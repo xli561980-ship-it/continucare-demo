@@ -75,8 +75,6 @@ from continucare.models import ConfirmedAnswerContext, ConfirmedSymptomReport
 from continucare.fhir.terminology import UCUM
 from continucare.terminology import (
     RepositoryTerminologyBackend,
-    load_cn_glp1_terminology_catalog,
-    terminology_catalog_sha256,
 )
 from continucare.terminology.catalog import (
     DYNAMIC_LINK_PREFIX,
@@ -121,9 +119,7 @@ class CareAgentService:
         self.safety = SafetyAgent(critic=selected_critic)
         self.language_rewriter = language_rewriter or MiMoLanguageRewriter(config)
         self.patient_timezone = patient_timezone or get_settings().patient_timezone
-        self.terminology = terminology_backend or RepositoryTerminologyBackend(
-            load_cn_glp1_terminology_catalog()
-        )
+        self.terminology = terminology_backend or RepositoryTerminologyBackend()
         registry = AgentRegistry()
         registry.register(
             RegisteredAgent(
@@ -166,9 +162,7 @@ class CareAgentService:
         )
         if latest_turn is not None and latest_turn.message_text == task.message_text:
             latest_record = self.store.get_agent_run(latest_turn.run_id)
-            if latest_record is not None and self._record_matches_task(
-                latest_record, task
-            ):
+            if latest_record is not None:
                 latest_result = SemanticResult.model_validate(
                     latest_record.output_json
                 )
@@ -186,7 +180,6 @@ class CareAgentService:
                     )
         existing = self.store.get_agent_run_by_task(task.task_id)
         if existing:
-            self._require_record_boundary(existing, task)
             return SemanticInteraction(
                 task=task,
                 result=SemanticResult.model_validate(existing.output_json),
@@ -1622,10 +1615,6 @@ class CareAgentService:
             mode=outcome.result.mode,
             input_text=task.message_text,
             input_hash=hashlib.sha256(task.message_text.encode("utf-8")).hexdigest(),
-            knowledge_release_id=task.knowledge_release_id,
-            terminology_catalog_id=task.terminology_catalog_id,
-            terminology_catalog_version=task.terminology_catalog_version,
-            terminology_catalog_sha256=task.terminology_catalog_sha256,
             output_json=outcome.result.model_dump(mode="json"),
             status=outcome.result.status.value,
             model_provider=(
@@ -1643,14 +1632,13 @@ class CareAgentService:
         record = self.store.get_agent_run(run_id)
         if record is None:
             raise ValueError("Agent 运行记录不存在")
-        self._task_for_record(record)
         return record, SemanticResult.model_validate(record.output_json)
 
     def _task_for_record(self, record: AgentRunRecord) -> SemanticTask:
         session = self._session(record.session_id)
         questionnaire = self.care_engine.questionnaire_for_session(session)
         result = SemanticResult.model_validate(record.output_json)
-        task = self._build_task(
+        return self._build_task(
             session,
             questionnaire,
             record.input_text,
@@ -1661,24 +1649,6 @@ class CareAgentService:
                 else record.started_at
             ),
         )
-        self._require_record_boundary(record, task)
-        return task
-
-    @staticmethod
-    def _record_matches_task(record: AgentRunRecord, task: SemanticTask) -> bool:
-        return (
-            record.knowledge_release_id == task.knowledge_release_id
-            and record.terminology_catalog_id == task.terminology_catalog_id
-            and record.terminology_catalog_version == task.terminology_catalog_version
-            and record.terminology_catalog_sha256 == task.terminology_catalog_sha256
-        )
-
-    @classmethod
-    def _require_record_boundary(
-        cls, record: AgentRunRecord, task: SemanticTask
-    ) -> None:
-        if not cls._record_matches_task(record, task):
-            raise ValueError("AgentRun knowledge or terminology release mismatch")
 
     def _session(self, session_id: str):
         session = self.store.get_care_session(session_id)
@@ -1713,12 +1683,6 @@ class CareAgentService:
         digest = hashlib.sha256(message_text.encode("utf-8")).hexdigest()
         context_identity = json.dumps(
             {
-                "knowledge_release_id": session.knowledge_release_id,
-                "terminology_catalog_id": self.terminology.catalog.catalog_id,
-                "terminology_catalog_version": self.terminology.catalog.version,
-                "terminology_catalog_sha256": terminology_catalog_sha256(
-                    self.terminology.catalog
-                ),
                 "local_date": temporal_context.local_date,
                 "latest_run_id": (
                     conversation_context.recent_turns[-1].run_id
@@ -1747,12 +1711,8 @@ class CareAgentService:
             pathway_version=session.pathway_version,
             questionnaire_canonical=session.questionnaire_canonical,
             questionnaire_version=session.questionnaire_version,
-            knowledge_release_id=session.knowledge_release_id,
             terminology_catalog_id=self.terminology.catalog.catalog_id,
             terminology_catalog_version=self.terminology.catalog.version,
-            terminology_catalog_sha256=terminology_catalog_sha256(
-                self.terminology.catalog
-            ),
             message_text=message_text,
             existing_answers=session.answers,
             conversation_context=conversation_context,

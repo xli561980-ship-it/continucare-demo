@@ -20,13 +20,6 @@ class PathwayStatus(str, Enum):
     RETIRED = "retired"
 
 
-class ScopeStatus(str, Enum):
-    GENERIC_DATA_CAPTURE_ONLY = "generic_data_capture_only"
-    NOT_PRODUCT_SPECIFIC = "not_product_specific"
-    PRODUCT_SPECIFIC_LABEL_INCOMPLETE = "product_specific_label_incomplete"
-    PRODUCT_SPECIFIC_LABEL_VERIFIED = "product_specific_label_verified"
-
-
 class ApprovalStatus(str, Enum):
     NOT_REVIEWED = "not_reviewed"
     CHANGES_REQUESTED = "changes_requested"
@@ -35,8 +28,6 @@ class ApprovalStatus(str, Enum):
 
 class KnowledgeSource(StrictModel):
     source_id: str
-    usage: Literal["runtime_contract", "background_only"]
-    runtime_eligible: bool
     title: str
     source_type: str
     authority: str
@@ -44,12 +35,6 @@ class KnowledgeSource(StrictModel):
     version: str | None = None
     applicable_section: str | None = None
     accessed_at: str
-
-    @model_validator(mode="after")
-    def background_sources_are_not_runtime(self) -> "KnowledgeSource":
-        if self.usage == "background_only" and self.runtime_eligible:
-            raise ValueError("background pathway source cannot be runtime eligible")
-        return self
 
 
 class ApprovalPolicy(StrictModel):
@@ -84,12 +69,6 @@ class PathwayDefinition(StrictModel):
     version: str
     status: PathwayStatus
     synthetic_only: bool = True
-    jurisdiction: str | None = None
-    knowledge_release_id: str | None = None
-    product_scope: list[str] = Field(default_factory=list)
-    indication_scope: list[str] = Field(default_factory=list)
-    population_scope: list[str] = Field(default_factory=list)
-    scope_status: ScopeStatus | None = None
     description: str
     clinical_safety_note: str
     fhir_version: Literal["4.0.1"]
@@ -105,16 +84,6 @@ class PathwayDefinition(StrictModel):
         source_ids = [item.source_id for item in self.knowledge_sources]
         if len(source_ids) != len(set(source_ids)):
             raise ValueError("pathway contains duplicate knowledge source ids")
-        if not self.product_scope and self.scope_status not in {
-            ScopeStatus.GENERIC_DATA_CAPTURE_ONLY,
-            ScopeStatus.NOT_PRODUCT_SPECIFIC,
-        }:
-            raise ValueError("a pathway without product_scope must declare a generic scope")
-        if self.product_scope and self.scope_status in {
-            ScopeStatus.GENERIC_DATA_CAPTURE_ONLY,
-            ScopeStatus.NOT_PRODUCT_SPECIFIC,
-        }:
-            raise ValueError("a product-specific pathway cannot declare a generic scope")
 
         artifact_keys = [
             (item.resource_type, item.canonical, item.version) for item in self.artifacts

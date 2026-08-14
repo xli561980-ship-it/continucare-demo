@@ -16,7 +16,7 @@ from continucare.layer4.fhir import (
     build_provenance,
     build_workflow_task,
 )
-from continucare.knowledge import compile_plan_definition, compile_questionnaire
+from continucare.pathways import load_glp1_plan_definition, load_glp1_questionnaire
 
 
 def main() -> None:
@@ -78,8 +78,8 @@ def main() -> None:
         activity_display="create",
     )
     resources = [
-        compile_questionnaire(),
-        compile_plan_definition(),
+        load_glp1_questionnaire(),
+        load_glp1_plan_definition(),
         response,
         observation,
         communication,

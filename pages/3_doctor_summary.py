@@ -15,19 +15,12 @@ from continucare.demo_data import DEMO_PATIENT_ID
 from continucare.models import AlertStatus
 from continucare.presentation import (
     alert_status_text,
-    build_l5_governance_for_patient,
-    build_latest_l5_submission_view,
     observation_evidence_text,
     observation_text,
     owner_text,
 )
 from continucare.services.summaries import SummaryService
-from continucare.ui import (
-    inject_global_styles,
-    render_l5_governance_panel,
-    render_l5_submission_panel,
-    render_mode_badges,
-)
+from continucare.ui import inject_global_styles, render_mode_badges
 
 
 def _in_period(timestamp: str, start: str, end: str) -> bool:
@@ -106,14 +99,11 @@ st.set_page_config(
 )
 inject_global_styles(st)
 st.title("医生复诊前简报")
+st.error("仅使用合成数据 · 不生成诊断、治疗或用药建议 · 默认不写入 EMR")
 
 store = SQLiteStore(get_settings().db_path)
 service = SummaryService(store, MockExtractor(), MockNotifier())
 patient = store.get_patient(DEMO_PATIENT_ID)
-render_l5_governance_panel(
-    st, build_l5_governance_for_patient(store, DEMO_PATIENT_ID)
-)
-render_l5_submission_panel(st, build_latest_l5_submission_view(store, DEMO_PATIENT_ID))
 
 header, generate_col = st.columns([3, 1])
 with header:

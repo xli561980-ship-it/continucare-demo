@@ -5,7 +5,6 @@ import pytest
 from continucare.adapters.sqlite_store import SQLiteStore
 from continucare.care_engine import CareEngine
 from continucare.demo_data import DEMO_PATIENT_ID
-from continucare.db import connect
 from continucare.fhir.questionnaires import build_questionnaire_response
 from continucare.fhir.r4 import FHIRValidationError
 from continucare.fhir.terminology import UCUM
@@ -108,27 +107,7 @@ def test_session_draft_is_resumable_and_version_locked(tmp_path):
     assert resumed.answers == {"nausea-present": False}
     assert resumed.pathway_version == "1.0.0"
     assert resumed.questionnaire_version == "1.0.0"
-    assert resumed.knowledge_release_id == "cn-glp1-l1-v1.0.3"
     assert resumed.status == CareSessionStatus.IN_PROGRESS
-
-
-def test_all_session_entry_points_reject_a_stale_knowledge_release(tmp_path):
-    store = SQLiteStore(tmp_path / "care-stale-release.db")
-    engine = CareEngine(store)
-    session = engine.start_or_resume(DEMO_PATIENT_ID)
-    with connect(store.db_path) as connection:
-        connection.execute(
-            "UPDATE care_sessions SET knowledge_release_id = ? WHERE session_id = ?",
-            ("cn-glp1-l1-stale", session.session_id),
-        )
-    stale = store.get_care_session(session.session_id)
-
-    with pytest.raises(ValueError, match="another knowledge release"):
-        engine.questionnaire_for_session(stale)
-    with pytest.raises(ValueError, match="another knowledge release"):
-        engine.save_draft(session.session_id, {"nausea-present": False})
-    with pytest.raises(ValueError, match="another knowledge release"):
-        engine.complete(session.session_id, {"nausea-present": False})
 
 
 def test_complete_session_persists_response_and_deterministic_observations(tmp_path):
@@ -147,7 +126,6 @@ def test_complete_session_persists_response_and_deterministic_observations(tmp_p
         "81660-3",
         "94070-0",
         "75301-2",
-        "21522001",
     }
     assert all(
         item.confidence_tier == ConfidenceTier.PATIENT_CONFIRMED
@@ -160,19 +138,8 @@ def test_complete_session_persists_response_and_deterministic_observations(tmp_p
     )
     assert len(
         reopened.list_observations_for_message(result.questionnaire_response["id"])
-    ) == 5
+    ) == 4
     assert reopened.list_alerts() == []
-    persisted = reopened.list_observations_for_message(
-        result.questionnaire_response["id"]
-    )
-    mapped = [item for item in persisted if item.evidence.metric_id]
-    assert mapped
-    assert all(
-        item.evidence.knowledge_release_id == "cn-glp1-l1-v1.0.3"
-        and item.evidence.evidence_claim_ids
-        and len(item.evidence.observation_mapping_sha256 or "") == 64
-        for item in mapped
-    )
 
     repeated = engine.complete(session.session_id, answers)
     assert repeated.questionnaire_response["id"] == result.questionnaire_response["id"]
@@ -182,7 +149,7 @@ def test_complete_session_persists_response_and_deterministic_observations(tmp_p
         engine.complete(session.session_id, {"nausea-present": False})
 
 
-def test_negative_answers_are_distinct_from_unanswered_fields(tmp_path):
+def test_free_text_and_negative_answers_do_not_invent_observations(tmp_path):
     store = SQLiteStore(tmp_path / "care-no-inference.db")
     engine = CareEngine(store)
     session = engine.start_or_resume(DEMO_PATIENT_ID)
@@ -196,11 +163,7 @@ def test_negative_answers_are_distinct_from_unanswered_fields(tmp_path):
         },
     )
 
-    assert {item.code: item.resource["valueBoolean"] for item in result.observations} == {
-        "422587007": False,
-        "21522001": False,
-    }
-    assert all(item.code != "75301-2" for item in result.observations)
+    assert result.observations == []
     assert "喝水比较少" in store.get_message(result.questionnaire_response["id"]).message_text
     assert store.list_alerts() == []
 

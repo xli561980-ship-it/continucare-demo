@@ -32,16 +32,6 @@ def test_layer2_one_click_scenario_uses_structured_questionnaire(tmp_path):
     db_path = tmp_path / "layer2-scenario.db"
     result = load_layer2_scenario(db_path, "呕吐与摄入记录")
 
-    assert {item.code for item in result.observations} == {
-        "422587007",
-        "21522001",
-        "94070-0",
-        "75301-2",
-    }
-    assert {
-        item.code: item.resource["valueBoolean"]
-        for item in result.observations
-        if item.code in {"422587007", "21522001"}
-    } == {"422587007": False, "21522001": False}
+    assert {item.code for item in result.observations} == {"94070-0", "75301-2"}
     assert result.questionnaire_response["status"] == "completed"
     assert result.session.pathway_version == "1.0.0"

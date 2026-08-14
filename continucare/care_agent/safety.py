@@ -26,7 +26,6 @@ from continucare.care_agent.mimo_enhancements import (
     governed_missing_findings,
     questionnaire_item_enabled,
 )
-from continucare.care_agent.release import LAYER3_RELEASE
 from continucare.care_agent.numbers import (
     count_from_evidence,
     millilitres_from_evidence,
@@ -265,25 +264,6 @@ class SafetyAgent:
 
     def review(self, task: SemanticTask, draft: SemanticResult) -> SemanticResult:
         violations = list(draft.safety_violations)
-        boundary_errors = []
-        if task.knowledge_release_id != LAYER3_RELEASE.knowledge_release_id:
-            boundary_errors.append("knowledge_release_mismatch")
-        if task.terminology_catalog_id != LAYER3_RELEASE.terminology_catalog_id:
-            boundary_errors.append("terminology_catalog_id_mismatch")
-        if task.terminology_catalog_version != LAYER3_RELEASE.terminology_catalog_version:
-            boundary_errors.append("terminology_catalog_version_mismatch")
-        if task.terminology_catalog_sha256 != LAYER3_RELEASE.terminology_catalog_sha256:
-            boundary_errors.append("terminology_catalog_digest_mismatch")
-        if boundary_errors:
-            return draft.model_copy(
-                update={
-                    "status": SemanticStatus.BLOCKED,
-                    "candidates": [],
-                    "clarifications": [],
-                    "safety_violations": sorted(set([*violations, *boundary_errors])),
-                    "safety_agent_version": self.VERSION,
-                }
-            )
         candidate_issues = list(draft.candidate_issues)
         duplicate_ids = _conflicting_link_ids(draft.candidates)
         safe_candidates: list[SemanticCandidate] = []

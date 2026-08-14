@@ -3,10 +3,6 @@
 from __future__ import annotations
 
 import html
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from continucare.presentation import L5GovernanceView, L5SubmissionView
 
 
 def inject_global_styles(st) -> None:
@@ -66,71 +62,6 @@ def inject_global_styles(st) -> None:
         """,
         unsafe_allow_html=True,
     )
-
-
-def render_l5_governance_panel(st, view: "L5GovernanceView") -> None:
-    """Render the same release, scope and review boundary for every L5 role."""
-
-    st.error(" · ".join(view.disclaimers))
-    with st.container(border=True):
-        st.markdown("#### 中国知识版本、适用范围与审核状态")
-        version_col, review_col = st.columns(2)
-        with version_col:
-            st.write(f"Pathway：`{view.pathway_code}` v`{view.pathway_version}`")
-            st.write(f"中国知识库 Release：`{view.knowledge_release_id}`")
-            st.write(f"知识发布状态：`{view.knowledge_status}`")
-        with review_col:
-            st.write(f"Pathway 状态：`{view.pathway_status}`")
-            st.write(f"当前审核状态：**{view.review_status}**")
-            st.write("临床规则：`not_assessed`（不创建临床 Alert）")
-        st.markdown("**产品范围**")
-        for product in view.products:
-            st.write(f"- {product}")
-        st.markdown("**适应证范围**")
-        st.write("、".join(view.indications) or "未声明")
-        st.markdown("**数据来源**")
-        for source in view.data_sources:
-            st.write(f"- {source}")
-
-
-def render_l5_submission_panel(
-    st,
-    submission: "L5SubmissionView | None",
-    *,
-    title: str = "最近一次原始回答与标准化 Observation",
-) -> None:
-    """Render raw answers and persisted Observation trace without inference."""
-
-    st.markdown(f"### {title}")
-    if submission is None:
-        st.info("尚无已完成的版本锁定随访；因此没有原始回答或标准化 Observation。")
-        return
-    st.caption(
-        f"QuestionnaireResponse/{submission.response_id} · "
-        f"{submission.response_status} · {submission.authored} · "
-        f"{submission.questionnaire}"
-    )
-    st.markdown("**原始患者回答（FHIR value[x]）**")
-    st.dataframe(
-        list(submission.raw_answer_rows),
-        hide_index=True,
-        width="stretch",
-    )
-    st.markdown("**标准化 Observation 与 L1 追溯**")
-    if submission.observation_rows:
-        st.dataframe(
-            list(submission.observation_rows),
-            hide_index=True,
-            width="stretch",
-        )
-    else:
-        st.info("原始回答已保存；本次没有形成发布映射范围内的 Observation。")
-    with st.expander("查看原始 FHIR JSON"):
-        st.markdown("**QuestionnaireResponse**")
-        st.json(submission.response_resource)
-        for resource in submission.observation_resources:
-            st.markdown(f"**Observation/{resource['id']}**")
-            st.json(resource)
 
 
 def render_mode_badges(st) -> None:

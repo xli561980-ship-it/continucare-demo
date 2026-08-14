@@ -13,7 +13,6 @@ from continucare.pathways.models import (
     KnowledgeSource,
     PathwayDefinition,
     PathwayStatus,
-    ScopeStatus,
 )
 from continucare.pathways.mappings import (
     ObservationMapping,
@@ -39,7 +38,6 @@ __all__ = [
     "PathwayNotFoundError",
     "PathwayRegistry",
     "PathwayStatus",
-    "ScopeStatus",
     "load_builtin_pathways",
     "load_fhir_artifact",
     "load_glp1_plan_definition",

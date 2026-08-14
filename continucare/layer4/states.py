@@ -8,7 +8,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Any, Iterable, Mapping, cast
+from typing import Any, Iterable, cast
 
 from continucare.fhir.r4 import validate_r4_resource
 from continucare.layer4.contracts import (
@@ -27,10 +27,6 @@ from continucare.layer4.contracts import (
 from continucare.layer4.fhir import build_provenance
 from continucare.layer4.inputs import Layer4InputReader
 from continucare.layer4.repository import Layer4Repository
-
-if TYPE_CHECKING:
-    from continucare.knowledge.models import KnowledgeRelease
-    from continucare.layer4.knowledge_binding import StateWindowPolicy
 
 
 STATE_AGENT_REFERENCE = "Device/continucare-clinical-state"
@@ -256,12 +252,7 @@ class ClinicalStateService:
         definitions: Iterable[StateMetricDefinition],
         as_of: str | None = None,
         generated_at: str | None = None,
-        required_knowledge_release_id: str | None = None,
     ) -> ClinicalStateSnapshot:
-        if required_knowledge_release_id is not None and not (
-            required_knowledge_release_id.strip()
-        ):
-            raise ValueError("required knowledge release id cannot be blank")
         snapshot = self.input_reader.read(patient_id)
         cutoff_text = as_of or snapshot.assembled_at
         generated_text = generated_at or cutoff_text
@@ -287,10 +278,6 @@ class ClinicalStateService:
         points = self._eligible_points(
             patient_id=patient_id,
             observations=snapshot.observations,
-            observation_knowledge_release_ids=(
-                snapshot.observation_knowledge_release_ids
-            ),
-            required_knowledge_release_id=required_knowledge_release_id,
             cutoff=cutoff,
         )
         states: list[MetricState] = []
@@ -395,42 +382,11 @@ class ClinicalStateService:
         self.repository.save_contract(result)
         return result
 
-    def build_from_l1_release(
-        self,
-        *,
-        patient_id: str,
-        release: "KnowledgeRelease",
-        window_policies: Mapping[str, "StateWindowPolicy"],
-        as_of: str | None = None,
-        generated_at: str | None = None,
-    ) -> ClinicalStateSnapshot:
-        """Build state from published L1 metrics without a second metric catalog."""
-
-        from continucare.layer4.knowledge_binding import (
-            bind_l1_state_metric_definitions,
-        )
-
-        binding = bind_l1_state_metric_definitions(
-            release,
-            pathway_code=self.pathway_code,
-            pathway_version=self.pathway_version,
-            window_policies=window_policies,
-        )
-        return self.build(
-            patient_id=patient_id,
-            definitions=binding.definitions,
-            as_of=as_of,
-            generated_at=generated_at,
-            required_knowledge_release_id=release.manifest.release_id,
-        )
-
     def _eligible_points(
         self,
         *,
         patient_id: str,
         observations: Iterable[dict[str, Any]],
-        observation_knowledge_release_ids: Mapping[str, str | None],
-        required_knowledge_release_id: str | None,
         cutoff: datetime,
     ) -> list[_Point]:
         superseded = self._superseded_references(patient_id)
@@ -445,12 +401,6 @@ class ClinicalStateService:
                 raise ValueError("Observation patient does not match state snapshot")
             reference = _resource_reference(resource)
             versioned = _versioned_reference(reference)
-            if (
-                required_knowledge_release_id is not None
-                and observation_knowledge_release_ids.get(versioned)
-                != required_knowledge_release_id
-            ):
-                continue
             if versioned in superseded:
                 continue
             start, end, issued = _observation_times(resource)

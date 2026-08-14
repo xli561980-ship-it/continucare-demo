@@ -23,8 +23,6 @@ class ObservationMapping(StrictModel):
     positive_only: bool = False
     effective_period_hours: int | None = Field(default=None, gt=0)
     accepted_quantity_unit_codes: list[str] = Field(default_factory=list)
-    metric_id: str | None = None
-    evidence_claim_ids: list[str] = Field(default_factory=list)
 
 
 class ObservationMappingPolicy(StrictModel):

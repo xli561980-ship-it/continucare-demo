@@ -121,35 +121,6 @@ def test_agent_run_is_persisted_and_same_task_replays_idempotently(tmp_path):
     assert len(store.list_agent_runs(session.session_id)) == 1
     assert first.record.model_provider is None
     assert first.result.mode == "local_semantic_mock"
-    assert first.record.knowledge_release_id == first.task.knowledge_release_id
-    assert first.record.terminology_catalog_id == first.task.terminology_catalog_id
-    assert (
-        first.record.terminology_catalog_sha256
-        == first.task.terminology_catalog_sha256
-    )
-
-
-@pytest.mark.parametrize(
-    ("field", "violation"),
-    [
-        ("knowledge_release_id", "knowledge_release_mismatch"),
-        ("terminology_catalog_id", "terminology_catalog_id_mismatch"),
-        ("terminology_catalog_version", "terminology_catalog_version_mismatch"),
-        ("terminology_catalog_sha256", "terminology_catalog_digest_mismatch"),
-    ],
-)
-def test_safety_agent_fails_closed_on_release_identity_mismatch(
-    tmp_path, field, violation
-):
-    _, _, session, service = _service(tmp_path)
-    interaction = service.analyze(session.session_id, "过去24小时我吐了2次。")
-    task = interaction.task.model_copy(update={field: "mismatched-release-value"})
-
-    reviewed = SafetyAgent().review(task, interaction.result)
-
-    assert reviewed.status == SemanticStatus.BLOCKED
-    assert reviewed.candidates == []
-    assert violation in reviewed.safety_violations
 
 
 def test_safety_agent_rejects_unknown_link_code_and_invalid_evidence(tmp_path):
