@@ -1929,7 +1929,7 @@ def test_knowledge_package_has_no_runtime_or_patient_store_dependencies():
         assert "patient_id" not in path.read_text("utf-8")
 
 
-def test_existing_runtime_modules_do_not_depend_on_knowledge_package():
+def test_runtime_knowledge_dependencies_are_explicitly_bounded():
     offenders = []
     for path in (REPOSITORY_ROOT / "continucare").rglob("*.py"):
         if "knowledge" in path.parts:
@@ -1944,4 +1944,12 @@ def test_existing_runtime_modules_do_not_depend_on_knowledge_package():
                 continue
             if any(name.startswith("continucare.knowledge") for name in names):
                 offenders.append(path)
-    assert offenders == []
+    assert {path.relative_to(REPOSITORY_ROOT).as_posix() for path in offenders} == {
+        "continucare/adapters/sqlite_store.py",
+        "continucare/care_engine/mapping.py",
+        "continucare/care_engine/service.py",
+        "continucare/layer4/knowledge_binding.py",
+        "continucare/layer4/states.py",
+        "continucare/presentation.py",
+        "continucare/terminology/catalog.py",
+    }

@@ -1,0 +1,150 @@
+[
+  {
+    "metric_id": "nausea_present_now",
+    "entry_type": "observation_code",
+    "coding": {
+      "system": "http://snomed.info/sct",
+      "code": "422587007",
+      "display": "Nausea",
+      "version": "20250201"
+    },
+    "local_aliases_zh": ["恶心", "作呕", "反胃"],
+    "edition": "SNOMED CT International Edition",
+    "jurisdiction_applicability": "CN applicability and institutional license unresolved; fixed synthetic binding only",
+    "license_status": "unresolved_not_for_bulk_redistribution",
+    "value_set_id": null,
+    "allowed_codes": [],
+    "runtime_eligible": true,
+    "validated_on": "2026-08-13"
+  },
+  {
+    "metric_id": "nausea_severity_current",
+    "entry_type": "observation_code",
+    "coding": {
+      "system": "http://loinc.org",
+      "code": "81660-3",
+      "display": "Nausea [Presence]",
+      "version": "2.82"
+    },
+    "local_aliases_zh": ["恶心程度", "反胃程度"],
+    "edition": "LOINC Complete 2.82",
+    "jurisdiction_applicability": "international data-contract standard; CN synthetic engineering use",
+    "license_status": "account_terms_accepted_release_downloaded",
+    "value_set_id": null,
+    "allowed_codes": [],
+    "runtime_eligible": true,
+    "validated_on": "2026-08-13"
+  },
+  {
+    "metric_id": "nausea_severity_current",
+    "entry_type": "answer_value_set",
+    "coding": {
+      "system": "urn:continucare:ValueSet",
+      "code": "nausea-severity-v1",
+      "display": "Nausea severity answer list",
+      "version": "1.0.0"
+    },
+    "local_aliases_zh": ["轻度", "中度", "重度"],
+    "edition": "ContinuCare governed subset of LOINC answer codes 2.82",
+    "jurisdiction_applicability": "CN synthetic engineering questionnaire only",
+    "license_status": "account_terms_accepted_release_downloaded",
+    "value_set_id": "urn:continucare:ValueSet:nausea-severity-v1",
+    "allowed_codes": [
+      {"system": "http://loinc.org", "code": "LA6752-5", "display": "Mild", "version": "2.82"},
+      {"system": "http://loinc.org", "code": "LA6751-7", "display": "Moderate", "version": "2.82"},
+      {"system": "http://loinc.org", "code": "LA6750-9", "display": "Severe", "version": "2.82"}
+    ],
+    "runtime_eligible": true,
+    "validated_on": "2026-08-13"
+  },
+  {
+    "metric_id": "vomiting_count_24h",
+    "entry_type": "observation_code",
+    "coding": {
+      "system": "http://loinc.org",
+      "code": "94070-0",
+      "display": "Emesis count 24 hour",
+      "version": "2.82"
+    },
+    "local_aliases_zh": ["呕吐次数", "吐了几次"],
+    "edition": "LOINC Complete 2.82",
+    "jurisdiction_applicability": "international data-contract standard; CN synthetic engineering use",
+    "license_status": "account_terms_accepted_release_downloaded",
+    "value_set_id": null,
+    "allowed_codes": [],
+    "runtime_eligible": true,
+    "validated_on": "2026-08-13"
+  },
+  {
+    "metric_id": "vomiting_count_24h",
+    "entry_type": "unit",
+    "coding": {
+      "system": "http://unitsofmeasure.org",
+      "code": "/d",
+      "display": "per day",
+      "version": null
+    },
+    "local_aliases_zh": ["次/24小时", "每天次数"],
+    "edition": "UCUM canonical unit syntax",
+    "jurisdiction_applicability": "international data-contract standard; CN synthetic engineering use",
+    "license_status": "verified_public_standard",
+    "value_set_id": null,
+    "allowed_codes": [],
+    "runtime_eligible": true,
+    "validated_on": "2026-08-13"
+  },
+  {
+    "metric_id": "fluid_intake_24h_estimated",
+    "entry_type": "observation_code",
+    "coding": {
+      "system": "http://loinc.org",
+      "code": "75301-2",
+      "display": "Fluid intake 24 hour Estimated",
+      "version": "2.82"
+    },
+    "local_aliases_zh": ["液体摄入", "喝水量", "饮水量"],
+    "edition": "LOINC Complete 2.82",
+    "jurisdiction_applicability": "international data-contract standard; CN synthetic engineering use",
+    "license_status": "account_terms_accepted_release_downloaded",
+    "value_set_id": null,
+    "allowed_codes": [],
+    "runtime_eligible": true,
+    "validated_on": "2026-08-13"
+  },
+  {
+    "metric_id": "fluid_intake_24h_estimated",
+    "entry_type": "unit",
+    "coding": {
+      "system": "http://unitsofmeasure.org",
+      "code": "mL/(24.h)",
+      "display": "millilitres per 24 hours",
+      "version": null
+    },
+    "local_aliases_zh": ["毫升/24小时", "24小时毫升数"],
+    "edition": "UCUM canonical unit syntax",
+    "jurisdiction_applicability": "international data-contract standard; CN synthetic engineering use",
+    "license_status": "verified_public_standard",
+    "value_set_id": null,
+    "allowed_codes": [],
+    "runtime_eligible": true,
+    "validated_on": "2026-08-13"
+  },
+  {
+    "metric_id": "abdominal_pain_present_now",
+    "entry_type": "observation_code",
+    "coding": {
+      "system": "http://snomed.info/sct",
+      "code": "21522001",
+      "display": "Abdominal pain (finding)",
+      "version": "20250201"
+    },
+    "local_aliases_zh": ["腹痛", "肚子痛", "肚子疼"],
+    "edition": "SNOMED CT International Edition",
+    "jurisdiction_applicability": "CN applicability and institutional license unresolved; fixed synthetic binding only",
+    "license_status": "unresolved_not_for_bulk_redistribution",
+    "value_set_id": null,
+    "allowed_codes": [],
+    "runtime_eligible": true,
+    "validated_on": "2026-08-13"
+  }
+]

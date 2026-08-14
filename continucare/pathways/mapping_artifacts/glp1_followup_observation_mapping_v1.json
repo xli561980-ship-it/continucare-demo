@@ -6,27 +6,37 @@
     {
       "link_id": "nausea-present",
       "kind": "boolean",
-      "positive_only": true
+      "positive_only": false,
+      "metric_id": "nausea_present_now",
+      "evidence_claim_ids": ["continucare-glp1-14d-wording-2026-001", "cn-wegovy-gi-monitoring-domain-2025-001"]
     },
     {
       "link_id": "nausea-severity",
-      "kind": "coded_choice"
+      "kind": "coded_choice",
+      "metric_id": "nausea_severity_current",
+      "evidence_claim_ids": ["continucare-glp1-14d-wording-2026-001", "loinc-2.82-observation-codes-001", "cn-wegovy-gi-monitoring-domain-2025-001"]
     },
     {
       "link_id": "vomiting-count-24h",
       "kind": "count_per_day",
-      "effective_period_hours": 24
+      "effective_period_hours": 24,
+      "metric_id": "vomiting_count_24h",
+      "evidence_claim_ids": ["continucare-glp1-14d-wording-2026-001", "loinc-2.82-observation-codes-001", "cn-wegovy-gi-monitoring-domain-2025-001"]
     },
     {
       "link_id": "fluid-intake-24h-estimated",
       "kind": "millilitres_per_24_hours",
       "effective_period_hours": 24,
-      "accepted_quantity_unit_codes": ["mL"]
+      "accepted_quantity_unit_codes": ["mL"],
+      "metric_id": "fluid_intake_24h_estimated",
+      "evidence_claim_ids": ["continucare-glp1-14d-wording-2026-001", "loinc-2.82-observation-codes-001", "cn-wegovy-gi-monitoring-domain-2025-001"]
     },
     {
       "link_id": "abdominal-pain-present",
       "kind": "boolean",
-      "positive_only": true
+      "positive_only": false,
+      "metric_id": "abdominal_pain_present_now",
+      "evidence_claim_ids": ["continucare-glp1-14d-wording-2026-001", "cn-wegovy-gi-monitoring-domain-2025-001"]
     }
   ]
 }

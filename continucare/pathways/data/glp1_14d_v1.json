@@ -6,7 +6,13 @@
   "version": "1.0.0",
   "status": "draft",
   "synthetic_only": true,
-  "description": "FHIR R4原生患者报告采集与Observation沉淀草案。当前药物安全证据以司美格鲁肽Wegovy为主，尚不能外推为全部GLP-1产品的统一临床路径。",
+  "jurisdiction": "CN",
+  "knowledge_release_id": "cn-glp1-l1-v1.0.3",
+  "product_scope": ["cn-wegovy-sj20240020", "cn-wegovy-sj20240021", "cn-wegovy-sj20240022", "cn-wegovy-sj20240023", "cn-wegovy-sj20240024"],
+  "indication_scope": ["chronic_weight_management", "cardiovascular_mace_risk_reduction"],
+  "population_scope": ["adult_cn_label_population"],
+  "scope_status": "product_specific_label_incomplete",
+  "description": "FHIR R4原生患者报告采集与Observation沉淀草案。当前中国产品范围仅绑定诺和盈公开批准资料，仍缺现行完整法定说明书；EMA/FDA/境外共识仅作background_only，尚不能外推为全部GLP-1产品的统一临床路径。",
   "clinical_safety_note": "本版本不包含任何自动临床分诊、报警阈值、诊断或治疗建议。真实患者使用前必须完成目标药物、适应证、人群、地区说明书、术语和院内流程的临床审批。",
   "fhir_version": "4.0.1",
   "artifacts": [
@@ -28,6 +34,8 @@
   "knowledge_sources": [
     {
       "source_id": "hl7-fhir-r4-observation",
+      "usage": "runtime_contract",
+      "runtime_eligible": false,
       "title": "FHIR R4 Observation",
       "source_type": "international_standard",
       "authority": "HL7 International",
@@ -38,6 +46,8 @@
     },
     {
       "source_id": "hl7-fhir-r4-questionnaire",
+      "usage": "runtime_contract",
+      "runtime_eligible": false,
       "title": "FHIR R4 Questionnaire and QuestionnaireResponse",
       "source_type": "international_standard",
       "authority": "HL7 International",
@@ -48,6 +58,8 @@
     },
     {
       "source_id": "loinc-2.82",
+      "usage": "runtime_contract",
+      "runtime_eligible": false,
       "title": "LOINC clinical observation terminology",
       "source_type": "terminology_standard",
       "authority": "Regenstrief Institute",
@@ -58,6 +70,8 @@
     },
     {
       "source_id": "snomed-ct-clinical-finding",
+      "usage": "runtime_contract",
+      "runtime_eligible": false,
       "title": "SNOMED CT Clinical Finding and Disorder",
       "source_type": "terminology_standard",
       "authority": "SNOMED International",
@@ -68,6 +82,8 @@
     },
     {
       "source_id": "ucum",
+      "usage": "runtime_contract",
+      "runtime_eligible": false,
       "title": "Unified Code for Units of Measure",
       "source_type": "unit_standard",
       "authority": "Regenstrief Institute",
@@ -78,6 +94,8 @@
     },
     {
       "source_id": "ema-wegovy-epar",
+      "usage": "background_only",
+      "runtime_eligible": false,
       "title": "Wegovy European Public Assessment Report and Product Information",
       "source_type": "regulatory_product_information",
       "authority": "European Medicines Agency",
@@ -88,6 +106,8 @@
     },
     {
       "source_id": "fda-wegovy-2026",
+      "usage": "background_only",
+      "runtime_eligible": false,
       "title": "WEGOVY Prescribing Information",
       "source_type": "regulatory_product_information",
       "authority": "U.S. Food and Drug Administration",
@@ -98,6 +118,8 @@
     },
     {
       "source_id": "jcm-glp1-gi-consensus-2022",
+      "usage": "background_only",
+      "runtime_eligible": false,
       "title": "Clinical Recommendations to Manage Gastrointestinal Adverse Events in Patients Treated with GLP-1 Receptor Agonists: A Multidisciplinary Expert Consensus",
       "source_type": "peer_reviewed_expert_consensus",
       "authority": "Journal of Clinical Medicine",

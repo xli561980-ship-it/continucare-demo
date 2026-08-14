@@ -16,6 +16,8 @@ from continucare.models import AlertStatus
 from continucare.presentation import (
     alert_next_step,
     alert_status_text,
+    build_l5_governance_for_patient,
+    build_latest_l5_submission_view,
     observation_evidence_text,
     owner_text,
 )
@@ -35,6 +37,8 @@ from continucare.services.competition_demo import (
 from continucare.ui import (
     inject_global_styles,
     render_competition_progress,
+    render_l5_governance_panel,
+    render_l5_submission_panel,
     render_mode_badges,
 )
 
@@ -130,7 +134,6 @@ st.set_page_config(
 )
 inject_global_styles(st)
 st.title("护士任务中心")
-st.error("仅使用合成数据 · 这里展示的是医护工作任务，不是诊断结论")
 
 settings = get_settings()
 progress = read_competition_demo(settings.db_path)
@@ -145,6 +148,13 @@ alert_service = AlertService(store, MockNotifier())
 manual_repository = Layer4SQLiteStore(settings.db_path, initialize=False)
 manual_service = ManualReviewWorkflowService(store, layer4_store=manual_repository)
 manual_tasks = ManualReviewQueue(manual_repository).list_for_patient(DEMO_PATIENT_ID)
+with st.expander("工程追溯：中国知识版本、原始回答与标准化 Observation"):
+    render_l5_governance_panel(
+        st, build_l5_governance_for_patient(store, DEMO_PATIENT_ID)
+    )
+    render_l5_submission_panel(
+        st, build_latest_l5_submission_view(store, DEMO_PATIENT_ID)
+    )
 all_alerts = store.list_alerts()
 active_alerts = [item for item in all_alerts if item.status != AlertStatus.RESOLVED]
 resolved_alerts = [item for item in all_alerts if item.status == AlertStatus.RESOLVED]

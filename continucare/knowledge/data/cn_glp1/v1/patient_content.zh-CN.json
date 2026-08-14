@@ -1,0 +1,80 @@
+[
+  {
+    "content_id": "nausea-present-now-zh-cn",
+    "link_id": "nausea-present",
+    "locale": "zh-CN",
+    "text": "现在有恶心吗？",
+    "purpose": "data_collection",
+    "metric_id": "nausea_present_now",
+    "evidence_claim_ids": ["continucare-glp1-14d-wording-2026-001", "cn-wegovy-gi-monitoring-domain-2025-001"],
+    "item_type": "boolean",
+    "answers": [],
+    "medical_advice": false,
+    "approval_status": "engineering_reviewed"
+  },
+  {
+    "content_id": "nausea-severity-current-zh-cn",
+    "link_id": "nausea-severity",
+    "locale": "zh-CN",
+    "text": "恶心程度最接近哪一项？",
+    "purpose": "data_collection",
+    "metric_id": "nausea_severity_current",
+    "evidence_claim_ids": ["continucare-glp1-14d-wording-2026-001", "loinc-2.82-observation-codes-001", "cn-wegovy-gi-monitoring-domain-2025-001"],
+    "item_type": "choice",
+    "answers": ["轻度", "中度", "重度"],
+    "medical_advice": false,
+    "approval_status": "engineering_reviewed"
+  },
+  {
+    "content_id": "vomiting-count-24h-zh-cn",
+    "link_id": "vomiting-count-24h",
+    "locale": "zh-CN",
+    "text": "过去24小时呕吐了几次？",
+    "purpose": "data_collection",
+    "metric_id": "vomiting_count_24h",
+    "evidence_claim_ids": ["continucare-glp1-14d-wording-2026-001", "loinc-2.82-observation-codes-001", "cn-wegovy-gi-monitoring-domain-2025-001"],
+    "item_type": "integer",
+    "answers": [],
+    "medical_advice": false,
+    "approval_status": "engineering_reviewed"
+  },
+  {
+    "content_id": "fluid-intake-24h-zh-cn",
+    "link_id": "fluid-intake-24h-estimated",
+    "locale": "zh-CN",
+    "text": "估计过去24小时一共摄入了多少毫升液体？不确定时可以留空并在补充说明中描述。",
+    "purpose": "data_collection",
+    "metric_id": "fluid_intake_24h_estimated",
+    "evidence_claim_ids": ["continucare-glp1-14d-wording-2026-001", "loinc-2.82-observation-codes-001", "cn-wegovy-gi-monitoring-domain-2025-001"],
+    "item_type": "quantity",
+    "answers": [],
+    "medical_advice": false,
+    "approval_status": "engineering_reviewed"
+  },
+  {
+    "content_id": "abdominal-pain-present-now-zh-cn",
+    "link_id": "abdominal-pain-present",
+    "locale": "zh-CN",
+    "text": "现在有腹痛吗？",
+    "purpose": "data_collection",
+    "metric_id": "abdominal_pain_present_now",
+    "evidence_claim_ids": ["continucare-glp1-14d-wording-2026-001", "cn-wegovy-gi-monitoring-domain-2025-001"],
+    "item_type": "boolean",
+    "answers": [],
+    "medical_advice": false,
+    "approval_status": "engineering_reviewed"
+  },
+  {
+    "content_id": "free-text-report-zh-cn",
+    "link_id": "free-text-report",
+    "locale": "zh-CN",
+    "text": "请描述今天的身体状态",
+    "purpose": "data_collection",
+    "metric_id": null,
+    "evidence_claim_ids": ["continucare-glp1-14d-wording-2026-001"],
+    "item_type": "text",
+    "answers": [],
+    "medical_advice": false,
+    "approval_status": "engineering_reviewed"
+  }
+]

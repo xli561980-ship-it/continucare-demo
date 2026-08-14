@@ -1,4 +1,4 @@
-"""Pathway-agnostic, read-only Knowledge Evidence registry."""
+"""Governed clinical knowledge bundles and versioned releases."""
 
 from continucare.knowledge.models import (
     ArtifactRef,
@@ -23,17 +23,32 @@ from continucare.knowledge.models import (
 )
 from continucare.knowledge.registry import (
     KnowledgeRegistry,
+    KnowledgeReleaseRegistry,
     LoadMode,
     PathwayKnowledgeView,
     SymptomKnowledgeView,
     inspect_bundle,
     load_builtin_bundle,
     load_bundle,
+    load_cn_glp1_release,
 )
 from continucare.knowledge.render import (
     KNOWLEDGE_DISCLAIMER,
     render_pathway_knowledge,
     render_symptom_knowledge,
+)
+from continucare.knowledge.compiler import (
+    compile_knowledge_release,
+    compile_observation_mappings,
+    compile_plan_definition,
+    compile_pro_ctcae_questionnaire,
+    compile_questionnaire,
+)
+from continucare.knowledge.validator import (
+    KnowledgeValidationError,
+    validate_packaged_release,
+    validate_release,
+    validate_runtime_artifacts,
 )
 
 __all__ = [
@@ -52,6 +67,8 @@ __all__ = [
     "KnowledgeSchemaError",
     "KnowledgeSourceArtifactError",
     "KnowledgeRegistry",
+    "KnowledgeReleaseRegistry",
+    "KnowledgeValidationError",
     "KNOWLEDGE_DISCLAIMER",
     "LoadMode",
     "PathwayRef",
@@ -61,9 +78,18 @@ __all__ = [
     "SourceRef",
     "SymptomIndexRecord",
     "SymptomIndexRef",
+    "compile_knowledge_release",
+    "compile_observation_mappings",
+    "compile_plan_definition",
+    "compile_pro_ctcae_questionnaire",
+    "compile_questionnaire",
     "inspect_bundle",
     "load_builtin_bundle",
     "load_bundle",
+    "load_cn_glp1_release",
     "render_pathway_knowledge",
     "render_symptom_knowledge",
+    "validate_release",
+    "validate_packaged_release",
+    "validate_runtime_artifacts",
 ]

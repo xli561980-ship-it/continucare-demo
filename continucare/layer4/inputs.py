@@ -55,6 +55,9 @@ class Layer4InputSnapshot(BaseModel):
     pathway_version: str = Field(min_length=1)
     questionnaire_responses: list[dict[str, Any]] = Field(default_factory=list)
     observations: list[dict[str, Any]] = Field(default_factory=list)
+    observation_knowledge_release_ids: dict[str, str | None] = Field(
+        default_factory=dict
+    )
     audit_events: list[AuditEvent] = Field(default_factory=list)
     assembled_at: str
 
@@ -93,6 +96,7 @@ class Layer4InputReader:
             raise ValueError("Layer 4 requires unique QuestionnaireResponse ids")
 
         observations = []
+        observation_knowledge_release_ids: dict[str, str | None] = {}
         observations_by_response = {reference: [] for reference in response_references}
         for item in self.store.list_final_observations(
             patient_id,
@@ -126,6 +130,11 @@ class Layer4InputReader:
                 )
             observations.append(resource)
             observations_by_response[source_reference].append(resource)
+            version_id = resource.get("meta", {}).get("versionId") or "1"
+            reference = f"Observation/{resource['id']}/_history/{version_id}"
+            observation_knowledge_release_ids[reference] = (
+                item.evidence.knowledge_release_id
+            )
         for response in responses:
             admit_final_patient_report(
                 patient_id=patient_id,
@@ -141,6 +150,7 @@ class Layer4InputReader:
             pathway_version=pathway_version,
             questionnaire_responses=responses,
             observations=observations,
+            observation_knowledge_release_ids=observation_knowledge_release_ids,
             audit_events=self.store.list_pathway_audit_events(
                 patient_id,
                 pathway_code=pathway_code,

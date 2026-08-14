@@ -22,7 +22,8 @@ from continucare.fhir.terminology import UCUM, CodingDefinition
 from continucare.agents.contracts import CodingContract
 from continucare.models import ConfidenceTier, ConfirmedAnswerContext, Observation
 from continucare.pathways.mappings import ObservationMappingPolicy
-from continucare.terminology import load_glp1_symptom_catalog
+from continucare.terminology import load_cn_glp1_terminology_catalog
+from continucare.knowledge import load_cn_glp1_release
 
 
 def map_response_to_observations(
@@ -48,6 +49,8 @@ def map_response_to_observations(
     source_text, fragments = questionnaire_response_summary(response, questionnaire)
     observations: list[Observation] = []
     answer_contexts = answer_contexts or {}
+    release = load_cn_glp1_release().release
+    mapping_sha256 = release.manifest.observation_mapping_sha256
 
     for mapping in policy.mappings:
         if mapping.link_id not in questions:
@@ -71,7 +74,7 @@ def map_response_to_observations(
         terminology_match = (
             answer_context.terminology_match
             if answer_context and answer_context.terminology_match is not None
-            else load_glp1_symptom_catalog()
+            else load_cn_glp1_terminology_catalog()
             .match_for_questionnaire(
                 link_id=mapping.link_id,
                 coding=CodingContract(
@@ -122,6 +125,10 @@ def map_response_to_observations(
                     "recorded_at": response["authored"],
                     "source_kind": "pathway_monitored",
                     "terminology_match": terminology_match,
+                    "metric_id": mapping.metric_id,
+                    "evidence_claim_ids": mapping.evidence_claim_ids,
+                    "knowledge_release_id": release.manifest.release_id,
+                    "observation_mapping_sha256": mapping_sha256,
                 },
             )
         )
@@ -147,7 +154,7 @@ def _mapped_value(mapping, answer: Any) -> tuple[str | None, Any]:
     if mapping.kind == "boolean":
         if type(answer) is not bool:
             raise FHIRValidationError(f"{mapping.link_id!r} mapping expects boolean")
-        if mapping.positive_only and not answer:
+        if not answer and mapping.positive_only:
             return None, None
         return "valueBoolean", answer
     if mapping.kind == "coded_choice":

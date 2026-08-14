@@ -22,9 +22,12 @@ from continucare.knowledge.models import (
     ClaimRef,
     ClaimRegistryFile,
     ClaimType,
+    CoverageReport,
     CoverageGapRecord,
     CoverageGapRef,
+    DataQualityRule,
     EquivalenceDecisionEvent,
+    EvidenceClaim,
     GovernanceRegistryFile,
     KnowledgeArtifactUnresolved,
     KnowledgeAuthorityError,
@@ -36,12 +39,18 @@ from continucare.knowledge.models import (
     KnowledgeReferenceError,
     KnowledgeSchemaError,
     KnowledgeSourceArtifactError,
+    KnowledgeRelease,
     LicenseDecisionEvent,
     LinkOnlyAccess,
     LocalArtifactAccess,
+    MetricDefinition,
+    PatientContent,
     PathwayWhitelistScope,
     PathwayRef,
     PayloadEnvelope,
+    ProductRecord,
+    ReleaseManifest,
+    ReleaseSourceRecord,
     ReviewAggregate,
     ReviewEvent,
     ReviewSummary,
@@ -54,6 +63,7 @@ from continucare.knowledge.models import (
     SymptomIndexLifecycle,
     SymptomIndexRecord,
     SymptomIndexRef,
+    TerminologyEntry,
     UniversalNonclinicalStandardScope,
     WorkflowDesignDecision,
     artifact_key,
@@ -1355,3 +1365,52 @@ def _claim_review_summary(
         else:
             aggregate = ReviewAggregate.NOT_ASSESSED
     return ReviewSummary(aggregate=aggregate, axes=axes, pharmacy=pharmacy)
+
+
+@dataclass(frozen=True)
+class KnowledgeReleaseRegistry:
+    release: KnowledgeRelease
+
+    def source(self, source_id: str) -> ReleaseSourceRecord:
+        return self._find(self.release.sources, "source_id", source_id)
+
+    def claim(self, claim_id: str) -> EvidenceClaim:
+        return self._find(self.release.evidence_claims, "claim_id", claim_id)
+
+    def metric(self, metric_id: str) -> MetricDefinition:
+        return self._find(self.release.metrics, "metric_id", metric_id)
+
+    @staticmethod
+    def _find(items: list, attribute: str, value: str):
+        item = next((item for item in items if getattr(item, attribute) == value), None)
+        if item is None:
+            raise LookupError(f"unknown {attribute} {value!r}")
+        return item
+
+
+def _read_json(data_dir, name: str, model):
+    text = data_dir.joinpath(name).read_text("utf-8")
+    if model is ReleaseManifest:
+        return model.model_validate_json(text)
+    return [model.model_validate(item) for item in __import__("json").loads(text)]
+
+
+def load_cn_glp1_release() -> KnowledgeReleaseRegistry:
+    data_dir = files("continucare.knowledge.data.cn_glp1.v1")
+    release = KnowledgeRelease(
+        manifest=_read_json(data_dir, "release_manifest.json", ReleaseManifest),
+        sources=_read_json(data_dir, "source_registry.json", ReleaseSourceRecord),
+        products=_read_json(data_dir, "product_registry.json", ProductRecord),
+        evidence_claims=_read_json(data_dir, "evidence_claims.json", EvidenceClaim),
+        metrics=_read_json(data_dir, "metric_definitions.json", MetricDefinition),
+        terminology=_read_json(data_dir, "terminology_manifest.json", TerminologyEntry),
+        patient_content=_read_json(data_dir, "patient_content.zh-CN.json", PatientContent),
+        data_quality_rules=_read_json(data_dir, "data_quality_rules.json", DataQualityRule),
+        clinical_rules=__import__("json").loads(
+            data_dir.joinpath("clinical_rules.json").read_text("utf-8")
+        ),
+        coverage=CoverageReport.model_validate_json(
+            data_dir.joinpath("coverage_report.json").read_text("utf-8")
+        ),
+    )
+    return KnowledgeReleaseRegistry(release=release)

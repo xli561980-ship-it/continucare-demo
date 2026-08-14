@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 from continucare.adapters.sqlite_store import SQLiteStore
-from continucare.agents.contracts import ClarificationKind, SemanticStatus
+from continucare.agents.contracts import SemanticStatus
 from continucare.care_agent import CareAgentService
 from continucare.care_agent.model_api import (
     SemanticModelConfig,
@@ -61,42 +61,26 @@ def test_governed_questionnaire_candidate_also_has_repository_match(tmp_path):
         item for item in interaction.result.candidates if item.link_id == "nausea-present"
     )
     assert nausea.terminology_match is not None
-    assert nausea.terminology_match.catalog_version == "1.0.0"
+    assert nausea.terminology_match.catalog_version == "cn-glp1-l1-v1.0.3"
     assert nausea.terminology_match.coding.code == "422587007"
     assert nausea.terminology_match.target_coding.code == "422587007"
 
 
-def test_new_symptom_is_confirmed_then_persisted_as_same_fhir_format(tmp_path):
-    store, engine, session, service = _service(tmp_path)
+def test_new_symptom_is_retained_as_raw_evidence_without_dynamic_observation(tmp_path):
+    store, _, session, service = _service(tmp_path)
     interaction = service.analyze(
         session.session_id,
         "我今天拉肚子。",
         received_at="2026-08-02T01:00:00+00:00",
     )
 
-    candidate = interaction.result.candidates[0]
-    assert candidate.link_id == "patient-reported-symptom::diarrhea"
-    assert candidate.origin.value == "patient_reported_new"
-    service.confirm_candidates(interaction.result.run_id, [candidate.candidate_id])
-
-    reports = store.list_active_symptom_reports(session.session_id)
-    assert [(item.concept_id, item.coding["code"]) for item in reports] == [
-        ("diarrhea", "62315008")
-    ]
-    completed = engine.complete(
-        session.session_id,
-        store.get_care_session(session.session_id).answers,
-    )
-    observation = next(item for item in completed.observations if item.code == "62315008")
-    assert observation.evidence.source_kind == "patient_reported_new"
-    assert observation.evidence.terminology_match["catalog_version"] == "1.0.0"
-    assert observation.resource["valueBoolean"] is True
-    assert observation.resource["derivedFrom"] == [
-        {"reference": f"QuestionnaireResponse/{completed.questionnaire_response['id']}"}
-    ]
+    assert interaction.result.candidates == []
+    assert store.list_active_symptom_reports(session.session_id) == []
+    assert store.get_agent_run(interaction.result.run_id).input_text == "我今天拉肚子。"
+    assert interaction.result.status == SemanticStatus.NO_MATCH
 
 
-def test_ambiguous_symptom_uses_button_concept_selection_before_storage(tmp_path):
+def test_legacy_ambiguous_symptom_is_not_exposed_by_cn_whitelist(tmp_path):
     store, _, session, service = _service(tmp_path)
     interaction = service.analyze(
         session.session_id,
@@ -104,23 +88,10 @@ def test_ambiguous_symptom_uses_button_concept_selection_before_storage(tmp_path
         received_at="2026-08-02T01:00:00+00:00",
     )
 
-    clarification = next(
-        item
-        for item in interaction.result.clarifications
-        if item.kind == ClarificationKind.TERMINOLOGY_DISAMBIGUATION
-    )
+    assert interaction.result.candidates == []
+    assert interaction.result.clarifications == []
     assert store.list_active_symptom_reports(session.session_id) == []
-
-    service.resolve_clarification(
-        interaction.result.run_id,
-        clarification.clarification_id,
-        "concept::postural-dizziness",
-    )
-
-    reports = store.list_active_symptom_reports(session.session_id)
-    assert [(item.concept_id, item.coding["code"]) for item in reports] == [
-        ("postural-dizziness", "407645004")
-    ]
+    assert store.get_agent_run(interaction.result.run_id).input_text == "我今天有点头晕。"
 
 
 def test_short_term_memory_is_daily_session_not_five_turns_and_completed_data_is_long_term(
@@ -140,10 +111,12 @@ def test_short_term_memory_is_daily_session_not_five_turns_and_completed_data_is
 
     symptom = service.analyze(
         session.session_id,
-        "我今天拉肚子。",
+        "我今天现在有点恶心。",
         received_at="2026-08-02T01:10:00+00:00",
     )
-    candidate = symptom.result.candidates[0]
+    candidate = next(
+        item for item in symptom.result.candidates if item.link_id == "nausea-present"
+    )
     service.confirm_candidates(symptom.result.run_id, [candidate.candidate_id])
     engine.complete(
         session.session_id,
@@ -160,7 +133,7 @@ def test_short_term_memory_is_daily_session_not_five_turns_and_completed_data_is
     remembered = {
         item.code: item for item in next_day.task.long_term_memory
     }
-    assert remembered["62315008"].source_kind == "patient_reported_new"
+    assert remembered["422587007"].source_kind == "pathway_monitored"
     assert next_day.task.conversation_context.recent_turns == []
 
 
@@ -170,12 +143,15 @@ def test_patient_page_daily_guard_reuses_completed_session_until_next_local_date
     store, engine, session, service = _service(tmp_path)
     symptom = service.analyze(
         session.session_id,
-        "我今天拉肚子。",
+        "我今天现在有点恶心。",
         received_at="2026-08-02T01:00:00+00:00",
+    )
+    candidate = next(
+        item for item in symptom.result.candidates if item.link_id == "nausea-present"
     )
     service.confirm_candidates(
         symptom.result.run_id,
-        [symptom.result.candidates[0].candidate_id],
+        [candidate.candidate_id],
     )
     completed = engine.complete(
         session.session_id,

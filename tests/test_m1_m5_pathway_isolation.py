@@ -445,6 +445,7 @@ def test_layer3_long_term_history_is_pathway_scoped(tmp_path):
         pathway_version=PATHWAY_A[1],
         questionnaire_canonical=load_glp1_questionnaire()["url"],
         questionnaire_version=load_glp1_questionnaire()["version"],
+        knowledge_release_id="cn-glp1-l1-v1.0.3",
         created_at="2026-08-03T10:00:00+00:00",
         updated_at="2026-08-03T10:00:00+00:00",
     )
@@ -502,6 +503,7 @@ def test_layer3_history_contamination_fails_before_agent_run_or_audit(tmp_path):
         pathway_version=PATHWAY_A[1],
         questionnaire_canonical=questionnaire["url"],
         questionnaire_version=questionnaire["version"],
+        knowledge_release_id="cn-glp1-l1-v1.0.3",
         created_at="2026-08-03T10:00:00+00:00",
         updated_at="2026-08-03T10:00:00+00:00",
     )
