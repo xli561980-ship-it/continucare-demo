@@ -17,7 +17,11 @@ from continucare.demo_data import DEMO_PATIENT_ID
 from continucare.fhir.r4 import FHIR_R4_VERSION
 from continucare.layer4 import Layer4InputReader
 from continucare.models import Observation
-from continucare.terminology import RepositoryTerminologyBackend
+from continucare.terminology import (
+    RepositoryTerminologyBackend,
+    load_cn_glp1_terminology_catalog,
+    terminology_catalog_sha256,
+)
 
 
 def _complete_answers() -> dict:
@@ -32,7 +36,7 @@ def _complete_answers() -> dict:
 
 def test_layer3_release_manifest_matches_runtime_versions():
     config = SemanticModelConfig()
-    catalog = RepositoryTerminologyBackend().catalog
+    catalog = RepositoryTerminologyBackend(load_cn_glp1_terminology_catalog()).catalog
 
     assert LAYER3_RELEASE.fhir_version == FHIR_R4_VERSION
     assert LAYER3_RELEASE.care_agent_version == CareSemanticAgent.VERSION
@@ -45,6 +49,10 @@ def test_layer3_release_manifest_matches_runtime_versions():
     assert LAYER3_RELEASE.language_prompt_version == config.language_prompt_version
     assert LAYER3_RELEASE.terminology_catalog_id == catalog.catalog_id
     assert LAYER3_RELEASE.terminology_catalog_version == catalog.version
+    assert LAYER3_RELEASE.terminology_catalog_sha256 == terminology_catalog_sha256(
+        catalog
+    )
+    assert LAYER3_RELEASE.knowledge_release_id == catalog.version
 
 
 def test_layer4_reader_consumes_only_final_resources_and_audit(tmp_path):
@@ -75,6 +83,13 @@ def test_layer4_reader_consumes_only_final_resources_and_audit(tmp_path):
     assert {item["id"] for item in snapshot.observations} == {
         item.observation_id for item in completed.observations
     }
+    assert snapshot.observation_knowledge_release_ids == {
+        (
+            f"Observation/{item.observation_id}/_history/"
+            f"{item.as_fhir().get('meta', {}).get('versionId') or '1'}"
+        ): LAYER3_RELEASE.knowledge_release_id
+        for item in completed.observations
+    }
     assert snapshot.audit_events
     assert set(snapshot.model_dump()) == {
         "contract_version",
@@ -83,6 +98,7 @@ def test_layer4_reader_consumes_only_final_resources_and_audit(tmp_path):
         "pathway_version",
         "questionnaire_responses",
         "observations",
+        "observation_knowledge_release_ids",
         "audit_events",
         "assembled_at",
     }

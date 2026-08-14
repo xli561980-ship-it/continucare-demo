@@ -65,7 +65,7 @@ def test_one_click_analysis_has_no_released_clinical_resource(tmp_path):
     interaction = load_manual_review_scenario(tmp_path / "analysis.db")
 
     assert len(interaction.result.candidates) == 1
-    assert interaction.result.candidates[0].link_id.endswith("::diarrhea")
+    assert interaction.result.candidates[0].link_id == "nausea-present"
     assert _counts(tmp_path / "analysis.db") == {
         table: 0 for table in CLINICAL_TABLES
     }
@@ -86,7 +86,7 @@ def test_patient_confirmation_atomically_creates_complete_evidence_and_manual_ta
     assert outcome.questionnaire_response["status"] == "completed"
     assert len(outcome.observations) == 1
     assert outcome.observations[0].resource["status"] == "final"
-    assert outcome.observations[0].code == "62315008"
+    assert outcome.observations[0].code == "422587007"
     assert outcome.task["priority"] == "routine"
     assert outcome.task["description"] == "人工复核患者已确认报告"
     assert "severity" not in outcome.task

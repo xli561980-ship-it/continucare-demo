@@ -25,6 +25,10 @@ from continucare.layer4 import (
 from continucare.layer4.contracts import DoctorReviewDecision, SummaryDraftStatus
 from continucare.layer4.manual_reviews import SEND_ENABLED
 from continucare.pathways import load_builtin_pathways
+from continucare.presentation import (
+    build_l5_governance_for_patient,
+    build_latest_l5_submission_view,
+)
 from continucare.services.competition_demo import (
     demo_write_guard,
     read_competition_demo,
@@ -32,6 +36,8 @@ from continucare.services.competition_demo import (
 from continucare.ui import (
     inject_global_styles,
     render_competition_progress,
+    render_l5_governance_panel,
+    render_l5_submission_panel,
     render_mode_badges,
 )
 
@@ -109,6 +115,14 @@ store = SQLiteStore(settings.db_path, initialize=False)
 repository = Layer4SQLiteStore(settings.db_path, initialize=False)
 patient = store.get_patient(DEMO_PATIENT_ID)
 pathway = load_builtin_pathways().get(patient.pathway_code if patient else "GLP1-14D")
+if patient is not None:
+    with st.expander("工程追溯：中国知识版本、原始回答与标准化 Observation"):
+        render_l5_governance_panel(
+            st, build_l5_governance_for_patient(store, DEMO_PATIENT_ID)
+        )
+        render_l5_submission_panel(
+            st, build_latest_l5_submission_view(store, DEMO_PATIENT_ID)
+        )
 briefs = ManualReviewBriefService(
     store,
     repository,

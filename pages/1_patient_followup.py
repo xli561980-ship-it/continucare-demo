@@ -32,7 +32,11 @@ from continucare.fhir.questionnaires import (
 )
 from continucare.fhir.r4 import FHIRValidationError
 from continucare.fhir.terminology import UCUM
-from continucare.presentation import observation_text
+from continucare.presentation import (
+    build_l5_governance_view,
+    build_latest_l5_submission_view,
+    observation_text,
+)
 from continucare.models import CareSessionStatus
 from continucare.ui import (
     PATIENT_EMERGENCY_NOTICE,
@@ -40,6 +44,8 @@ from continucare.ui import (
     inject_global_styles,
     patient_recorded_meaning,
     project_patient_followup,
+    render_l5_governance_panel,
+    render_l5_submission_panel,
     render_mode_badges,
 )
 from continucare.services.confirmed_review import ConfirmedReviewService
@@ -1166,6 +1172,20 @@ _render_patient_main(
     generation=progress.generation,
     run_id=progress.run_id,
 )
+
+if store is not None and session is not None and engine is not None:
+    with st.expander("工程追溯：中国知识版本、原始回答与标准化 Observation"):
+        governance = build_l5_governance_view(
+            session.pathway_code,
+            session.pathway_version,
+            knowledge_release_id=session.knowledge_release_id,
+            release=engine.knowledge_release,
+        )
+        render_l5_governance_panel(st, governance)
+        render_l5_submission_panel(
+            st,
+            build_latest_l5_submission_view(store, DEMO_PATIENT_ID),
+        )
 
 show_other_methods = bool(projection.decision_actions or progress.run_id is None)
 if (

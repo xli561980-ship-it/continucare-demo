@@ -56,6 +56,14 @@ def row_to_observation(row: sqlite3.Row) -> Observation:
                 if data.get("terminology_match_json")
                 else None
             ),
+            "metric_id": data.get("metric_id"),
+            "evidence_claim_ids": (
+                json.loads(data["evidence_claim_ids_json"])
+                if data.get("evidence_claim_ids_json")
+                else []
+            ),
+            "knowledge_release_id": data.get("knowledge_release_id"),
+            "observation_mapping_sha256": data.get("observation_mapping_sha256"),
         },
     )
 

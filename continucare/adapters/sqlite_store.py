@@ -61,10 +61,11 @@ class SQLiteStore:
                 """
                 INSERT INTO care_sessions (
                     session_id, patient_id, pathway_code, pathway_version,
-                    questionnaire_canonical, questionnaire_version, status,
+                    questionnaire_canonical, questionnaire_version,
+                    knowledge_release_id, status,
                     answers_json, questionnaire_response_id, created_at,
                     updated_at, completed_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     session.session_id,
@@ -73,6 +74,7 @@ class SQLiteStore:
                     session.pathway_version,
                     session.questionnaire_canonical,
                     session.questionnaire_version,
+                    session.knowledge_release_id,
                     session.status.value,
                     json.dumps(session.answers, ensure_ascii=False),
                     session.questionnaire_response_id,
@@ -152,9 +154,11 @@ class SQLiteStore:
                 INSERT INTO agent_runs (
                     run_id, task_id, patient_id, session_id, agent_name,
                     agent_version, mode, input_text, input_hash, output_json,
+                    knowledge_release_id, terminology_catalog_id,
+                    terminology_catalog_version, terminology_catalog_sha256,
                     status, model_provider, model_name, prompt_version,
                     started_at, completed_at, error_code
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     record.run_id,
@@ -167,6 +171,10 @@ class SQLiteStore:
                     record.input_text,
                     record.input_hash,
                     json.dumps(record.output_json, ensure_ascii=False),
+                    record.knowledge_release_id,
+                    record.terminology_catalog_id,
+                    record.terminology_catalog_version,
+                    record.terminology_catalog_sha256,
                     record.status,
                     record.model_provider,
                     record.model_name,
@@ -988,7 +996,9 @@ class SQLiteStore:
                     """
                     SELECT o.*, e.confidence_tier, e.evidence_text,
                            e.evidence_start, e.evidence_end, e.recorded_at,
-                           e.source_kind, e.terminology_match_json
+                           e.source_kind, e.terminology_match_json, e.metric_id,
+                           e.evidence_claim_ids_json, e.knowledge_release_id,
+                           e.observation_mapping_sha256
                     FROM fhir_observations o
                     JOIN observation_evidence e USING (observation_id)
                     WHERE o.questionnaire_response_id=?
@@ -1110,8 +1120,10 @@ class SQLiteStore:
                         INSERT INTO observation_evidence (
                             observation_id, confidence_tier, evidence_text,
                             evidence_start, evidence_end, recorded_at, source_kind,
-                            terminology_match_json
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            terminology_match_json, metric_id,
+                            evidence_claim_ids_json, knowledge_release_id,
+                            observation_mapping_sha256
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
                             item.observation_id,
@@ -1126,6 +1138,10 @@ class SQLiteStore:
                                 if item.evidence.terminology_match is not None
                                 else None
                             ),
+                            item.evidence.metric_id,
+                            payload(item.evidence.evidence_claim_ids),
+                            item.evidence.knowledge_release_id,
+                            item.evidence.observation_mapping_sha256,
                         ),
                     )
                     self._completion_bundle_fault(f"after_evidence:{index}")
@@ -1409,8 +1425,10 @@ class SQLiteStore:
                     INSERT INTO observation_evidence (
                         observation_id, confidence_tier, evidence_text,
                         evidence_start, evidence_end, recorded_at, source_kind,
-                        terminology_match_json
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        terminology_match_json, metric_id,
+                        evidence_claim_ids_json, knowledge_release_id,
+                        observation_mapping_sha256
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         item.observation_id,
@@ -1425,6 +1443,10 @@ class SQLiteStore:
                             if item.evidence.terminology_match is not None
                             else None
                         ),
+                        item.evidence.metric_id,
+                        json.dumps(item.evidence.evidence_claim_ids, ensure_ascii=False),
+                        item.evidence.knowledge_release_id,
+                        item.evidence.observation_mapping_sha256,
                     ),
                 )
             cursor = connection.execute(
@@ -1620,9 +1642,12 @@ class SQLiteStore:
                 """,
                 (patient_id, pathway_code, pathway_version),
             ).fetchall()
+        from continucare.knowledge import compile_questionnaire
+
+        questionnaire = compile_questionnaire()
         return [
             validate_questionnaire_response_against_questionnaire(
-                json.loads(row["resource_json"]), load_glp1_questionnaire()
+                json.loads(row["resource_json"]), questionnaire
             )
             for row in rows
         ]
@@ -1670,8 +1695,10 @@ class SQLiteStore:
                     INSERT INTO observation_evidence (
                         observation_id, confidence_tier, evidence_text,
                         evidence_start, evidence_end, recorded_at, source_kind,
-                        terminology_match_json
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        terminology_match_json, metric_id,
+                        evidence_claim_ids_json, knowledge_release_id,
+                        observation_mapping_sha256
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         item.observation_id,
@@ -1688,6 +1715,10 @@ class SQLiteStore:
                             if item.evidence.terminology_match is not None
                             else None
                         ),
+                        item.evidence.metric_id,
+                        json.dumps(item.evidence.evidence_claim_ids, ensure_ascii=False),
+                        item.evidence.knowledge_release_id,
+                        item.evidence.observation_mapping_sha256,
                     ),
                 )
 
@@ -1697,7 +1728,9 @@ class SQLiteStore:
                 """
                 SELECT o.*, e.confidence_tier, e.evidence_text,
                        e.evidence_start, e.evidence_end, e.recorded_at,
-                       e.source_kind, e.terminology_match_json
+                       e.source_kind, e.terminology_match_json, e.metric_id,
+                       e.evidence_claim_ids_json, e.knowledge_release_id,
+                       e.observation_mapping_sha256
                 FROM fhir_observations o
                 JOIN observation_evidence e USING (observation_id)
                 WHERE o.patient_id = ? ORDER BY o.effective_time DESC
@@ -1726,7 +1759,9 @@ class SQLiteStore:
                 """
                 SELECT o.*, e.confidence_tier, e.evidence_text,
                        e.evidence_start, e.evidence_end, e.recorded_at,
-                       e.source_kind, e.terminology_match_json
+                       e.source_kind, e.terminology_match_json, e.metric_id,
+                       e.evidence_claim_ids_json, e.knowledge_release_id,
+                       e.observation_mapping_sha256
                 FROM fhir_observations o
                 JOIN observation_evidence e USING (observation_id)
                 LEFT JOIN care_sessions c
@@ -1870,7 +1905,9 @@ class SQLiteStore:
                 """
                 SELECT o.*, e.confidence_tier, e.evidence_text,
                        e.evidence_start, e.evidence_end, e.recorded_at,
-                       e.source_kind, e.terminology_match_json
+                       e.source_kind, e.terminology_match_json, e.metric_id,
+                       e.evidence_claim_ids_json, e.knowledge_release_id,
+                       e.observation_mapping_sha256
                 FROM fhir_observations o
                 JOIN observation_evidence e USING (observation_id)
                 WHERE o.questionnaire_response_id = ? ORDER BY e.evidence_start
@@ -1885,7 +1922,9 @@ class SQLiteStore:
                 """
                 SELECT o.*, e.confidence_tier, e.evidence_text,
                        e.evidence_start, e.evidence_end, e.recorded_at,
-                       e.source_kind, e.terminology_match_json
+                       e.source_kind, e.terminology_match_json, e.metric_id,
+                       e.evidence_claim_ids_json, e.knowledge_release_id,
+                       e.observation_mapping_sha256
                 FROM fhir_observations o
                 JOIN observation_evidence e USING (observation_id)
                 WHERE o.observation_id = ?

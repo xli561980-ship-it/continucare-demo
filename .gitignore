@@ -8,7 +8,19 @@ __pycache__/
 data/
 !continucare/pathways/data/
 !continucare/pathways/data/**
+!continucare/knowledge/data/
+!continucare/knowledge/data/**
 continucare/pathways/data/**/__pycache__/
 continucare/pathways/data/**/*.pyc
+continucare/knowledge/data/**/__pycache__/
+continucare/knowledge/data/**/*.pyc
 tmp/
 .DS_Store
+
+# Clinical source packs are local verification workspaces and can contain
+# restricted or non-redistributable originals.
+output/clinical-source-pack-*/
+
+# Generated release candidates are reproducible from the tracked L1 registries.
+output/cn-glp1-l1-*/
+output/archive/cn-glp1-l1-*/

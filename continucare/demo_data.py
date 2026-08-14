@@ -7,7 +7,12 @@ DEMO_PATIENT_ID = "P-DEMO-001"
 NAUSEA_MESSAGE = "今天有点恶心，但是能正常喝水，没有吐。"
 QUANTIFIED_MESSAGE = "今天吐了一次，估计过去24小时喝水800毫升。"
 UNSTRUCTURED_MESSAGE = "我现在胸口很痛，还有点喘不过气。"
-MANUAL_REVIEW_MESSAGE = "我今天拉肚子。"
+# The competition story must stay inside the active CN Layer-3 fixed
+# Questionnaire whitelist.  Newly reported symptoms such as “拉肚子” remain
+# raw, unstructured evidence until a governed dynamic terminology release is
+# available; “恶心” is a fixed coded Questionnaire item and can therefore
+# produce the single patient-confirmable synthetic candidate used by the demo.
+MANUAL_REVIEW_MESSAGE = "我今天有恶心。"
 
 SCENARIOS = {
     "恶心记录": NAUSEA_MESSAGE,

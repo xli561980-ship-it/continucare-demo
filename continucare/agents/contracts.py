@@ -259,8 +259,10 @@ class SemanticTask(StrictModel):
     pathway_version: str
     questionnaire_canonical: str
     questionnaire_version: str
-    terminology_catalog_id: str | None = None
-    terminology_catalog_version: str | None = None
+    knowledge_release_id: str
+    terminology_catalog_id: str
+    terminology_catalog_version: str
+    terminology_catalog_sha256: str
     message_text: str = Field(min_length=1, max_length=4000)
     existing_answers: dict[str, Any] = Field(default_factory=dict)
     conversation_context: ConversationContext = Field(
@@ -408,6 +410,10 @@ class AgentRunRecord(StrictModel):
     mode: str
     input_text: str
     input_hash: str
+    knowledge_release_id: str | None = None
+    terminology_catalog_id: str | None = None
+    terminology_catalog_version: str | None = None
+    terminology_catalog_sha256: str | None = None
     output_json: dict[str, Any]
     status: str
     model_provider: str | None = None

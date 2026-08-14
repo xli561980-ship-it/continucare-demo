@@ -1,0 +1,555 @@
+{
+  "report_id": "cn-glp1-l1-v1.0.3-coverage",
+  "release_id": "cn-glp1-l1-v1.0.3",
+  "generated_at": "2026-08-14T01:10:29+02:00",
+  "jurisdiction": "CN",
+  "coverage_status": "incomplete",
+  "source_count": 18,
+  "verified_source_count": 17,
+  "cn_source_count": 9,
+  "product_record_count": 15,
+  "verified_product_record_count": 6,
+  "incomplete_product_record_count": 9,
+  "evidence_claim_count": 16,
+  "runtime_evidence_claim_count": 3,
+  "metric_count": 16,
+  "runtime_metric_count": 5,
+  "clinical_rule_count": 0,
+  "compiled_artifacts": [
+    "Questionnaire/glp1-14d-followup-v1",
+    "PlanDefinition/glp1-14d-followup-plan-v1",
+    "Contract/glp1_14d_observation_mapping.json"
+  ],
+  "fhir_r4_schema_status": "verified",
+  "production_clinical_runtime_eligible": false,
+  "products": [
+    {
+      "product_id": "cn-wegovy-sj20240020",
+      "agonist_type": "single_glp1_ra",
+      "indication_scope": [
+        "chronic_weight_management",
+        "cardiovascular_mace_risk_reduction"
+      ],
+      "verification_status": "incomplete",
+      "label_source_id": null,
+      "runtime_pathway_bound": true,
+      "coverage_note": "批准文号和规格已核验；最新完整中国说明书未取得。"
+    },
+    {
+      "product_id": "cn-wegovy-sj20240021",
+      "agonist_type": "single_glp1_ra",
+      "indication_scope": [
+        "chronic_weight_management",
+        "cardiovascular_mace_risk_reduction"
+      ],
+      "verification_status": "incomplete",
+      "label_source_id": null,
+      "runtime_pathway_bound": true,
+      "coverage_note": "批准文号和规格已核验；最新完整中国说明书未取得。"
+    },
+    {
+      "product_id": "cn-wegovy-sj20240022",
+      "agonist_type": "single_glp1_ra",
+      "indication_scope": [
+        "chronic_weight_management",
+        "cardiovascular_mace_risk_reduction"
+      ],
+      "verification_status": "incomplete",
+      "label_source_id": null,
+      "runtime_pathway_bound": true,
+      "coverage_note": "批准文号和规格已核验；最新完整中国说明书未取得。"
+    },
+    {
+      "product_id": "cn-wegovy-sj20240023",
+      "agonist_type": "single_glp1_ra",
+      "indication_scope": [
+        "chronic_weight_management",
+        "cardiovascular_mace_risk_reduction"
+      ],
+      "verification_status": "incomplete",
+      "label_source_id": null,
+      "runtime_pathway_bound": true,
+      "coverage_note": "批准文号和规格已核验；最新完整中国说明书未取得。"
+    },
+    {
+      "product_id": "cn-wegovy-sj20240024",
+      "agonist_type": "single_glp1_ra",
+      "indication_scope": [
+        "chronic_weight_management",
+        "cardiovascular_mace_risk_reduction"
+      ],
+      "verification_status": "incomplete",
+      "label_source_id": null,
+      "runtime_pathway_bound": true,
+      "coverage_note": "批准文号和规格已核验；最新完整中国说明书未取得。"
+    },
+    {
+      "product_id": "cn-mounjaro-prefilled-hj20240020",
+      "agonist_type": "dual_gip_glp1_agonist",
+      "indication_scope": [
+        "type_2_diabetes",
+        "chronic_weight_management",
+        "moderate_to_severe_obstructive_sleep_apnea"
+      ],
+      "verification_status": "incomplete",
+      "label_source_id": "lilly-cn-mounjaro-prefilled-label-2026-02-10",
+      "runtime_pathway_bound": false,
+      "coverage_note": "现行中文说明书已核验，但文号与规格的逐项原子证据待NMPA/NHSA补齐；尚无独立产品路径。"
+    },
+    {
+      "product_id": "cn-mounjaro-prefilled-hj20240021",
+      "agonist_type": "dual_gip_glp1_agonist",
+      "indication_scope": [
+        "type_2_diabetes",
+        "chronic_weight_management",
+        "moderate_to_severe_obstructive_sleep_apnea"
+      ],
+      "verification_status": "incomplete",
+      "label_source_id": "lilly-cn-mounjaro-prefilled-label-2026-02-10",
+      "runtime_pathway_bound": false,
+      "coverage_note": "现行中文说明书已核验，但文号与规格的逐项原子证据待NMPA/NHSA补齐；尚无独立产品路径。"
+    },
+    {
+      "product_id": "cn-mounjaro-prefilled-hj20240022",
+      "agonist_type": "dual_gip_glp1_agonist",
+      "indication_scope": [
+        "type_2_diabetes",
+        "chronic_weight_management",
+        "moderate_to_severe_obstructive_sleep_apnea"
+      ],
+      "verification_status": "incomplete",
+      "label_source_id": "lilly-cn-mounjaro-prefilled-label-2026-02-10",
+      "runtime_pathway_bound": false,
+      "coverage_note": "现行中文说明书已核验，但文号与规格的逐项原子证据待NMPA/NHSA补齐；尚无独立产品路径。"
+    },
+    {
+      "product_id": "cn-mounjaro-prefilled-hj20240023",
+      "agonist_type": "dual_gip_glp1_agonist",
+      "indication_scope": [
+        "type_2_diabetes",
+        "chronic_weight_management",
+        "moderate_to_severe_obstructive_sleep_apnea"
+      ],
+      "verification_status": "incomplete",
+      "label_source_id": "lilly-cn-mounjaro-prefilled-label-2026-02-10",
+      "runtime_pathway_bound": false,
+      "coverage_note": "现行中文说明书已核验，但文号与规格的逐项原子证据待NMPA/NHSA补齐；尚无独立产品路径。"
+    },
+    {
+      "product_id": "cn-mounjaro-multidose-hj20255004",
+      "agonist_type": "dual_gip_glp1_agonist",
+      "indication_scope": [
+        "type_2_diabetes",
+        "chronic_weight_management",
+        "moderate_to_severe_obstructive_sleep_apnea"
+      ],
+      "verification_status": "verified",
+      "label_source_id": "lilly-cn-mounjaro-multidose-label-2026-05-19",
+      "runtime_pathway_bound": false,
+      "coverage_note": "当前完整中文说明书及文号规格对应已核验；尚无独立产品路径。"
+    },
+    {
+      "product_id": "cn-mounjaro-multidose-hj20255005",
+      "agonist_type": "dual_gip_glp1_agonist",
+      "indication_scope": [
+        "type_2_diabetes",
+        "chronic_weight_management",
+        "moderate_to_severe_obstructive_sleep_apnea"
+      ],
+      "verification_status": "verified",
+      "label_source_id": "lilly-cn-mounjaro-multidose-label-2026-05-19",
+      "runtime_pathway_bound": false,
+      "coverage_note": "当前完整中文说明书及文号规格对应已核验；尚无独立产品路径。"
+    },
+    {
+      "product_id": "cn-mounjaro-multidose-hj20255006",
+      "agonist_type": "dual_gip_glp1_agonist",
+      "indication_scope": [
+        "type_2_diabetes",
+        "chronic_weight_management",
+        "moderate_to_severe_obstructive_sleep_apnea"
+      ],
+      "verification_status": "verified",
+      "label_source_id": "lilly-cn-mounjaro-multidose-label-2026-05-19",
+      "runtime_pathway_bound": false,
+      "coverage_note": "当前完整中文说明书及文号规格对应已核验；尚无独立产品路径。"
+    },
+    {
+      "product_id": "cn-mounjaro-multidose-hj20255007",
+      "agonist_type": "dual_gip_glp1_agonist",
+      "indication_scope": [
+        "type_2_diabetes",
+        "chronic_weight_management",
+        "moderate_to_severe_obstructive_sleep_apnea"
+      ],
+      "verification_status": "verified",
+      "label_source_id": "lilly-cn-mounjaro-multidose-label-2026-05-19",
+      "runtime_pathway_bound": false,
+      "coverage_note": "当前完整中文说明书及文号规格对应已核验；尚无独立产品路径。"
+    },
+    {
+      "product_id": "cn-trulicity-sj20190021",
+      "agonist_type": "single_glp1_ra",
+      "indication_scope": [
+        "type_2_diabetes"
+      ],
+      "verification_status": "verified",
+      "label_source_id": "lilly-cn-trulicity-label-2025-04-14",
+      "runtime_pathway_bound": false,
+      "coverage_note": "当前完整中文说明书已核验；不得外推到体重管理。"
+    },
+    {
+      "product_id": "cn-trulicity-sj20190022",
+      "agonist_type": "single_glp1_ra",
+      "indication_scope": [
+        "type_2_diabetes"
+      ],
+      "verification_status": "verified",
+      "label_source_id": "lilly-cn-trulicity-label-2025-04-14",
+      "runtime_pathway_bound": false,
+      "coverage_note": "当前完整中文说明书已核验；不得外推到体重管理。"
+    }
+  ],
+  "metrics": [
+    {
+      "metric_id": "nausea_present_now",
+      "questionnaire_link_ids": [
+        "nausea-present"
+      ],
+      "evidence_claim_ids": [
+        "continucare-glp1-14d-wording-2026-001",
+        "cn-wegovy-gi-monitoring-domain-2025-001"
+      ],
+      "cn_runtime_claim_ids": [
+        "continucare-glp1-14d-wording-2026-001",
+        "cn-wegovy-gi-monitoring-domain-2025-001"
+      ],
+      "observation_mapping_bound": true,
+      "synthetic_runtime_eligible": true,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "固定合成运营问卷；中国来源仅支持产品范围与胃肠道采集领域，不逐项验证本指标；明确否认同时保留在QuestionnaireResponse并映射为valueBoolean=false的Observation，与未回答明确区分。"
+    },
+    {
+      "metric_id": "nausea_severity_current",
+      "questionnaire_link_ids": [
+        "nausea-severity"
+      ],
+      "evidence_claim_ids": [
+        "continucare-glp1-14d-wording-2026-001",
+        "loinc-2.82-observation-codes-001",
+        "cn-wegovy-gi-monitoring-domain-2025-001"
+      ],
+      "cn_runtime_claim_ids": [
+        "continucare-glp1-14d-wording-2026-001",
+        "cn-wegovy-gi-monitoring-domain-2025-001"
+      ],
+      "observation_mapping_bound": true,
+      "synthetic_runtime_eligible": true,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "工程自拟措辞；LOINC 2.82编码已离线核验；中国来源仅支持胃肠道采集领域，不逐项验证当前程度。"
+    },
+    {
+      "metric_id": "vomiting_count_24h",
+      "questionnaire_link_ids": [
+        "vomiting-count-24h"
+      ],
+      "evidence_claim_ids": [
+        "continucare-glp1-14d-wording-2026-001",
+        "loinc-2.82-observation-codes-001",
+        "cn-wegovy-gi-monitoring-domain-2025-001"
+      ],
+      "cn_runtime_claim_ids": [
+        "continucare-glp1-14d-wording-2026-001",
+        "cn-wegovy-gi-monitoring-domain-2025-001"
+      ],
+      "observation_mapping_bound": true,
+      "synthetic_runtime_eligible": true,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "FDA背景证据已从运行时链移除；中国来源支持呕吐所属胃肠道采集领域，但不逐项验证24小时次数契约。"
+    },
+    {
+      "metric_id": "fluid_intake_24h_estimated",
+      "questionnaire_link_ids": [
+        "fluid-intake-24h-estimated"
+      ],
+      "evidence_claim_ids": [
+        "continucare-glp1-14d-wording-2026-001",
+        "loinc-2.82-observation-codes-001",
+        "cn-wegovy-gi-monitoring-domain-2025-001"
+      ],
+      "cn_runtime_claim_ids": [
+        "continucare-glp1-14d-wording-2026-001",
+        "cn-wegovy-gi-monitoring-domain-2025-001"
+      ],
+      "observation_mapping_bound": true,
+      "synthetic_runtime_eligible": true,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "纯工程数据采集指标；现有中国来源未逐项验证24小时液体摄入契约，不作脱水或风险解释。"
+    },
+    {
+      "metric_id": "abdominal_pain_present_now",
+      "questionnaire_link_ids": [
+        "abdominal-pain-present"
+      ],
+      "evidence_claim_ids": [
+        "continucare-glp1-14d-wording-2026-001",
+        "cn-wegovy-gi-monitoring-domain-2025-001"
+      ],
+      "cn_runtime_claim_ids": [
+        "continucare-glp1-14d-wording-2026-001",
+        "cn-wegovy-gi-monitoring-domain-2025-001"
+      ],
+      "observation_mapping_bound": true,
+      "synthetic_runtime_eligible": true,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "固定合成运营问卷；中国来源仅支持产品范围与胃肠道采集领域，不逐项验证本指标；明确否认同时保留在QuestionnaireResponse并映射为valueBoolean=false的Observation，与未回答明确区分。"
+    },
+    {
+      "metric_id": "pro_appetite_severity_7d",
+      "questionnaire_link_ids": [],
+      "evidence_claim_ids": [
+        "pro-ctcae-glp1-question-wording-001"
+      ],
+      "cn_runtime_claim_ids": [],
+      "observation_mapping_bound": false,
+      "synthetic_runtime_eligible": false,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "仅保留PRO-CTCAE指标与来源元数据；许可范围确认前，公开版不含原文、Questionnaire或运行时绑定。"
+    },
+    {
+      "metric_id": "pro_appetite_interference_7d",
+      "questionnaire_link_ids": [],
+      "evidence_claim_ids": [
+        "pro-ctcae-glp1-question-wording-001"
+      ],
+      "cn_runtime_claim_ids": [],
+      "observation_mapping_bound": false,
+      "synthetic_runtime_eligible": false,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "仅保留PRO-CTCAE指标与来源元数据；许可范围确认前，公开版不含原文、Questionnaire或运行时绑定。"
+    },
+    {
+      "metric_id": "pro_nausea_frequency_7d",
+      "questionnaire_link_ids": [],
+      "evidence_claim_ids": [
+        "pro-ctcae-glp1-question-wording-001"
+      ],
+      "cn_runtime_claim_ids": [],
+      "observation_mapping_bound": false,
+      "synthetic_runtime_eligible": false,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "仅保留PRO-CTCAE指标与来源元数据；许可范围确认前，公开版不含原文、Questionnaire或运行时绑定。"
+    },
+    {
+      "metric_id": "pro_nausea_severity_7d",
+      "questionnaire_link_ids": [],
+      "evidence_claim_ids": [
+        "pro-ctcae-glp1-question-wording-001"
+      ],
+      "cn_runtime_claim_ids": [],
+      "observation_mapping_bound": false,
+      "synthetic_runtime_eligible": false,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "仅保留PRO-CTCAE指标与来源元数据；许可范围确认前，公开版不含原文、Questionnaire或运行时绑定。"
+    },
+    {
+      "metric_id": "pro_vomiting_frequency_7d",
+      "questionnaire_link_ids": [],
+      "evidence_claim_ids": [
+        "pro-ctcae-glp1-question-wording-001"
+      ],
+      "cn_runtime_claim_ids": [],
+      "observation_mapping_bound": false,
+      "synthetic_runtime_eligible": false,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "仅保留PRO-CTCAE指标与来源元数据；许可范围确认前，公开版不含原文、Questionnaire或运行时绑定。"
+    },
+    {
+      "metric_id": "pro_vomiting_severity_7d",
+      "questionnaire_link_ids": [],
+      "evidence_claim_ids": [
+        "pro-ctcae-glp1-question-wording-001"
+      ],
+      "cn_runtime_claim_ids": [],
+      "observation_mapping_bound": false,
+      "synthetic_runtime_eligible": false,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "仅保留PRO-CTCAE指标与来源元数据；许可范围确认前，公开版不含原文、Questionnaire或运行时绑定。"
+    },
+    {
+      "metric_id": "pro_constipation_severity_7d",
+      "questionnaire_link_ids": [],
+      "evidence_claim_ids": [
+        "pro-ctcae-glp1-question-wording-001"
+      ],
+      "cn_runtime_claim_ids": [],
+      "observation_mapping_bound": false,
+      "synthetic_runtime_eligible": false,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "仅保留PRO-CTCAE指标与来源元数据；许可范围确认前，公开版不含原文、Questionnaire或运行时绑定。"
+    },
+    {
+      "metric_id": "pro_diarrhea_frequency_7d",
+      "questionnaire_link_ids": [],
+      "evidence_claim_ids": [
+        "pro-ctcae-glp1-question-wording-001"
+      ],
+      "cn_runtime_claim_ids": [],
+      "observation_mapping_bound": false,
+      "synthetic_runtime_eligible": false,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "仅保留PRO-CTCAE指标与来源元数据；许可范围确认前，公开版不含原文、Questionnaire或运行时绑定。"
+    },
+    {
+      "metric_id": "pro_abdominal_pain_frequency_7d",
+      "questionnaire_link_ids": [],
+      "evidence_claim_ids": [
+        "pro-ctcae-glp1-question-wording-001"
+      ],
+      "cn_runtime_claim_ids": [],
+      "observation_mapping_bound": false,
+      "synthetic_runtime_eligible": false,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "仅保留PRO-CTCAE指标与来源元数据；许可范围确认前，公开版不含原文、Questionnaire或运行时绑定。"
+    },
+    {
+      "metric_id": "pro_abdominal_pain_severity_7d",
+      "questionnaire_link_ids": [],
+      "evidence_claim_ids": [
+        "pro-ctcae-glp1-question-wording-001"
+      ],
+      "cn_runtime_claim_ids": [],
+      "observation_mapping_bound": false,
+      "synthetic_runtime_eligible": false,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "仅保留PRO-CTCAE指标与来源元数据；许可范围确认前，公开版不含原文、Questionnaire或运行时绑定。"
+    },
+    {
+      "metric_id": "pro_abdominal_pain_interference_7d",
+      "questionnaire_link_ids": [],
+      "evidence_claim_ids": [
+        "pro-ctcae-glp1-question-wording-001"
+      ],
+      "cn_runtime_claim_ids": [],
+      "observation_mapping_bound": false,
+      "synthetic_runtime_eligible": false,
+      "clinical_runtime_eligible": false,
+      "coverage_note": "仅保留PRO-CTCAE指标与来源元数据；许可范围确认前，公开版不含原文、Questionnaire或运行时绑定。"
+    }
+  ],
+  "gaps": [
+    {
+      "gap_id": "GAP-RUNTIME-METRIC-ITEM-EVIDENCE",
+      "category": "evidence",
+      "status": "blocked_external",
+      "description": "五个合成运行指标有中国产品范围/胃肠道领域证据和工程契约，但诺和盈现有公告未逐项验证当前恶心程度、24小时呕吐次数、24小时液体摄入或当前腹痛。",
+      "affected_ids": [
+        "nausea_present_now",
+        "nausea_severity_current",
+        "vomiting_count_24h",
+        "fluid_intake_24h_estimated",
+        "abdominal_pain_present_now"
+      ],
+      "required_action": "取得现行完整中国说明书或其他产品特异中国一手证据并建立逐指标定位；在此之前仅限合成工程采集，clinical_runtime_eligible保持false。",
+      "blocks_clinical_use": true
+    },
+    {
+      "gap_id": "GAP-MOUNJARO-PREFILLED-ATOMIC-AUTHORIZATION",
+      "category": "product",
+      "status": "blocked_external",
+      "description": "穆峰达一次性预填充笔说明书分别列出4个规格和4个批准文号，但没有提供逐项对应证据；4条记录保持incomplete。",
+      "affected_ids": [
+        "cn-mounjaro-prefilled-hj20240020",
+        "cn-mounjaro-prefilled-hj20240021",
+        "cn-mounjaro-prefilled-hj20240022",
+        "cn-mounjaro-prefilled-hj20240023"
+      ],
+      "required_action": "取得NMPA或NHSA按批准文号的逐条查询证据，复核候选文号—规格映射后才能升级verified。",
+      "blocks_clinical_use": true
+    },
+    {
+      "gap_id": "GAP-CN-LABEL-WEGOVY",
+      "category": "source",
+      "status": "blocked_external",
+      "description": "尚未取得并核验诺和盈2025-12-22适应证更新后的完整中国法定说明书。",
+      "affected_ids": [
+        "cn-wegovy-sj20240020",
+        "cn-wegovy-sj20240021",
+        "cn-wegovy-sj20240022",
+        "cn-wegovy-sj20240023",
+        "cn-wegovy-sj20240024"
+      ],
+      "required_action": "由NMPA查询或上市许可持有人取得完整现行说明书并计算SHA-256。",
+      "blocks_clinical_use": true
+    },
+    {
+      "gap_id": "GAP-CN-PRODUCT-CATALOG",
+      "category": "product",
+      "status": "open",
+      "description": "15条记录覆盖诺和盈、穆峰达和度易达，仍不代表中国全部GLP-1产品；诺和泰已核文号但缺最新版全文。",
+      "affected_ids": [],
+      "required_action": "继续按一批准文号一记录核验中国现行说明书、适应证和人群。",
+      "blocks_clinical_use": true
+    },
+    {
+      "gap_id": "GAP-PRO-PERMISSION-AND-BINDING",
+      "category": "runtime",
+      "status": "blocked_external",
+      "description": "PRO-CTCAE项目使用与衍生全文再分发范围尚未确认；公开Release仅保留来源和指标元数据，不含原文、Questionnaire、Pathway或Observation Mapping。",
+      "affected_ids": [
+        "nci-pro-ctcae-zh-cn-glp1-custom-2026-08-13",
+        "pro_appetite_severity_7d",
+        "pro_appetite_interference_7d",
+        "pro_nausea_frequency_7d",
+        "pro_nausea_severity_7d",
+        "pro_vomiting_frequency_7d",
+        "pro_vomiting_severity_7d",
+        "pro_constipation_severity_7d",
+        "pro_diarrhea_frequency_7d",
+        "pro_abdominal_pain_frequency_7d",
+        "pro_abdominal_pain_severity_7d",
+        "pro_abdominal_pain_interference_7d"
+      ],
+      "required_action": "留存适用于本项目和交付方式的许可记录；获准后在新的Release中由受控本地overlay原样生成独立draft synthetic Pathway与确定性映射。",
+      "blocks_clinical_use": true
+    },
+    {
+      "gap_id": "GAP-L3-CN-WHITELIST",
+      "category": "runtime",
+      "status": "blocked_external",
+      "description": "CN L1已编译并锁定只含5个固定linkId的L3术语白名单，动态concepts为空；旧DailyMed目录不能进入中国路径Observation。",
+      "affected_ids": [
+        "continucare.terminology.data.glp1_symptom_catalog_v1"
+      ],
+      "required_action": "术语许可、Edition、中国适用性和人工审核完成后，才可在新Release中增加动态concepts；未命中内容仅保留原文。",
+      "blocks_clinical_use": true
+    },
+    {
+      "gap_id": "GAP-SNOMED-CN-LICENSE",
+      "category": "terminology",
+      "status": "blocked_external",
+      "description": "固定问卷仍含两个SNOMED代码，但中国许可和可分发Edition尚未核验；动态目录已禁写Observation。",
+      "affected_ids": [],
+      "required_action": "由术语负责人完成许可和Edition核验，或将固定项改用本地受控代码系统。",
+      "blocks_clinical_use": true
+    },
+    {
+      "gap_id": "GAP-FHIR-VALIDATOR-CLI",
+      "category": "runtime",
+      "status": "planned",
+      "description": "已通过FHIR R4模型与官方JSON Schema，尚未运行完整HL7 FHIR Validator CLI/IG校验。",
+      "affected_ids": [],
+      "required_action": "在机构实施阶段添加FHIR Validator CLI及目标Implementation Guide。",
+      "blocks_clinical_use": true
+    },
+    {
+      "gap_id": "GAP-CLINICAL-APPROVAL",
+      "category": "clinical_review",
+      "status": "blocked_external",
+      "description": "没有临床、药学和术语审批；clinical_rules保持为空。",
+      "affected_ids": [],
+      "required_action": "由目标机构完成临床、药学、术语、法务和信息安全审批。",
+      "blocks_clinical_use": true
+    }
+  ]
+}
