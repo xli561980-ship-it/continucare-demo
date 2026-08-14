@@ -1,0 +1,550 @@
+[
+  {
+    "product_id": "cn-wegovy-sj20240020",
+    "jurisdiction": "CN",
+    "active_ingredient": "司美格鲁肽",
+    "brand_name_zh": "诺和盈",
+    "agonist_type": "single_glp1_ra",
+    "marketing_authorization_holder": "Novo Nordisk A/S（丹麦诺和诺德公司）",
+    "dosage_form": "注射剂（预填充注射笔）",
+    "strengths": ["3.2mg/ml，3ml"],
+    "strength": "3.2mg/ml，3ml",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字SJ20240020"],
+    "approval_number": "国药准字SJ20240020",
+    "approval_source_ids": ["nhsa-cn-drug-code-registry-wegovy-2026-08-13"],
+    "approval_status": "approved",
+    "approved_indications": ["chronic_weight_management", "cardiovascular_mace_risk_reduction"],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "chronic_weight_management",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["作为低热量饮食和增加体力活动的辅助治疗；成人初始BMI≥30kg/m²，或BMI≥27且<30kg/m²并至少有一种体重相关合并症；以现行完整中国说明书为准"]
+      },
+      {
+        "indication": "cardiovascular_mace_risk_reduction",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["已有心血管疾病且BMI≥27kg/m²成人；以2025-12-22上市许可持有人公告和待取得的现行完整中国说明书为准"]
+      }
+    ],
+    "label_source_id": null,
+    "label_version": null,
+    "verified_at": "2026-08-13",
+    "verification_status": "incomplete"
+  },
+  {
+    "product_id": "cn-wegovy-sj20240021",
+    "jurisdiction": "CN",
+    "active_ingredient": "司美格鲁肽",
+    "brand_name_zh": "诺和盈",
+    "agonist_type": "single_glp1_ra",
+    "marketing_authorization_holder": "Novo Nordisk A/S（丹麦诺和诺德公司）",
+    "dosage_form": "注射剂（预填充注射笔）",
+    "strengths": ["2.27mg/ml，3ml"],
+    "strength": "2.27mg/ml，3ml",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字SJ20240021"],
+    "approval_number": "国药准字SJ20240021",
+    "approval_source_ids": ["nhsa-cn-drug-code-registry-wegovy-2026-08-13"],
+    "approval_status": "approved",
+    "approved_indications": ["chronic_weight_management", "cardiovascular_mace_risk_reduction"],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "chronic_weight_management",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["作为低热量饮食和增加体力活动的辅助治疗；成人初始BMI≥30kg/m²，或BMI≥27且<30kg/m²并至少有一种体重相关合并症；以现行完整中国说明书为准"]
+      },
+      {
+        "indication": "cardiovascular_mace_risk_reduction",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["已有心血管疾病且BMI≥27kg/m²成人；以2025-12-22上市许可持有人公告和待取得的现行完整中国说明书为准"]
+      }
+    ],
+    "label_source_id": null,
+    "label_version": null,
+    "verified_at": "2026-08-13",
+    "verification_status": "incomplete"
+  },
+  {
+    "product_id": "cn-wegovy-sj20240022",
+    "jurisdiction": "CN",
+    "active_ingredient": "司美格鲁肽",
+    "brand_name_zh": "诺和盈",
+    "agonist_type": "single_glp1_ra",
+    "marketing_authorization_holder": "Novo Nordisk A/S（丹麦诺和诺德公司）",
+    "dosage_form": "注射剂（预填充注射笔）",
+    "strengths": ["1.34mg/ml，3ml"],
+    "strength": "1.34mg/ml，3ml",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字SJ20240022"],
+    "approval_number": "国药准字SJ20240022",
+    "approval_source_ids": ["nhsa-cn-drug-code-registry-wegovy-2026-08-13"],
+    "approval_status": "approved",
+    "approved_indications": ["chronic_weight_management", "cardiovascular_mace_risk_reduction"],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "chronic_weight_management",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["作为低热量饮食和增加体力活动的辅助治疗；成人初始BMI≥30kg/m²，或BMI≥27且<30kg/m²并至少有一种体重相关合并症；以现行完整中国说明书为准"]
+      },
+      {
+        "indication": "cardiovascular_mace_risk_reduction",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["已有心血管疾病且BMI≥27kg/m²成人；以2025-12-22上市许可持有人公告和待取得的现行完整中国说明书为准"]
+      }
+    ],
+    "label_source_id": null,
+    "label_version": null,
+    "verified_at": "2026-08-13",
+    "verification_status": "incomplete"
+  },
+  {
+    "product_id": "cn-wegovy-sj20240023",
+    "jurisdiction": "CN",
+    "active_ingredient": "司美格鲁肽",
+    "brand_name_zh": "诺和盈",
+    "agonist_type": "single_glp1_ra",
+    "marketing_authorization_holder": "Novo Nordisk A/S（丹麦诺和诺德公司）",
+    "dosage_form": "注射剂（预填充注射笔）",
+    "strengths": ["1.34mg/ml，1.5ml"],
+    "strength": "1.34mg/ml，1.5ml",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字SJ20240023"],
+    "approval_number": "国药准字SJ20240023",
+    "approval_source_ids": ["nhsa-cn-drug-code-registry-wegovy-2026-08-13"],
+    "approval_status": "approved",
+    "approved_indications": ["chronic_weight_management", "cardiovascular_mace_risk_reduction"],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "chronic_weight_management",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["作为低热量饮食和增加体力活动的辅助治疗；成人初始BMI≥30kg/m²，或BMI≥27且<30kg/m²并至少有一种体重相关合并症；以现行完整中国说明书为准"]
+      },
+      {
+        "indication": "cardiovascular_mace_risk_reduction",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["已有心血管疾病且BMI≥27kg/m²成人；以2025-12-22上市许可持有人公告和待取得的现行完整中国说明书为准"]
+      }
+    ],
+    "label_source_id": null,
+    "label_version": null,
+    "verified_at": "2026-08-13",
+    "verification_status": "incomplete"
+  },
+  {
+    "product_id": "cn-wegovy-sj20240024",
+    "jurisdiction": "CN",
+    "active_ingredient": "司美格鲁肽",
+    "brand_name_zh": "诺和盈",
+    "agonist_type": "single_glp1_ra",
+    "marketing_authorization_holder": "Novo Nordisk A/S（丹麦诺和诺德公司）",
+    "dosage_form": "注射剂（预填充注射笔）",
+    "strengths": ["0.68mg/ml，1.5ml"],
+    "strength": "0.68mg/ml，1.5ml",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字SJ20240024"],
+    "approval_number": "国药准字SJ20240024",
+    "approval_source_ids": ["nhsa-cn-drug-code-registry-wegovy-2026-08-13"],
+    "approval_status": "approved",
+    "approved_indications": ["chronic_weight_management", "cardiovascular_mace_risk_reduction"],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "chronic_weight_management",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["作为低热量饮食和增加体力活动的辅助治疗；成人初始BMI≥30kg/m²，或BMI≥27且<30kg/m²并至少有一种体重相关合并症；以现行完整中国说明书为准"]
+      },
+      {
+        "indication": "cardiovascular_mace_risk_reduction",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["已有心血管疾病且BMI≥27kg/m²成人；以2025-12-22上市许可持有人公告和待取得的现行完整中国说明书为准"]
+      }
+    ],
+    "label_source_id": null,
+    "label_version": null,
+    "verified_at": "2026-08-13",
+    "verification_status": "incomplete"
+  },
+  {
+    "product_id": "cn-mounjaro-prefilled-hj20240020",
+    "jurisdiction": "CN",
+    "active_ingredient": "替尔泊肽",
+    "brand_name_zh": "穆峰达",
+    "agonist_type": "dual_gip_glp1_agonist",
+    "marketing_authorization_holder": "Eli Lilly Nederland B.V.",
+    "dosage_form": "注射剂（一次性预填充注射笔，带注射针）",
+    "strengths": ["0.5ml:2.5mg"],
+    "strength": "0.5ml:2.5mg",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字HJ20240020"],
+    "approval_number": "国药准字HJ20240020",
+    "approval_source_ids": ["lilly-cn-mounjaro-prefilled-label-2026-02-10"],
+    "approval_status": "approved",
+    "approved_indications": [
+      "type_2_diabetes",
+      "chronic_weight_management",
+      "moderate_to_severe_obstructive_sleep_apnea"
+    ],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "type_2_diabetes",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在饮食和运动基础上，改善成人2型糖尿病患者的血糖控制；以一次性预填充笔现行中国说明书为准"]
+      },
+      {
+        "indication": "chronic_weight_management",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人BMI≥28kg/m²，或BMI≥24kg/m²并至少有一种体重相关合并症"]
+      },
+      {
+        "indication": "moderate_to_severe_obstructive_sleep_apnea",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人肥胖患者的中度至重度阻塞性睡眠呼吸暂停"]
+      }
+    ],
+    "label_source_id": "lilly-cn-mounjaro-prefilled-label-2026-02-10",
+    "label_version": "2026-02-10",
+    "verified_at": "2026-08-13",
+    "verification_status": "incomplete"
+  },
+  {
+    "product_id": "cn-mounjaro-prefilled-hj20240021",
+    "jurisdiction": "CN",
+    "active_ingredient": "替尔泊肽",
+    "brand_name_zh": "穆峰达",
+    "agonist_type": "dual_gip_glp1_agonist",
+    "marketing_authorization_holder": "Eli Lilly Nederland B.V.",
+    "dosage_form": "注射剂（一次性预填充注射笔，带注射针）",
+    "strengths": ["0.5ml:7.5mg"],
+    "strength": "0.5ml:7.5mg",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字HJ20240021"],
+    "approval_number": "国药准字HJ20240021",
+    "approval_source_ids": ["lilly-cn-mounjaro-prefilled-label-2026-02-10"],
+    "approval_status": "approved",
+    "approved_indications": [
+      "type_2_diabetes",
+      "chronic_weight_management",
+      "moderate_to_severe_obstructive_sleep_apnea"
+    ],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "type_2_diabetes",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在饮食和运动基础上，改善成人2型糖尿病患者的血糖控制；以一次性预填充笔现行中国说明书为准"]
+      },
+      {
+        "indication": "chronic_weight_management",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人BMI≥28kg/m²，或BMI≥24kg/m²并至少有一种体重相关合并症"]
+      },
+      {
+        "indication": "moderate_to_severe_obstructive_sleep_apnea",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人肥胖患者的中度至重度阻塞性睡眠呼吸暂停"]
+      }
+    ],
+    "label_source_id": "lilly-cn-mounjaro-prefilled-label-2026-02-10",
+    "label_version": "2026-02-10",
+    "verified_at": "2026-08-13",
+    "verification_status": "incomplete"
+  },
+  {
+    "product_id": "cn-mounjaro-prefilled-hj20240022",
+    "jurisdiction": "CN",
+    "active_ingredient": "替尔泊肽",
+    "brand_name_zh": "穆峰达",
+    "agonist_type": "dual_gip_glp1_agonist",
+    "marketing_authorization_holder": "Eli Lilly Nederland B.V.",
+    "dosage_form": "注射剂（一次性预填充注射笔，带注射针）",
+    "strengths": ["0.5ml:10mg"],
+    "strength": "0.5ml:10mg",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字HJ20240022"],
+    "approval_number": "国药准字HJ20240022",
+    "approval_source_ids": ["lilly-cn-mounjaro-prefilled-label-2026-02-10"],
+    "approval_status": "approved",
+    "approved_indications": ["type_2_diabetes", "chronic_weight_management", "moderate_to_severe_obstructive_sleep_apnea"],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "type_2_diabetes",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在饮食和运动基础上，改善成人2型糖尿病患者的血糖控制；以一次性预填充笔现行中国说明书为准"]
+      },
+      {
+        "indication": "chronic_weight_management",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人BMI≥28kg/m²，或BMI≥24kg/m²并至少有一种体重相关合并症"]
+      },
+      {
+        "indication": "moderate_to_severe_obstructive_sleep_apnea",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人肥胖患者的中度至重度阻塞性睡眠呼吸暂停"]
+      }
+    ],
+    "label_source_id": "lilly-cn-mounjaro-prefilled-label-2026-02-10",
+    "label_version": "2026-02-10",
+    "verified_at": "2026-08-13",
+    "verification_status": "incomplete"
+  },
+  {
+    "product_id": "cn-mounjaro-prefilled-hj20240023",
+    "jurisdiction": "CN",
+    "active_ingredient": "替尔泊肽",
+    "brand_name_zh": "穆峰达",
+    "agonist_type": "dual_gip_glp1_agonist",
+    "marketing_authorization_holder": "Eli Lilly Nederland B.V.",
+    "dosage_form": "注射剂（一次性预填充注射笔，带注射针）",
+    "strengths": ["0.5ml:5mg"],
+    "strength": "0.5ml:5mg",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字HJ20240023"],
+    "approval_number": "国药准字HJ20240023",
+    "approval_source_ids": ["lilly-cn-mounjaro-prefilled-label-2026-02-10"],
+    "approval_status": "approved",
+    "approved_indications": ["type_2_diabetes", "chronic_weight_management", "moderate_to_severe_obstructive_sleep_apnea"],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "type_2_diabetes",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在饮食和运动基础上，改善成人2型糖尿病患者的血糖控制；以一次性预填充笔现行中国说明书为准"]
+      },
+      {
+        "indication": "chronic_weight_management",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人BMI≥28kg/m²，或BMI≥24kg/m²并至少有一种体重相关合并症"]
+      },
+      {
+        "indication": "moderate_to_severe_obstructive_sleep_apnea",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人肥胖患者的中度至重度阻塞性睡眠呼吸暂停"]
+      }
+    ],
+    "label_source_id": "lilly-cn-mounjaro-prefilled-label-2026-02-10",
+    "label_version": "2026-02-10",
+    "verified_at": "2026-08-13",
+    "verification_status": "incomplete"
+  },
+  {
+    "product_id": "cn-mounjaro-multidose-hj20255004",
+    "jurisdiction": "CN",
+    "active_ingredient": "替尔泊肽",
+    "brand_name_zh": "穆峰达",
+    "agonist_type": "dual_gip_glp1_agonist",
+    "marketing_authorization_holder": "Eli Lilly Nederland B.V.",
+    "dosage_form": "注射剂（多剂量预装笔式注射器，每支4剂）",
+    "strengths": ["2.4ml:40mg（每剂0.6ml:10mg）"],
+    "strength": "2.4ml:40mg（每剂0.6ml:10mg）",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字HJ20255004"],
+    "approval_number": "国药准字HJ20255004",
+    "approval_source_ids": ["nhsa-cn-mounjaro-public-2025", "lilly-cn-mounjaro-multidose-label-2026-05-19"],
+    "approval_status": "approved",
+    "approved_indications": ["type_2_diabetes", "chronic_weight_management", "moderate_to_severe_obstructive_sleep_apnea"],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "type_2_diabetes",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["饮食和运动基础上，二甲双胍和/或磺脂类药物控制不佳的成人2型糖尿病；或与胰岛素联合（可伴口服药）；以多剂量笔现行中国说明书为准"]
+      },
+      {
+        "indication": "chronic_weight_management",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人BMI≥28kg/m²，或BMI≥24kg/m²并至少有一种体重相关合并症"]
+      },
+      {
+        "indication": "moderate_to_severe_obstructive_sleep_apnea",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人肥胖患者的中度至重度阻塞性睡眠呼吸暂停"]
+      }
+    ],
+    "label_source_id": "lilly-cn-mounjaro-multidose-label-2026-05-19",
+    "label_version": "2026-05-19",
+    "verified_at": "2026-08-13",
+    "verification_status": "verified"
+  },
+  {
+    "product_id": "cn-mounjaro-multidose-hj20255005",
+    "jurisdiction": "CN",
+    "active_ingredient": "替尔泊肽",
+    "brand_name_zh": "穆峰达",
+    "agonist_type": "dual_gip_glp1_agonist",
+    "marketing_authorization_holder": "Eli Lilly Nederland B.V.",
+    "dosage_form": "注射剂（多剂量预装笔式注射器，每支4剂）",
+    "strengths": ["2.4ml:30mg（每剂0.6ml:7.5mg）"],
+    "strength": "2.4ml:30mg（每剂0.6ml:7.5mg）",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字HJ20255005"],
+    "approval_number": "国药准字HJ20255005",
+    "approval_source_ids": ["nhsa-cn-mounjaro-public-2025", "lilly-cn-mounjaro-multidose-label-2026-05-19"],
+    "approval_status": "approved",
+    "approved_indications": ["type_2_diabetes", "chronic_weight_management", "moderate_to_severe_obstructive_sleep_apnea"],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "type_2_diabetes",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["饮食和运动基础上，二甲双胍和/或磺脂类药物控制不佳的成人2型糖尿病；或与胰岛素联合（可伴口服药）；以多剂量笔现行中国说明书为准"]
+      },
+      {
+        "indication": "chronic_weight_management",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人BMI≥28kg/m²，或BMI≥24kg/m²并至少有一种体重相关合并症"]
+      },
+      {
+        "indication": "moderate_to_severe_obstructive_sleep_apnea",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人肥胖患者的中度至重度阻塞性睡眠呼吸暂停"]
+      }
+    ],
+    "label_source_id": "lilly-cn-mounjaro-multidose-label-2026-05-19",
+    "label_version": "2026-05-19",
+    "verified_at": "2026-08-13",
+    "verification_status": "verified"
+  },
+  {
+    "product_id": "cn-mounjaro-multidose-hj20255006",
+    "jurisdiction": "CN",
+    "active_ingredient": "替尔泊肽",
+    "brand_name_zh": "穆峰达",
+    "agonist_type": "dual_gip_glp1_agonist",
+    "marketing_authorization_holder": "Eli Lilly Nederland B.V.",
+    "dosage_form": "注射剂（多剂量预装笔式注射器，每支4剂）",
+    "strengths": ["2.4ml:20mg（每剂0.6ml:5mg）"],
+    "strength": "2.4ml:20mg（每剂0.6ml:5mg）",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字HJ20255006"],
+    "approval_number": "国药准字HJ20255006",
+    "approval_source_ids": ["nhsa-cn-mounjaro-public-2025", "lilly-cn-mounjaro-multidose-label-2026-05-19"],
+    "approval_status": "approved",
+    "approved_indications": ["type_2_diabetes", "chronic_weight_management", "moderate_to_severe_obstructive_sleep_apnea"],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "type_2_diabetes",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["饮食和运动基础上，二甲双胍和/或磺脂类药物控制不佳的成人2型糖尿病；或与胰岛素联合（可伴口服药）；以多剂量笔现行中国说明书为准"]
+      },
+      {
+        "indication": "chronic_weight_management",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人BMI≥28kg/m²，或BMI≥24kg/m²并至少有一种体重相关合并症"]
+      },
+      {
+        "indication": "moderate_to_severe_obstructive_sleep_apnea",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人肥胖患者的中度至重度阻塞性睡眠呼吸暂停"]
+      }
+    ],
+    "label_source_id": "lilly-cn-mounjaro-multidose-label-2026-05-19",
+    "label_version": "2026-05-19",
+    "verified_at": "2026-08-13",
+    "verification_status": "verified"
+  },
+  {
+    "product_id": "cn-mounjaro-multidose-hj20255007",
+    "jurisdiction": "CN",
+    "active_ingredient": "替尔泊肽",
+    "brand_name_zh": "穆峰达",
+    "agonist_type": "dual_gip_glp1_agonist",
+    "marketing_authorization_holder": "Eli Lilly Nederland B.V.",
+    "dosage_form": "注射剂（多剂量预装笔式注射器，每支4剂）",
+    "strengths": ["2.4ml:10mg（每剂0.6ml:2.5mg）"],
+    "strength": "2.4ml:10mg（每剂0.6ml:2.5mg）",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字HJ20255007"],
+    "approval_number": "国药准字HJ20255007",
+    "approval_source_ids": ["nhsa-cn-mounjaro-public-2025", "lilly-cn-mounjaro-multidose-label-2026-05-19"],
+    "approval_status": "approved",
+    "approved_indications": ["type_2_diabetes", "chronic_weight_management", "moderate_to_severe_obstructive_sleep_apnea"],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "type_2_diabetes",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["饮食和运动基础上，二甲双胍和/或磺脂类药物控制不佳的成人2型糖尿病；或与胰岛素联合（可伴口服药）；以多剂量笔现行中国说明书为准"]
+      },
+      {
+        "indication": "chronic_weight_management",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人BMI≥28kg/m²，或BMI≥24kg/m²并至少有一种体重相关合并症"]
+      },
+      {
+        "indication": "moderate_to_severe_obstructive_sleep_apnea",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["在控制饮食和增加运动基础上；成人肥胖患者的中度至重度阻塞性睡眠呼吸暂停"]
+      }
+    ],
+    "label_source_id": "lilly-cn-mounjaro-multidose-label-2026-05-19",
+    "label_version": "2026-05-19",
+    "verified_at": "2026-08-13",
+    "verification_status": "verified"
+  },
+  {
+    "product_id": "cn-trulicity-sj20190021",
+    "jurisdiction": "CN",
+    "active_ingredient": "度拉糖肽",
+    "brand_name_zh": "度易达",
+    "agonist_type": "single_glp1_ra",
+    "marketing_authorization_holder": "Eli Lilly Nederland B.V.",
+    "dosage_form": "注射剂（预填充注射笔）",
+    "strengths": ["0.75mg:0.5ml"],
+    "strength": "0.75mg:0.5ml",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字SJ20190021"],
+    "approval_number": "国药准字SJ20190021",
+    "approval_source_ids": ["lilly-cn-trulicity-label-2025-04-14"],
+    "approval_status": "approved",
+    "approved_indications": ["type_2_diabetes"],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "type_2_diabetes",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["成人2型糖尿病患者血糖控制；单药或说明书列明的联合治疗范围"]
+      }
+    ],
+    "label_source_id": "lilly-cn-trulicity-label-2025-04-14",
+    "label_version": "2025-04-14",
+    "verified_at": "2026-08-13",
+    "verification_status": "verified"
+  },
+  {
+    "product_id": "cn-trulicity-sj20190022",
+    "jurisdiction": "CN",
+    "active_ingredient": "度拉糖肽",
+    "brand_name_zh": "度易达",
+    "agonist_type": "single_glp1_ra",
+    "marketing_authorization_holder": "Eli Lilly Nederland B.V.",
+    "dosage_form": "注射剂（预填充注射笔）",
+    "strengths": ["1.5mg:0.5ml"],
+    "strength": "1.5mg:0.5ml",
+    "administration_route": "皮下注射",
+    "approval_numbers": ["国药准字SJ20190022"],
+    "approval_number": "国药准字SJ20190022",
+    "approval_source_ids": ["lilly-cn-trulicity-label-2025-04-14"],
+    "approval_status": "approved",
+    "approved_indications": ["type_2_diabetes"],
+    "approved_populations": ["adult_cn_label_population"],
+    "indication_population_scopes": [
+      {
+        "indication": "type_2_diabetes",
+        "populations": ["adult_cn_label_population"],
+        "qualifiers": ["成人2型糖尿病患者血糖控制；单药或说明书列明的联合治疗范围"]
+      }
+    ],
+    "label_source_id": "lilly-cn-trulicity-label-2025-04-14",
+    "label_version": "2025-04-14",
+    "verified_at": "2026-08-13",
+    "verification_status": "verified"
+  }
+]

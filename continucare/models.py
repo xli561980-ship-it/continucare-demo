@@ -66,6 +66,7 @@ class CareSession(StrictModel):
     pathway_version: str
     questionnaire_canonical: str
     questionnaire_version: str
+    knowledge_release_id: str | None = None
     status: CareSessionStatus = CareSessionStatus.IN_PROGRESS
     answers: dict[str, Any] = Field(default_factory=dict)
     questionnaire_response_id: str | None = None
@@ -130,6 +131,10 @@ class ObservationEvidence(StrictModel):
     recorded_at: str
     source_kind: str = "pathway_monitored"
     terminology_match: dict[str, Any] | None = None
+    metric_id: str | None = None
+    evidence_claim_ids: list[str] = Field(default_factory=list)
+    knowledge_release_id: str | None = None
+    observation_mapping_sha256: str | None = None
 
     @field_validator("evidence_end")
     @classmethod

@@ -1,0 +1,46 @@
+{
+  "record_type": "controlled_dynamic_query_log",
+  "authority": "国家医疗保障局",
+  "system": "药品耗材信息公开数据库",
+  "canonical_url": "https://code.nhsa.gov.cn/yp/toPublicList3.html",
+  "retrieved_at": "2026-08-13",
+  "query_method": "在官方交互页面按批准文号逐项精确查询并人工复核",
+  "records": [
+    {
+      "approval_number": "国药准字SJ20240020",
+      "strength": "3.2mg/ml，3ml",
+      "drug_code": "XA10BJS279B002010178997",
+      "standard_code": "86978997003567"
+    },
+    {
+      "approval_number": "国药准字SJ20240021",
+      "strength": "2.27mg/ml，3ml",
+      "drug_code": "XA10BJS279B002020178997",
+      "standard_code": "86978997003529"
+    },
+    {
+      "approval_number": "国药准字SJ20240022",
+      "strength": "1.34mg/ml，3ml",
+      "drug_code": "XA10BJS279B002030178997",
+      "standard_code": "86978997003536"
+    },
+    {
+      "approval_number": "国药准字SJ20240023",
+      "strength": "1.34mg/ml，1.5ml",
+      "drug_code": "XA10BJS279B002040178997",
+      "standard_code": "86978997003543"
+    },
+    {
+      "approval_number": "国药准字SJ20240024",
+      "strength": "0.68mg/ml，1.5ml",
+      "drug_code": "XA10BJS279B002050178997",
+      "standard_code": "86978997003574"
+    }
+  ],
+  "limitations": [
+    "该文件是可审计的查询日志，不是国家医保局签发的静态证明文件。",
+    "官方页面没有稳定的单品永久链接或说明书附件。",
+    "查询结果不能替代现行完整中国法定说明书。"
+  ],
+  "verification_status": "partially_verified"
+}

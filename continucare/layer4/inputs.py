@@ -34,6 +34,9 @@ class Layer4InputSnapshot(BaseModel):
     patient_id: str
     questionnaire_responses: list[dict[str, Any]] = Field(default_factory=list)
     observations: list[dict[str, Any]] = Field(default_factory=list)
+    observation_knowledge_release_ids: dict[str, str | None] = Field(
+        default_factory=dict
+    )
     audit_events: list[AuditEvent] = Field(default_factory=list)
     assembled_at: str
 
@@ -57,6 +60,7 @@ class Layer4InputReader:
             responses.append(resource)
 
         observations = []
+        observation_knowledge_release_ids: dict[str, str | None] = {}
         for item in self.store.list_final_observations(patient_id):
             resource = validate_r4_resource(
                 item.as_fhir(), expected_resource_type="Observation"
@@ -64,10 +68,16 @@ class Layer4InputReader:
             if resource.get("status") != "final":
                 raise ValueError("Layer 4 only accepts final Observation resources")
             observations.append(resource)
+            version_id = resource.get("meta", {}).get("versionId") or "1"
+            reference = f"Observation/{resource['id']}/_history/{version_id}"
+            observation_knowledge_release_ids[reference] = (
+                item.evidence.knowledge_release_id
+            )
         return Layer4InputSnapshot(
             patient_id=patient_id,
             questionnaire_responses=responses,
             observations=observations,
+            observation_knowledge_release_ids=observation_knowledge_release_ids,
             audit_events=self.store.list_audit_events(patient_id),
             assembled_at=assembled_at or utc_now_iso(),
         )

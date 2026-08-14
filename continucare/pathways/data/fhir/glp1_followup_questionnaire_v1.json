@@ -7,18 +7,30 @@
   "title": "GLP-1治疗后14天患者报告采集（临床审核草案）",
   "status": "draft",
   "experimental": true,
-  "date": "2026-07-31",
+  "date": "2026-08-14",
   "publisher": "ContinuCare",
-  "description": "FHIR R4结构草案。当前临床依据包以司美格鲁肽Wegovy监管资料为主；未经适用医院临床与术语审核，不得用于真实患者自动分诊。",
+  "description": "FHIR R4合成数据采集草案。当前中国路径仅绑定诺和盈公开批准资料且缺现行完整法定说明书；境外资料不支持中国运行时临床判断。未经适用医院临床、药学和术语审核，不得用于真实患者。",
+  "extension": [
+    {
+      "url": "urn:continucare:StructureDefinition:knowledge-release-id",
+      "valueString": "cn-glp1-l1-v1.0.3"
+    }
+  ],
   "subjectType": ["Patient"],
   "item": [
     {
       "linkId": "nausea-present",
+      "extension": [
+        {"url": "urn:continucare:StructureDefinition:metric-id", "valueString": "nausea_present_now"},
+        {"url": "urn:continucare:StructureDefinition:evidence-claim-id", "valueString": "continucare-glp1-14d-wording-2026-001"},
+        {"url": "urn:continucare:StructureDefinition:evidence-claim-id", "valueString": "cn-wegovy-gi-monitoring-domain-2025-001"}
+      ],
       "code": [
         {
           "system": "http://snomed.info/sct",
           "code": "422587007",
-          "display": "Nausea"
+          "display": "Nausea",
+          "version": "20250201"
         }
       ],
       "text": "现在有恶心吗？",
@@ -26,6 +38,12 @@
     },
     {
       "linkId": "nausea-severity",
+      "extension": [
+        {"url": "urn:continucare:StructureDefinition:metric-id", "valueString": "nausea_severity_current"},
+        {"url": "urn:continucare:StructureDefinition:evidence-claim-id", "valueString": "continucare-glp1-14d-wording-2026-001"},
+        {"url": "urn:continucare:StructureDefinition:evidence-claim-id", "valueString": "loinc-2.82-observation-codes-001"},
+        {"url": "urn:continucare:StructureDefinition:evidence-claim-id", "valueString": "cn-wegovy-gi-monitoring-domain-2025-001"}
+      ],
       "code": [
         {
           "system": "http://loinc.org",
@@ -114,6 +132,12 @@
     },
     {
       "linkId": "vomiting-count-24h",
+      "extension": [
+        {"url": "urn:continucare:StructureDefinition:metric-id", "valueString": "vomiting_count_24h"},
+        {"url": "urn:continucare:StructureDefinition:evidence-claim-id", "valueString": "loinc-2.82-observation-codes-001"},
+        {"url": "urn:continucare:StructureDefinition:evidence-claim-id", "valueString": "cn-wegovy-gi-monitoring-domain-2025-001"},
+        {"url": "urn:continucare:StructureDefinition:evidence-claim-id", "valueString": "continucare-glp1-14d-wording-2026-001"}
+      ],
       "code": [
         {
           "system": "http://loinc.org",
@@ -127,6 +151,11 @@
     },
     {
       "linkId": "fluid-intake-24h-estimated",
+      "extension": [
+        {"url": "urn:continucare:StructureDefinition:metric-id", "valueString": "fluid_intake_24h_estimated"},
+        {"url": "urn:continucare:StructureDefinition:evidence-claim-id", "valueString": "loinc-2.82-observation-codes-001"},
+        {"url": "urn:continucare:StructureDefinition:evidence-claim-id", "valueString": "cn-wegovy-gi-monitoring-domain-2025-001"}
+      ],
       "code": [
         {
           "system": "http://loinc.org",
@@ -140,11 +169,17 @@
     },
     {
       "linkId": "abdominal-pain-present",
+      "extension": [
+        {"url": "urn:continucare:StructureDefinition:metric-id", "valueString": "abdominal_pain_present_now"},
+        {"url": "urn:continucare:StructureDefinition:evidence-claim-id", "valueString": "continucare-glp1-14d-wording-2026-001"},
+        {"url": "urn:continucare:StructureDefinition:evidence-claim-id", "valueString": "cn-wegovy-gi-monitoring-domain-2025-001"}
+      ],
       "code": [
         {
           "system": "http://snomed.info/sct",
           "code": "21522001",
-          "display": "Abdominal pain (finding)"
+          "display": "Abdominal pain (finding)",
+          "version": "20250201"
         }
       ],
       "text": "现在有腹痛吗？",
@@ -152,6 +187,9 @@
     },
     {
       "linkId": "free-text-report",
+      "extension": [
+        {"url": "urn:continucare:StructureDefinition:evidence-claim-id", "valueString": "continucare-glp1-14d-wording-2026-001"}
+      ],
       "text": "请描述今天的身体状态",
       "type": "text"
     }

@@ -58,7 +58,7 @@ CONTINUCARE_SUMMARY_PROMPT_VERSION=mimo-summary-outline-v1
 
 受控 Summary 已使用官方 MiMo API 完成固定合成数据验收：5/5 用例、64/64 条事实恰好覆盖一次，包括未知医生自定义指标、事实文本提示注入、40 指标容量场景和完整服务/存储/Provenance 链路。该结果是工程验收，不是临床验证；提交配置仍默认关闭真实 Summary 调用。
 
-MiMo 不生成医学代码。已知 Questionnaire 字段和患者自述新症状都必须经过 `continucare/terminology/data/glp1_symptom_catalog_v1.json` 检索与版本校验：唯一命中后显示确认卡，多候选（例如“头晕”）显示语义区分按钮，未命中则只保留原话并等待术语/医生复核。当前目录是基于官方 GLP-1 药品标签建立的原型覆盖集，不声称穷尽所有可能症状；医院部署时通过同一后端协议接入其 FHIR 术语服务器。
+MiMo 不生成医学代码。中国 GLP1-14D 路径只加载由 L1 Release 编译的 5 个固定 Questionnaire `linkId` 白名单，并锁定 knowledge release 与白名单 SHA-256。`continucare/terminology/data/glp1_symptom_catalog_v1.json` 仅保留为旧海外合成测试 fixture，不能生成中国路径动态 Observation。中国白名单未命中内容只保留原话并等待术语/医生复核。
 
 2026-08-02 的冻结配置 10 例单轮合成数据评测达到业务结果 10/10、完整三 Prompt 链路 10/10、原始模型输出 10/10。Layer 3 工程发布清单、原始报告和 Git 回滚标签固定为 `continucare-layer3-v1.0.0` / `layer3-v1.0.0`。该结果是工程回归，不是临床验证。
 
@@ -71,8 +71,8 @@ MiMo 不生成医学代码。已知 Questionnaire 字段和患者自述新症状
 - 对话式自由表达只生成候选，患者确认前不写入第二层；
 - Agent 输出通过 linkId/code、enableWhen、证据跨度、候选值、主语、否定、时间和单位安全检查；
 - 随访会话锁定 Pathway/Questionnaire 版本，支持草稿恢复和幂等提交；
-- LOINC、SNOMED CT 与 UCUM 映射有独立权威信源包；
-- GLP-1 症状目录对已知与新增症状统一检索，保留目录版本、命中别名、code 与确认来源；
+- LOINC 2.82 与 UCUM 映射已锁定；SNOMED CT 固定代码仅限合成工程测试，Edition、中国适用性和许可仍待核验；
+- 中国路径只使用固定白名单，未命中新症状不生成 Observation；
 - 没有获批临床规则时采取 fail-closed，不输出风险等级或 Alert；
 - Summary 审阅和 Mock 通知进入本地审计链。
 
@@ -85,6 +85,10 @@ MiMo 不生成医学代码。已知 Questionnaire 字段和患者自述新症状
 - 工作流证据链：用人类可读的六阶段时间线还原结果形成过程，技术记录按需展开。
 
 ## 临床与标准依据
+
+下载资料已接入版本化的中国 GLP-1 L1 知识层 `cn-glp1-l1-v1.0.3`：运行时读取结构化 JSON 和编译后的 FHIR 契约，不直接解析 PDF/ZIP。当前按批准文号登记 15 条中国产品记录：6 条 `verified`，9 条 `incomplete`。穆峰达 8 条和度易达 2 条已绑定现行中文说明书，但穆峰达一次性预填充笔 4 条还缺文号—规格逐项原子证据；诺和盈 5 条仍缺最新完整说明书。GLP1-14D 问卷和 Observation Mapping 已绑定 `metric_id`、`evidence_claim_id` 与知识版本；PRO-CTCAE 只保留来源和 11 个非运行指标元数据，许可范围确认前公开版本不包含原文或衍生 Questionnaire。CTCAE、FDA 标签和 FAERS 不进入自动临床判断。
+
+- [中国 GLP-1 L1 知识版本与运行边界](docs/clinical/cn_glp1/README.md)
 
 - [整体六层方案与端到端工作流](docs/14_layered_solution_blueprint.md)
 - [第一层验收报告](docs/15_layer_1_acceptance.md)
@@ -130,11 +134,18 @@ MiMo 不生成医学代码。已知 Questionnaire 字段和患者自述新症状
 ## 验收命令
 
 ```bash
-curl -L https://hl7.org/fhir/R4/fhir.schema.json.zip -o /tmp/fhir-r4-schema.zip
-FHIR_R4_SCHEMA_ZIP=/tmp/fhir-r4-schema.zip .venv/bin/python -m pytest -q
-.venv/bin/python scripts/validate_fhir_r4.py --schema /tmp/fhir-r4-schema.zip
+# 公开 checkout：先从受控 JSON 重建，再核验
+.venv/bin/python scripts/validate_cn_glp1_knowledge.py --skip-source-files
+.venv/bin/python scripts/build_cn_glp1_knowledge.py
+.venv/bin/python scripts/build_cn_glp1_knowledge.py --check
+.venv/bin/python -m pytest -q
+
+# 持有受控本地 source pack 时，再做原件哈希和官方 Schema 附加验证
+.venv/bin/python scripts/check_cn_glp1_sources.py
+.venv/bin/python scripts/validate_fhir_r4.py \
+  --schema output/clinical-source-pack-2026-08-13/schemas/fhir_r4_4.0.1_json_schema.zip
 .venv/bin/python scripts/evaluate_semantic_layer.py
 .venv/bin/streamlit run app.py
 ```
 
-所有演示身份、消息和结果均为合成数据。禁止把运行数据库、密钥或真实患者信息提交到仓库。
+所有演示身份、消息和结果均为合成数据。禁止把运行数据库、密钥或真实患者信息提交到仓库。比赛包必须从已审查的 Git 文件集合用 `git archive` 或显式 allowlist 生成，不能对当前工作区执行递归 `zip`，因为本地 `output/` 可能包含受限核验原件和历史候选包。

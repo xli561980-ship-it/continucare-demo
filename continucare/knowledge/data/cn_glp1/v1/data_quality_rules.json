@@ -1,0 +1,23 @@
+[
+  {
+    "rule_id": "DQ-MISSING-UNIT",
+    "rule_type": "data_quality",
+    "condition": "quantity_value_present_and_unit_missing",
+    "action": "request_clarification",
+    "clinical_risk_level": null
+  },
+  {
+    "rule_id": "DQ-TIME-WINDOW-UNCLEAR",
+    "rule_type": "data_quality",
+    "condition": "numeric_answer_present_and_time_window_unclear",
+    "action": "request_clarification",
+    "clinical_risk_level": null
+  },
+  {
+    "rule_id": "DQ-FHIR-INVALID",
+    "rule_type": "data_quality",
+    "condition": "fhir_resource_fails_release_contract",
+    "action": "reject_invalid_resource",
+    "clinical_risk_level": null
+  }
+]

@@ -14,11 +14,19 @@ from continucare.models import AlertStatus
 from continucare.presentation import (
     alert_next_step,
     alert_status_text,
+    build_l5_governance_for_patient,
+    build_latest_l5_submission_view,
     observation_evidence_text,
     owner_text,
 )
 from continucare.services.alerts import AlertService
-from continucare.ui import inject_global_styles, render_mode_badges
+from continucare.ui import (
+    inject_global_styles,
+    render_l5_governance_panel,
+    render_l5_submission_panel,
+    render_mode_badges,
+)
+from continucare.demo_data import DEMO_PATIENT_ID
 
 
 def _sla_text(due_at: str | None) -> str:
@@ -73,10 +81,13 @@ st.set_page_config(
 )
 inject_global_styles(st)
 st.title("护士任务中心")
-st.error("仅使用合成数据 · 这里展示的是医护工作任务，不是诊断结论")
 
 store = SQLiteStore(get_settings().db_path)
 service = AlertService(store, MockNotifier())
+render_l5_governance_panel(
+    st, build_l5_governance_for_patient(store, DEMO_PATIENT_ID)
+)
+render_l5_submission_panel(st, build_latest_l5_submission_view(store, DEMO_PATIENT_ID))
 all_alerts = store.list_alerts()
 active_alerts = [item for item in all_alerts if item.status != AlertStatus.RESOLVED]
 resolved_alerts = [item for item in all_alerts if item.status == AlertStatus.RESOLVED]

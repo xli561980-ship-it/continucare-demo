@@ -1,0 +1,30 @@
+{
+  "release_id": "cn-glp1-l1-v1.0.3",
+  "jurisdiction": "CN",
+  "created_at": "2026-08-14T01:10:29+02:00",
+  "status": "engineering_validated",
+  "synthetic_only": true,
+  "source_registry_sha256": "c3d27c4ee0ae7f4ff3a101baab1d12ab27668886a475a02331a6fed05bdb74a3",
+  "product_registry_sha256": "610521d1614b8cfe7bc70ab608970a21ace54cfaaebca984f848933148327fc3",
+  "evidence_claims_sha256": "8f09e505b5ec2bdfd6b60e8e41ef99d5154fa16d6d42403df2b4c543e55d8e9d",
+  "metric_definitions_sha256": "cedde9a52b222e9c9e84e620386eccdcff59d87459ddc2f05cc26c0b42a92fa3",
+  "terminology_manifest_sha256": "4ff5b3f9b9d11907fa856a3b09b11ab2e9203a67b972ffc582b616f91a9f61a4",
+  "patient_content_sha256": "23f368f831a8bf519c0e034693dacbf122afe689b20049c7466228e5f25c85c9",
+  "data_quality_rules_sha256": "e690fd3df38505bb9a408586c234dd4193a4d230caaed742f3206c46a130dcd4",
+  "clinical_rules_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+  "coverage_report_sha256": "4903b017997d97d85d539d5997df9d8dae23cb13604ba552a10a15277362f81b",
+  "questionnaire_sha256": "8105862f8f8493f4b651facdc4ad2ce7755f1622cb6e9f53ba488d739b7e7cc3",
+  "plan_definition_sha256": "1a02db5ad855e4057b12f90ffcc68acaf469ec069961ffab4ca4501b812d34cf",
+  "observation_mapping_sha256": "f3845e85cd1b103975c09fddceb14286eb0024a12fb4c1f6319443c7af6f7625",
+  "clinical_approval": null,
+  "known_limitations": [
+    "已登记15条按批准文号拆分的中国产品记录：6条verified、9条incomplete；诺和盈5条缺最新完整说明书，穆峰达一次性预填充笔4条缺文号—规格逐项原子证据。",
+    "FDA WEGOVY、CTCAE和FAERS仅作离线背景或候选证据，不进入中国运行时临床判断。",
+    "五个运行指标仅有中国产品范围/胃肠道领域证据与工程数据契约，尚无逐指标中国说明书级锚点；因此只允许合成工程采集，不能声称临床指标已验证。",
+    "当前版本没有临床审批，clinical_rules为空，系统必须返回not_assessed且不创建临床Alert。",
+    "ICD-11仅登记许可文件，未导入分类数据库；固定SNOMED CT代码已记录International Edition/20250201但中国适用性与许可仍待核验，旧DailyMed动态目录已禁止写入中国路径Observation。",
+    "PRO-CTCAE仅登记来源与11个非运行指标元数据；项目使用及再分发许可未确认前，公开Release不包含原文、Questionnaire、Pathway或Observation Mapping。",
+    "受限来源原件只允许保留在被Git忽略的本地核验区；下载或转换格式不等同于取得公开再分发许可。",
+    "FHIR R4模型和官方JSON Schema已验证；完整HL7 FHIR Validator CLI与机构Implementation Guide校验仍待实施。"
+  ]
+}

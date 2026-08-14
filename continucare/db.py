@@ -54,6 +54,35 @@ def _migrate_schema(connection: sqlite3.Connection) -> None:
         connection.execute(
             "ALTER TABLE observation_evidence ADD COLUMN terminology_match_json TEXT"
         )
+    observation_evidence_columns = {
+        "metric_id": "TEXT",
+        "evidence_claim_ids_json": "TEXT NOT NULL DEFAULT '[]'",
+        "knowledge_release_id": "TEXT",
+        "observation_mapping_sha256": "TEXT",
+    }
+    for name, definition in observation_evidence_columns.items():
+        if name not in columns:
+            connection.execute(
+                f"ALTER TABLE observation_evidence ADD COLUMN {name} {definition}"
+            )
+    care_session_columns = {
+        row["name"] for row in connection.execute("PRAGMA table_info(care_sessions)")
+    }
+    if "knowledge_release_id" not in care_session_columns:
+        connection.execute(
+            "ALTER TABLE care_sessions ADD COLUMN knowledge_release_id TEXT"
+        )
+    agent_run_columns = {
+        row["name"] for row in connection.execute("PRAGMA table_info(agent_runs)")
+    }
+    for name in (
+        "knowledge_release_id",
+        "terminology_catalog_id",
+        "terminology_catalog_version",
+        "terminology_catalog_sha256",
+    ):
+        if name not in agent_run_columns:
+            connection.execute(f"ALTER TABLE agent_runs ADD COLUMN {name} TEXT")
     answer_columns = {
         row["name"]
         for row in connection.execute("PRAGMA table_info(confirmed_answer_contexts)")
@@ -235,6 +264,7 @@ CREATE TABLE IF NOT EXISTS care_sessions (
     pathway_version TEXT NOT NULL,
     questionnaire_canonical TEXT NOT NULL,
     questionnaire_version TEXT NOT NULL,
+    knowledge_release_id TEXT,
     status TEXT NOT NULL CHECK (
         status IN ('in_progress', 'completed', 'stopped', 'entered_in_error')
     ),
@@ -255,6 +285,10 @@ CREATE TABLE IF NOT EXISTS agent_runs (
     mode TEXT NOT NULL,
     input_text TEXT NOT NULL,
     input_hash TEXT NOT NULL,
+    knowledge_release_id TEXT NOT NULL,
+    terminology_catalog_id TEXT NOT NULL,
+    terminology_catalog_version TEXT NOT NULL,
+    terminology_catalog_sha256 TEXT NOT NULL,
     output_json TEXT NOT NULL,
     status TEXT NOT NULL,
     model_provider TEXT,
@@ -342,7 +376,11 @@ CREATE TABLE IF NOT EXISTS observation_evidence (
     evidence_end INTEGER NOT NULL,
     recorded_at TEXT NOT NULL,
     source_kind TEXT NOT NULL DEFAULT 'pathway_monitored',
-    terminology_match_json TEXT
+    terminology_match_json TEXT,
+    metric_id TEXT,
+    evidence_claim_ids_json TEXT NOT NULL DEFAULT '[]',
+    knowledge_release_id TEXT,
+    observation_mapping_sha256 TEXT
 );
 
 CREATE TABLE IF NOT EXISTS alerts (

@@ -24,9 +24,18 @@ from continucare.fhir.questionnaires import (
 )
 from continucare.fhir.r4 import FHIRValidationError
 from continucare.fhir.terminology import UCUM
-from continucare.presentation import observation_text
+from continucare.presentation import (
+    build_l5_governance_view,
+    build_latest_l5_submission_view,
+    observation_text,
+)
 from continucare.models import CareSessionStatus
-from continucare.ui import inject_global_styles, render_mode_badges
+from continucare.ui import (
+    inject_global_styles,
+    render_l5_governance_panel,
+    render_l5_submission_panel,
+    render_mode_badges,
+)
 
 
 PRESETS = {
@@ -576,7 +585,6 @@ st.set_page_config(
 )
 inject_global_styles(st)
 st.title("患者随访（合成数据）")
-st.error("仅用于合成数据演示 · 不提供诊断、治疗或用药建议 · 不是急救通道")
 
 settings = get_settings()
 store = SQLiteStore(settings.db_path)
@@ -593,6 +601,13 @@ session = engine.start_or_resume(
 )
 questionnaire = engine.questionnaire_for_session(session)
 agent_service = CareAgentService(store, care_engine=engine)
+governance = build_l5_governance_view(
+    session.pathway_code,
+    session.pathway_version,
+    knowledge_release_id=session.knowledge_release_id,
+    release=engine.knowledge_release,
+)
+render_l5_governance_panel(st, governance)
 
 notice = st.session_state.pop("care_submission_notice", None)
 if notice:
@@ -600,6 +615,7 @@ if notice:
 
 st.markdown("## 最近一次随访结果")
 _render_latest_submission()
+render_l5_submission_panel(st, build_latest_l5_submission_view(store, DEMO_PATIENT_ID))
 
 if session.status == CareSessionStatus.COMPLETED:
     st.info(
