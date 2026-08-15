@@ -1,0 +1,283 @@
+{
+  "file_id": "knowledge-ops-source-policies",
+  "file_version": 2,
+  "contract_version": "2.0.0",
+  "file_kind": "source_policy_registry",
+  "extends": {
+    "file_id": "knowledge-ops-source-policies",
+    "file_version": 1
+  },
+  "policies": [
+    {
+      "policy_id": "source-dailymed",
+      "policy_version": 1,
+      "display_name": "NLM DailyMed SPL history metadata",
+      "issuing_authority": "U.S. National Library of Medicine",
+      "source_types": ["regulatory_product_information_metadata"],
+      "source_jurisdictions": [{"system": "iso3166_1", "code": "US"}],
+      "languages": ["en"],
+      "allowed_origins": ["https://dailymed.nlm.nih.gov"],
+      "allow_subdomains": false,
+      "allowed_query_parameters": [],
+      "allowed_path_templates": ["/dailymed/services/v2/spls/{set_id}/history.json"],
+      "allowed_content_types": ["application/json"],
+      "maximum_response_bytes": 1000000,
+      "license_posture": "needs_verification",
+      "terms_uri": "https://dailymed.nlm.nih.gov/dailymed/app-support-web-services.cfm",
+      "rights_evidence": [
+        {
+          "evidence_id": "rights-dailymed-docs-20260814",
+          "official_document_url": "https://dailymed.nlm.nih.gov/dailymed/app-support-web-services.cfm",
+          "retrieved_at": "2026-08-14T11:26:24Z",
+          "document_sha256": "3fbe63342062c085fcbb85f1431f6c1614bbacc6b2ade5adc21de8eba3c4327e",
+          "digest_scope": "official_document_bytes",
+          "recorded_by": "system:codex-official-document-capture",
+          "reviewed_by": "none-formal-rights-officer-unavailable",
+          "conclusion": "metadata_discovery_only_rights_unresolved",
+          "known_limitations": [
+            "Documentation capture is technical evidence, not a formal licence determination.",
+            "DailyMed metadata is not asserted to be the latest FDA approval conclusion."
+          ],
+          "formal_rights_review_completed": false
+        }
+      ],
+      "operation_rules": [
+        {"operation": "register_link_metadata", "decision": "allow", "rationale": "Exact SPL identifiers and official metadata links may be registered."},
+        {"operation": "discover_metadata", "decision": "allow", "rationale": "Typed SetID history metadata may be discovered without label text."},
+        {"operation": "fetch_for_change_detection", "decision": "offline_fixture_only", "rationale": "Operational acquisition remains offline; live access is validator-only."},
+        {"operation": "persist_snapshot", "decision": "offline_fixture_only", "rationale": "Only synthetic fixture snapshots may be persisted in P1."},
+        {"operation": "persist_full_text", "decision": "deny", "rationale": "Label text persistence is outside P1 and rights remain unresolved."},
+        {"operation": "short_quote", "decision": "review_required", "rationale": "Any quotation requires rights and clinical review."},
+        {"operation": "translate", "decision": "deny", "rationale": "P1 does not translate source content."},
+        {"operation": "adapt", "decision": "deny", "rationale": "P1 does not adapt label content into clinical guidance."},
+        {"operation": "redistribute", "decision": "deny", "rationale": "P1 does not redistribute source content."},
+        {"operation": "create_mapping", "decision": "deny", "rationale": "Metadata discovery cannot create an approved clinical mapping."},
+        {"operation": "commercial_use", "decision": "deny", "rationale": "Commercial reuse requires future formal rights review."},
+        {"operation": "model_training", "decision": "deny", "rationale": "Source content cannot be used for model training."},
+        {"operation": "vector_index", "decision": "deny", "rationale": "Source content cannot be vector indexed."}
+      ],
+      "live_network_enabled": false,
+      "status": "active",
+      "registered_at": "2026-08-14T11:26:24Z",
+      "registered_by": "system:knowledge-ops-p1-readiness",
+      "notes": ["Operational acquisition remains default-off; only a separate live contract validator may request metadata."]
+    },
+    {
+      "policy_id": "source-ema-website-data",
+      "policy_version": 1,
+      "display_name": "EMA documented website medicines JSON metadata",
+      "issuing_authority": "European Medicines Agency",
+      "source_types": ["regulatory_product_information_metadata"],
+      "source_jurisdictions": [{"system": "global", "code": "GLOBAL"}],
+      "languages": ["en"],
+      "allowed_origins": ["https://www.ema.europa.eu"],
+      "allow_subdomains": false,
+      "allowed_query_parameters": [],
+      "allowed_path_templates": ["/en/documents/report/medicines-output-medicines_json-report_en.json"],
+      "allowed_content_types": ["application/json"],
+      "maximum_response_bytes": 2000000,
+      "license_posture": "needs_verification",
+      "terms_uri": "https://www.ema.europa.eu/en/about-us/about-website/download-website-data-json-data-format",
+      "rights_evidence": [
+        {
+          "evidence_id": "rights-ema-website-json-20260814",
+          "official_document_url": "https://www.ema.europa.eu/en/about-us/about-website/download-website-data-json-data-format",
+          "retrieved_at": "2026-08-14T11:26:24Z",
+          "document_sha256": "1c642287534470380a34aa94522e1a4ffce588cc3dc99d2085f32bd72ed0afb6",
+          "digest_scope": "official_document_bytes",
+          "recorded_by": "system:codex-official-document-capture",
+          "reviewed_by": "none-formal-rights-officer-unavailable",
+          "conclusion": "metadata_discovery_only_rights_unresolved",
+          "known_limitations": [
+            "Documentation capture is not a formal commercial-reuse decision.",
+            "The documented medicines JSON file may exceed the P1 hard response cap."
+          ],
+          "formal_rights_review_completed": false
+        }
+      ],
+      "operation_rules": [
+        {"operation": "register_link_metadata", "decision": "allow", "rationale": "Exact EMA medicine identifiers and official links may be registered."},
+        {"operation": "discover_metadata", "decision": "allow", "rationale": "Only fields from the documented website JSON dataset may be discovered."},
+        {"operation": "fetch_for_change_detection", "decision": "offline_fixture_only", "rationale": "Operational acquisition remains offline and the live validator has a hard cap."},
+        {"operation": "persist_snapshot", "decision": "offline_fixture_only", "rationale": "Only synthetic fixture snapshots may be persisted."},
+        {"operation": "persist_full_text", "decision": "deny", "rationale": "EMA document text is outside this metadata contract."},
+        {"operation": "short_quote", "decision": "review_required", "rationale": "Quotation requires exact document rights review."},
+        {"operation": "translate", "decision": "deny", "rationale": "P1 does not translate EMA content."},
+        {"operation": "adapt", "decision": "deny", "rationale": "P1 does not adapt EMA content into clinical guidance."},
+        {"operation": "redistribute", "decision": "deny", "rationale": "P1 does not redistribute EMA content."},
+        {"operation": "create_mapping", "decision": "deny", "rationale": "Metadata cannot create an approved terminology or clinical mapping."},
+        {"operation": "commercial_use", "decision": "deny", "rationale": "Commercial reuse requires formal rights review."},
+        {"operation": "model_training", "decision": "deny", "rationale": "Source content cannot be used for model training."},
+        {"operation": "vector_index", "decision": "deny", "rationale": "Source content cannot be vector indexed."}
+      ],
+      "live_network_enabled": false,
+      "status": "active",
+      "registered_at": "2026-08-14T11:26:24Z",
+      "registered_by": "system:knowledge-ops-p1-readiness",
+      "notes": ["PMS/SPOR APIs, undocumented XHR, internal backends, HTML scraping and ePI pilot APIs are not allowed."]
+    },
+    {
+      "policy_id": "source-medlineplus",
+      "policy_version": 1,
+      "display_name": "NLM MedlinePlus health-topic feed metadata",
+      "issuing_authority": "U.S. National Library of Medicine",
+      "source_types": ["patient_education_metadata"],
+      "source_jurisdictions": [{"system": "iso3166_1", "code": "US"}],
+      "languages": ["en", "es"],
+      "allowed_origins": ["https://medlineplus.gov"],
+      "allow_subdomains": false,
+      "allowed_query_parameters": [],
+      "allowed_path_templates": ["/xml/mplus_topics_{publication_date}.xml"],
+      "allowed_content_types": ["application/xml", "text/xml"],
+      "maximum_response_bytes": 2000000,
+      "license_posture": "needs_verification",
+      "terms_uri": "https://medlineplus.gov/xml.html",
+      "rights_evidence": [
+        {
+          "evidence_id": "rights-medlineplus-xml-20260814",
+          "official_document_url": "https://medlineplus.gov/xml.html",
+          "retrieved_at": "2026-08-14T11:26:24Z",
+          "document_sha256": "2208af37dbbef360f5d6a1fe766f50bcd19e75e3cfe31d0f4e71d90e4bcb652c",
+          "digest_scope": "official_document_bytes",
+          "recorded_by": "system:codex-official-document-capture",
+          "reviewed_by": "none-formal-rights-officer-unavailable",
+          "conclusion": "metadata_discovery_only_rights_unresolved",
+          "known_limitations": [
+            "The feed can link to third-party material with separate rights.",
+            "P1 selects topic attributes only and does not persist, translate, adapt or summarize patient-facing text."
+          ],
+          "formal_rights_review_completed": false
+        }
+      ],
+      "operation_rules": [
+        {"operation": "register_link_metadata", "decision": "allow", "rationale": "Exact health-topic identifiers and canonical links may be registered."},
+        {"operation": "discover_metadata", "decision": "allow", "rationale": "Only topic, language, update and canonical-link metadata may be selected."},
+        {"operation": "fetch_for_change_detection", "decision": "offline_fixture_only", "rationale": "Operational acquisition remains offline; feed contract tests use synthetic XML."},
+        {"operation": "persist_snapshot", "decision": "offline_fixture_only", "rationale": "Only synthetic metadata fixtures may be persisted."},
+        {"operation": "persist_full_text", "decision": "deny", "rationale": "Patient-facing and linked third-party text cannot be persisted."},
+        {"operation": "short_quote", "decision": "review_required", "rationale": "Quotation needs item-specific rights review."},
+        {"operation": "translate", "decision": "deny", "rationale": "P1 does not translate MedlinePlus content."},
+        {"operation": "adapt", "decision": "deny", "rationale": "P1 does not adapt or summarize patient-facing content."},
+        {"operation": "redistribute", "decision": "deny", "rationale": "P1 does not redistribute source or linked content."},
+        {"operation": "create_mapping", "decision": "deny", "rationale": "Topic metadata cannot create an approved clinical mapping."},
+        {"operation": "commercial_use", "decision": "deny", "rationale": "Commercial reuse requires formal rights review."},
+        {"operation": "model_training", "decision": "deny", "rationale": "Source content cannot be used for model training."},
+        {"operation": "vector_index", "decision": "deny", "rationale": "Source content cannot be vector indexed."}
+      ],
+      "live_network_enabled": false,
+      "status": "active",
+      "registered_at": "2026-08-14T11:26:24Z",
+      "registered_by": "system:knowledge-ops-p1-readiness",
+      "notes": ["The site is not treated as one uniformly open corpus."]
+    },
+    {
+      "policy_id": "nlm-pubmed-metadata",
+      "policy_version": 2,
+      "display_name": "NLM PubMed E-utilities bibliographic metadata",
+      "issuing_authority": "U.S. National Library of Medicine / NCBI",
+      "source_types": ["peer_reviewed_study_metadata"],
+      "source_jurisdictions": [{"system": "global", "code": "GLOBAL"}],
+      "languages": ["en"],
+      "allowed_origins": ["https://eutils.ncbi.nlm.nih.gov"],
+      "allow_subdomains": false,
+      "allowed_query_parameters": ["db", "id", "retmode", "tool"],
+      "allowed_path_templates": ["/entrez/eutils/esummary.fcgi"],
+      "allowed_content_types": ["application/json"],
+      "maximum_response_bytes": 512000,
+      "license_posture": "needs_verification",
+      "terms_uri": "https://www.ncbi.nlm.nih.gov/books/NBK25497/",
+      "rights_evidence": [
+        {
+          "evidence_id": "rights-pubmed-eutils-20260814",
+          "official_document_url": "https://www.ncbi.nlm.nih.gov/books/NBK25497/",
+          "retrieved_at": "2026-08-14T11:26:24Z",
+          "document_sha256": "43f813114d7932e39d01b4e30899ed4de23c39870e30994f43bdaf7cea0b0925",
+          "digest_scope": "official_document_bytes",
+          "recorded_by": "system:codex-official-document-capture",
+          "reviewed_by": "none-formal-rights-officer-unavailable",
+          "conclusion": "metadata_discovery_only_rights_unresolved",
+          "known_limitations": [
+            "Bibliographic discovery is not a clinical conclusion.",
+            "Abstract and article reuse rights are not granted by a PubMed result."
+          ],
+          "formal_rights_review_completed": false
+        }
+      ],
+      "operation_rules": [
+        {"operation": "register_link_metadata", "decision": "allow", "rationale": "Exact PMID and PubMed record links may be registered."},
+        {"operation": "discover_metadata", "decision": "allow", "rationale": "Typed PMID ESummary metadata may be discovered under the documented rate limit."},
+        {"operation": "fetch_for_change_detection", "decision": "offline_fixture_only", "rationale": "Operational acquisition remains offline; live validation is metadata-only."},
+        {"operation": "persist_snapshot", "decision": "offline_fixture_only", "rationale": "Only synthetic bibliographic fixtures may be persisted."},
+        {"operation": "persist_full_text", "decision": "deny", "rationale": "Abstract and article text persistence is outside P1."},
+        {"operation": "short_quote", "decision": "review_required", "rationale": "Any abstract or article quotation requires item-specific rights review."},
+        {"operation": "translate", "decision": "deny", "rationale": "P1 does not translate publication text."},
+        {"operation": "adapt", "decision": "deny", "rationale": "P1 does not convert a search result into clinical guidance."},
+        {"operation": "redistribute", "decision": "deny", "rationale": "P1 does not redistribute abstract or article text."},
+        {"operation": "create_mapping", "decision": "deny", "rationale": "Bibliographic metadata cannot create an approved clinical mapping."},
+        {"operation": "commercial_use", "decision": "deny", "rationale": "Commercial text reuse requires formal rights review."},
+        {"operation": "model_training", "decision": "deny", "rationale": "Publication text cannot be used for model training."},
+        {"operation": "vector_index", "decision": "deny", "rationale": "Publication text cannot be vector indexed."}
+      ],
+      "live_network_enabled": false,
+      "status": "active",
+      "registered_at": "2026-08-14T11:26:24Z",
+      "registered_by": "system:knowledge-ops-p1-readiness",
+      "notes": ["No API key or personal email is configured; NCBI requests are spaced at least 350 ms apart."]
+    },
+    {
+      "policy_id": "source-pmc-open-access",
+      "policy_version": 1,
+      "display_name": "PMC Open Access per-article licence locator metadata",
+      "issuing_authority": "U.S. National Library of Medicine / NCBI",
+      "source_types": ["open_access_article_license_metadata"],
+      "source_jurisdictions": [{"system": "global", "code": "GLOBAL"}],
+      "languages": ["en"],
+      "allowed_origins": ["https://www.ncbi.nlm.nih.gov"],
+      "allow_subdomains": false,
+      "allowed_query_parameters": ["id"],
+      "allowed_path_templates": ["/pmc/utils/oa/oa.fcgi"],
+      "allowed_content_types": ["application/xml", "text/xml"],
+      "maximum_response_bytes": 512000,
+      "license_posture": "needs_verification",
+      "terms_uri": "https://pmc.ncbi.nlm.nih.gov/tools/oa-service/",
+      "rights_evidence": [
+        {
+          "evidence_id": "rights-pmc-oa-service-20260814",
+          "official_document_url": "https://pmc.ncbi.nlm.nih.gov/tools/oa-service/",
+          "retrieved_at": "2026-08-14T11:26:24Z",
+          "document_sha256": "94bd27f79f1ac93ccf48ef8e616fffa3ab5855a35614394170a0e6ce5e1c2fbb",
+          "digest_scope": "official_document_bytes",
+          "recorded_by": "system:codex-official-document-capture",
+          "reviewed_by": "none-formal-rights-officer-unavailable",
+          "conclusion": "metadata_discovery_only_rights_unresolved",
+          "known_limitations": [
+            "PMC availability does not mean every article is in the Open Access subset.",
+            "Each article licence requires item-specific verification before any reuse.",
+            "The legacy OA Web Service is scheduled to stop on or after 2026-08-24."
+          ],
+          "formal_rights_review_completed": false
+        }
+      ],
+      "operation_rules": [
+        {"operation": "register_link_metadata", "decision": "allow", "rationale": "Exact PMCID and official per-article locator metadata may be registered."},
+        {"operation": "discover_metadata", "decision": "allow", "rationale": "Typed PMCID licence-locator metadata may be discovered."},
+        {"operation": "fetch_for_change_detection", "decision": "offline_fixture_only", "rationale": "Operational acquisition remains offline and the legacy contract may change."},
+        {"operation": "persist_snapshot", "decision": "offline_fixture_only", "rationale": "Only synthetic locator fixtures may be persisted."},
+        {"operation": "persist_full_text", "decision": "deny", "rationale": "P1 never fetches or persists real PMC article text."},
+        {"operation": "short_quote", "decision": "review_required", "rationale": "Quotation requires verified item licence and rights review."},
+        {"operation": "translate", "decision": "deny", "rationale": "P1 does not translate PMC content."},
+        {"operation": "adapt", "decision": "deny", "rationale": "P1 does not adapt PMC content into clinical guidance."},
+        {"operation": "redistribute", "decision": "deny", "rationale": "P1 does not redistribute article packages or text."},
+        {"operation": "create_mapping", "decision": "deny", "rationale": "OA locator metadata cannot create an approved clinical mapping."},
+        {"operation": "commercial_use", "decision": "deny", "rationale": "Commercial reuse requires item-specific licence and formal rights review."},
+        {"operation": "model_training", "decision": "deny", "rationale": "Article text cannot be used for model training."},
+        {"operation": "vector_index", "decision": "deny", "rationale": "Article text cannot be vector indexed."}
+      ],
+      "live_network_enabled": false,
+      "status": "active",
+      "registered_at": "2026-08-14T11:26:24Z",
+      "registered_by": "system:knowledge-ops-p1-readiness",
+      "notes": ["PubMed metadata and PMC OA licence locator rights are deliberately separate policies."]
+    }
+  ]
+}

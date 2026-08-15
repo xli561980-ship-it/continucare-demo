@@ -1,0 +1,100 @@
+{
+  "file_kind": "bundle_index",
+  "bundle_id": "continucare-knowledge-foundation",
+  "bundle_version": 1,
+  "contract_version": "1.0.0",
+  "files": [
+    {
+      "ref": {"file_id": "knowledge-sources", "file_version": 1},
+      "relative_path": "sources_v1.json",
+      "manifest_sha256": "c33999b9ba30d7879b6f7f64c0cf27ee98e0649e5c6836fa830fb6bc5c80c51c",
+      "size": 21664
+    },
+    {
+      "ref": {"file_id": "knowledge-claims", "file_version": 1},
+      "relative_path": "claims_v1.json",
+      "manifest_sha256": "8d7be39898d4697df149a28dd35a6b89164a41c4d4bbcd91699f3fe6131fb01e",
+      "size": 13350
+    },
+    {
+      "ref": {"file_id": "knowledge-bindings-glp1-14d", "file_version": 1},
+      "relative_path": "bindings_glp1_14d_v1.json",
+      "manifest_sha256": "4be160b8d55bdfaaacc929b02372edd93a61680eb8582d6ab97304097841a14d",
+      "size": 9528
+    },
+    {
+      "ref": {"file_id": "knowledge-governance", "file_version": 1},
+      "relative_path": "governance_v1.json",
+      "manifest_sha256": "629a05621cfd46400eb0225c5907e9462baa3dc8d45ed6c45fd4484ea0091d02",
+      "size": 11371
+    },
+    {
+      "ref": {"file_id": "knowledge-symptom-index", "file_version": 1},
+      "relative_path": "symptom_index_v1.json",
+      "manifest_sha256": "a232eebafcb4fe19c27e15819a1dd103331996e869a32f7f37fae95282973d9d",
+      "size": 3967
+    }
+  ],
+  "current_source_refs": [
+    {"source_id": "hl7-fhir-r4-observation", "record_version": 1},
+    {"source_id": "hl7-fhir-r4-questionnaire", "record_version": 1},
+    {"source_id": "loinc-2.82", "record_version": 1},
+    {"source_id": "snomed-ct-clinical-finding", "record_version": 1},
+    {"source_id": "ucum", "record_version": 1},
+    {"source_id": "ema-wegovy-epar", "record_version": 1},
+    {"source_id": "fda-wegovy-2026", "record_version": 1},
+    {"source_id": "jcm-glp1-gi-consensus-2022", "record_version": 1},
+    {"source_id": "dailymed-ozempic", "record_version": 1},
+    {"source_id": "dailymed-wegovy", "record_version": 1},
+    {"source_id": "dailymed-mounjaro", "record_version": 1},
+    {"source_id": "dailymed-zepbound", "record_version": 1},
+    {"source_id": "snomed-fhir", "record_version": 1},
+    {"source_id": "hpo-v2026-06-23", "record_version": 1},
+    {"source_id": "nci-pro-ctcae-official-site", "record_version": 1}
+  ],
+  "current_claim_refs": [
+    {"claim_id": "glp1-nausea-collection-rationale", "claim_version": 1},
+    {"claim_id": "loinc-81660-3-nausea-severity-terminology", "claim_version": 1},
+    {"claim_id": "glp1-vomiting-collection-rationale", "claim_version": 1},
+    {"claim_id": "loinc-94070-0-emesis-count-24h-terminology", "claim_version": 1},
+    {"claim_id": "glp1-fluid-intake-collection-rationale", "claim_version": 1},
+    {"claim_id": "loinc-75301-2-fluid-intake-24h-terminology", "claim_version": 1},
+    {"claim_id": "glp1-abdominal-pain-collection-rationale", "claim_version": 1},
+    {"claim_id": "glp1-diarrhea-collection-rationale", "claim_version": 1}
+  ],
+  "current_binding_refs": [
+    {"binding_id": "glp1-qitem-nausea-present-collection", "binding_version": 1},
+    {"binding_id": "glp1-qitem-nausea-severity-terminology", "binding_version": 1},
+    {"binding_id": "glp1-qitem-vomiting-count-collection", "binding_version": 1},
+    {"binding_id": "glp1-qitem-fluid-intake-collection", "binding_version": 1},
+    {"binding_id": "glp1-qitem-abdominal-pain-collection", "binding_version": 1},
+    {"binding_id": "glp1-map-nausea-severity-terminology", "binding_version": 1},
+    {"binding_id": "glp1-map-vomiting-count-terminology", "binding_version": 1},
+    {"binding_id": "glp1-map-fluid-intake-terminology", "binding_version": 1},
+    {"binding_id": "glp1-qbinding-nausea-severity-terminology", "binding_version": 1},
+    {"binding_id": "glp1-qbinding-vomiting-count-terminology", "binding_version": 1},
+    {"binding_id": "glp1-qbinding-fluid-intake-terminology", "binding_version": 1}
+  ],
+  "current_gap_refs": [
+    {"gap_id": "glp1-gap-free-text-design-governance", "gap_version": 1},
+    {"gap_id": "glp1-gap-nausea-positive-only-governance", "gap_version": 1},
+    {"gap_id": "glp1-gap-abdominal-pain-positive-only-governance", "gap_version": 1},
+    {"gap_id": "glp1-gap-nausea-qbinding-snomed-version", "gap_version": 1},
+    {"gap_id": "glp1-gap-abdominal-pain-qbinding-snomed-version", "gap_version": 1},
+    {"gap_id": "glp1-gap-nausea-concept-basis", "gap_version": 1},
+    {"gap_id": "glp1-gap-vomiting-concept-basis", "gap_version": 1},
+    {"gap_id": "glp1-gap-abdominal-pain-concept-basis", "gap_version": 1},
+    {"gap_id": "glp1-gap-plan-definition-governance", "gap_version": 1},
+    {"gap_id": "glp1-gap-diarrhea-concept-basis", "gap_version": 1},
+    {"gap_id": "m5k-gap-diarrhea-patient-expression-evidence", "gap_version": 1},
+    {"gap_id": "m5k-gap-nausea-patient-expression-evidence", "gap_version": 1},
+    {"gap_id": "m5k-gap-vomiting-patient-expression-evidence", "gap_version": 1},
+    {"gap_id": "m5k-gap-abdominal-pain-patient-expression-evidence", "gap_version": 1}
+  ],
+  "current_symptom_index_refs": [
+    {"symptom_index_id": "diarrhea", "record_version": 1},
+    {"symptom_index_id": "nausea", "record_version": 1},
+    {"symptom_index_id": "vomiting", "record_version": 1},
+    {"symptom_index_id": "abdominal-pain", "record_version": 1}
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "file_id": "knowledge-ops-readiness-gaps",
+  "file_version": 1,
+  "contract_version": "2.0.0",
+  "file_kind": "readiness_gap_registry",
+  "gaps": [
+    {
+      "gap_id": "gap-p1a-dailymed-live-validation-not-attempted",
+      "gap_kind": "live_validation_not_attempted",
+      "subject": {"subject_kind": "source_policy", "source_policy": {"policy_id": "source-dailymed", "policy_version": 1}},
+      "lifecycle": "open",
+      "blocks": ["persistent_governance_validation", "production_eligibility", "knowledge_release", "p1b_live_validation"],
+      "reason": "No authorized live DailyMed contract-validation run has been completed; P1b remains not attempted.",
+      "created_at": "2026-08-14T12:00:00Z",
+      "created_by_principal_id": "system-knowledge-ops-governance"
+    },
+    {
+      "gap_id": "gap-p1a-ema-live-validation-not-attempted",
+      "gap_kind": "live_validation_not_attempted",
+      "subject": {"subject_kind": "source_policy", "source_policy": {"policy_id": "source-ema-website-data", "policy_version": 1}},
+      "lifecycle": "open",
+      "blocks": ["persistent_governance_validation", "production_eligibility", "knowledge_release", "p1b_live_validation"],
+      "reason": "No authorized live EMA contract-validation run has been completed; P1b remains not attempted.",
+      "created_at": "2026-08-14T12:00:00Z",
+      "created_by_principal_id": "system-knowledge-ops-governance"
+    },
+    {
+      "gap_id": "gap-p1a-medlineplus-live-validation-not-attempted",
+      "gap_kind": "live_validation_not_attempted",
+      "subject": {"subject_kind": "source_policy", "source_policy": {"policy_id": "source-medlineplus", "policy_version": 1}},
+      "lifecycle": "open",
+      "blocks": ["persistent_governance_validation", "production_eligibility", "knowledge_release", "p1b_live_validation"],
+      "reason": "No authorized live MedlinePlus contract-validation run has been completed; P1b remains not attempted.",
+      "created_at": "2026-08-14T12:00:00Z",
+      "created_by_principal_id": "system-knowledge-ops-governance"
+    },
+    {
+      "gap_id": "gap-p1a-pubmed-live-validation-not-attempted",
+      "gap_kind": "live_validation_not_attempted",
+      "subject": {"subject_kind": "source_policy", "source_policy": {"policy_id": "nlm-pubmed-metadata", "policy_version": 2}},
+      "lifecycle": "open",
+      "blocks": ["persistent_governance_validation", "production_eligibility", "knowledge_release", "p1b_live_validation"],
+      "reason": "No authorized live PubMed contract-validation run has been completed; P1b remains not attempted.",
+      "created_at": "2026-08-14T12:00:00Z",
+      "created_by_principal_id": "system-knowledge-ops-governance"
+    },
+    {
+      "gap_id": "gap-p1a-pmc-live-validation-not-attempted",
+      "gap_kind": "live_validation_not_attempted",
+      "subject": {"subject_kind": "source_policy", "source_policy": {"policy_id": "source-pmc-open-access", "policy_version": 1}},
+      "lifecycle": "open",
+      "blocks": ["persistent_governance_validation", "production_eligibility", "knowledge_release", "p1b_live_validation"],
+      "reason": "No authorized live PMC contract-validation run has been completed; P1b remains not attempted.",
+      "created_at": "2026-08-14T12:00:00Z",
+      "created_by_principal_id": "system-knowledge-ops-governance"
+    },
+    {
+      "gap_id": "gap-p1a-dailymed-rights-unresolved",
+      "gap_kind": "rights_unresolved",
+      "subject": {"subject_kind": "source_policy", "source_policy": {"policy_id": "source-dailymed", "policy_version": 1}},
+      "lifecycle": "open",
+      "blocks": ["reuse_beyond_metadata_link_only", "production_eligibility", "knowledge_release"],
+      "reason": "No formal rights-officer decision authorizes DailyMed reuse beyond exact metadata and links.",
+      "created_at": "2026-08-14T12:00:00Z",
+      "created_by_principal_id": "system-knowledge-ops-governance"
+    },
+    {
+      "gap_id": "gap-p1a-ema-rights-unresolved",
+      "gap_kind": "rights_unresolved",
+      "subject": {"subject_kind": "source_policy", "source_policy": {"policy_id": "source-ema-website-data", "policy_version": 1}},
+      "lifecycle": "open",
+      "blocks": ["reuse_beyond_metadata_link_only", "production_eligibility", "knowledge_release"],
+      "reason": "No formal rights-officer decision authorizes EMA reuse beyond exact metadata and links.",
+      "created_at": "2026-08-14T12:00:00Z",
+      "created_by_principal_id": "system-knowledge-ops-governance"
+    },
+    {
+      "gap_id": "gap-p1a-medlineplus-rights-unresolved",
+      "gap_kind": "rights_unresolved",
+      "subject": {"subject_kind": "source_policy", "source_policy": {"policy_id": "source-medlineplus", "policy_version": 1}},
+      "lifecycle": "open",
+      "blocks": ["reuse_beyond_metadata_link_only", "production_eligibility", "knowledge_release"],
+      "reason": "No formal rights-officer decision authorizes MedlinePlus reuse beyond exact metadata and links.",
+      "created_at": "2026-08-14T12:00:00Z",
+      "created_by_principal_id": "system-knowledge-ops-governance"
+    },
+    {
+      "gap_id": "gap-p1a-pubmed-rights-unresolved",
+      "gap_kind": "rights_unresolved",
+      "subject": {"subject_kind": "source_policy", "source_policy": {"policy_id": "nlm-pubmed-metadata", "policy_version": 2}},
+      "lifecycle": "open",
+      "blocks": ["reuse_beyond_metadata_link_only", "production_eligibility", "knowledge_release"],
+      "reason": "No formal rights-officer decision authorizes PubMed reuse beyond exact bibliographic metadata and links.",
+      "created_at": "2026-08-14T12:00:00Z",
+      "created_by_principal_id": "system-knowledge-ops-governance"
+    },
+    {
+      "gap_id": "gap-p1a-pmc-rights-unresolved",
+      "gap_kind": "rights_unresolved",
+      "subject": {"subject_kind": "source_policy", "source_policy": {"policy_id": "source-pmc-open-access", "policy_version": 1}},
+      "lifecycle": "open",
+      "blocks": ["reuse_beyond_metadata_link_only", "production_eligibility", "knowledge_release"],
+      "reason": "No formal rights-officer decision authorizes PMC reuse beyond exact per-article licence-locator metadata and links.",
+      "created_at": "2026-08-14T12:00:00Z",
+      "created_by_principal_id": "system-knowledge-ops-governance"
+    },
+    {
+      "gap_id": "gap-p1b-cold-import-socket-proof-pending",
+      "gap_kind": "cold_import_socket_proof_pending",
+      "subject": {"subject_kind": "governance_gate", "gate": "cold_import_socket_proof"},
+      "lifecycle": "open",
+      "blocks": ["production_eligibility", "knowledge_release", "p1b_live_validation"],
+      "reason": "The process-start cold-import socket invariant has not been proven and the existing scoped guard has not been redefined.",
+      "created_at": "2026-08-14T12:00:00Z",
+      "created_by_principal_id": "system-knowledge-ops-governance"
+    },
+    {
+      "gap_id": "gap-core-symptom-catalog-terminology-alias-review-pending",
+      "gap_kind": "terminology_alias_review_pending",
+      "subject": {
+        "subject_kind": "core_symptom_catalog",
+        "catalog_id": "continucare-core-symptom-catalog",
+        "catalog_version": "2.0.0",
+        "concept_refs": ["nausea", "vomiting", "diarrhea", "abdominal-pain", "constipation", "decreased-appetite", "fatigue", "dizziness", "dyspnea"]
+      },
+      "lifecycle": "open",
+      "blocks": ["consumer_integration"],
+      "reason": "The nine inherited v1 concept references remain unverified for Core Symptom Catalog v2 consumer integration.",
+      "created_at": "2026-08-14T12:00:00Z",
+      "created_by_principal_id": "system-knowledge-ops-governance"
+    }
+  ]
+}

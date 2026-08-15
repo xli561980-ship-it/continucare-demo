@@ -1,0 +1,4 @@
+SYNTHETIC KNOWLEDGE CONNECTOR FIXTURE
+Domain: chronic cardiopulmonary follow-up
+Version: 1
+This file contains no clinical claim, patient content, threshold, or advice.

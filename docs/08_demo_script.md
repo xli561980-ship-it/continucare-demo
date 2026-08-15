@@ -1,5 +1,7 @@
 # 08. 比赛 Demo 方案（FHIR 基线版）
 
+> 当前 M5-D 主比赛故事与最新点击脚本见 [28_m5_d_competition_demo.md](28_m5_d_competition_demo.md) 和 [demo_scripts.md](demo_scripts.md)。本章保留早期 FHIR 基线场景，现已归入首页“其他技术演示”。
+
 本章全部身份、事件和数值均为合成演示内容。当前版本先证明“患者原始回答如何可靠进入标准数据层”，不演示未经审批的自动分诊、诊断、治疗或用药建议。
 
 ## 1. Demo 目标

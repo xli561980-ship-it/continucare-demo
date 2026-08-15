@@ -107,6 +107,12 @@ def build_model_adapter(
         from continucare.care_agent.mimo_adapter import MiMoSemanticAdapter
 
         return MiMoSemanticAdapter(config)
+    if config.provider == "feishu_aily":
+        from continucare.adapters.factory import AdapterFactory
+
+        factory = AdapterFactory()
+        if factory.statuses()["aily"].external_calls_allowed:
+            return factory.build_aily()
     return UnconfiguredModelAdapter(config)
 
 

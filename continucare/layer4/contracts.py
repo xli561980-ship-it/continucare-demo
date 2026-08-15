@@ -177,6 +177,7 @@ class EvidenceArtifactType(str, Enum):
     FHIR_RESOURCE = "fhir_resource"
     CONTRACT_RECORD = "contract_record"
     METRIC_DEFINITION = "metric_definition"
+    APPLICATION_RECORD = "application_record"
 
 
 class ResourceReference(StrictModel):
@@ -689,6 +690,9 @@ class Layer4SummaryDraft(StrictModel):
     patient_id: str
     pathway_code: str | None = None
     pathway_version: str | None = None
+    summary_kind: Literal["timeline_evidence", "manual_review_brief"] = (
+        "timeline_evidence"
+    )
     period_start: str
     period_end: str
     status: SummaryDraftStatus = SummaryDraftStatus.DRAFT
@@ -711,6 +715,9 @@ class Layer4SummaryDraft(StrictModel):
     model_usage: dict[str, int] | None = None
     provider_request_id: str | None = Field(default=None, min_length=1)
     fallback_reason_codes: list[str] = Field(default_factory=list)
+    source_evidence_digest: str | None = Field(
+        default=None, min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"
+    )
     created_at: str
 
     @model_validator(mode="after")
@@ -836,6 +843,7 @@ class DoctorReview(StrictModel):
 class DoctorReviewOutcome(StrictModel):
     review: DoctorReview
     summary: Layer4SummaryDraft
+    idempotent_replay: bool = False
 
 
 class StateMetricDefinition(StrictModel):

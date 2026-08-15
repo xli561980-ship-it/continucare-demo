@@ -1,0 +1,72 @@
+{
+  "file_id": "knowledge-ops-review-policy",
+  "file_version": 1,
+  "contract_version": "2.0.0",
+  "file_kind": "review_policy_registry",
+  "gates": [
+    {
+      "gate": "source_promotion",
+      "required_roles": ["knowledge_curator", "rights_officer"],
+      "automatic_approval_allowed": false,
+      "synthetic_events_allowed_for_tests": true,
+      "synthetic_events_count_toward_release": false,
+      "rationale": "Metadata quality and exact reuse rights are independent decisions before a staged candidate becomes a governed Source."
+    },
+    {
+      "gate": "content_persistence",
+      "required_roles": ["rights_officer", "knowledge_curator"],
+      "automatic_approval_allowed": false,
+      "synthetic_events_allowed_for_tests": true,
+      "synthetic_events_count_toward_release": false,
+      "rationale": "A visible web page is not evidence that ContinuCare may persist, index, or redistribute its content."
+    },
+    {
+      "gate": "terminology_mapping_promotion",
+      "required_roles": ["terminologist", "rights_officer", "knowledge_curator"],
+      "automatic_approval_allowed": false,
+      "synthetic_events_allowed_for_tests": true,
+      "synthetic_events_count_toward_release": false,
+      "rationale": "Mappings require semantic validation and a separate rights determination."
+    },
+    {
+      "gate": "translation_promotion",
+      "required_roles": ["rights_officer", "terminologist", "clinical_reviewer"],
+      "automatic_approval_allowed": false,
+      "synthetic_events_allowed_for_tests": true,
+      "synthetic_events_count_toward_release": false,
+      "rationale": "Translation may be a licensed adaptation and can change clinical meaning."
+    },
+    {
+      "gate": "clinical_claim_approval",
+      "required_roles": ["clinical_reviewer", "knowledge_curator"],
+      "automatic_approval_allowed": false,
+      "synthetic_events_allowed_for_tests": true,
+      "synthetic_events_count_toward_release": false,
+      "rationale": "A citation and an internally consistent draft do not substitute for accountable clinical review."
+    },
+    {
+      "gate": "binding_approval",
+      "required_roles": ["clinical_reviewer", "knowledge_curator"],
+      "automatic_approval_allowed": false,
+      "synthetic_events_allowed_for_tests": true,
+      "synthetic_events_count_toward_release": false,
+      "rationale": "A Claim may be sound in one context but unsafe to bind to another population, product, or jurisdiction."
+    },
+    {
+      "gate": "patient_content_approval",
+      "required_roles": ["clinical_reviewer", "rights_officer", "knowledge_curator"],
+      "automatic_approval_allowed": false,
+      "synthetic_events_allowed_for_tests": true,
+      "synthetic_events_count_toward_release": false,
+      "rationale": "Patient-facing content needs clinical, provenance, and reuse review even when it is informational."
+    },
+    {
+      "gate": "knowledge_release",
+      "required_roles": ["knowledge_curator", "rights_officer", "clinical_reviewer"],
+      "automatic_approval_allowed": false,
+      "synthetic_events_allowed_for_tests": true,
+      "synthetic_events_count_toward_release": false,
+      "rationale": "Release readiness is a separate decision and never grants runtime authority."
+    }
+  ]
+}

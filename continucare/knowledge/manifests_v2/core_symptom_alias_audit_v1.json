@@ -1,0 +1,143 @@
+{
+  "file_id": "knowledge-ops-core-symptom-alias-audit",
+  "file_version": 1,
+  "contract_version": "2.0.0",
+  "file_kind": "core_symptom_alias_audit",
+  "audit": {
+    "audit_id": "core-symptom-alias-technical-boundary-audit",
+    "audit_version": 1,
+    "audit_kind": "technical_boundary_audit",
+    "catalog_id": "continucare-core-symptom-catalog",
+    "catalog_version": "2.0.0",
+    "catalog_sha256": "e7a1694aa7468aa236584f104acbd60e6d0d4c0edf2cc2991ef8771bbaf2e7cf",
+    "source_catalog_id": "continucare-glp1-patient-reported-symptoms",
+    "source_catalog_version": "1.0.0",
+    "source_catalog_sha256": "34c67ac92f24fcebf6e43c6a2d0dc27d6963922af84a37741a6f6930abf35e7a",
+    "concept_audits": [
+      {
+        "benchmark_id": "core-symptom-nausea",
+        "benchmark_key": "nausea",
+        "existing_concept_ref": "nausea",
+        "preferred_zh": "恶心",
+        "benchmark_label_en": "nausea",
+        "aliases": [
+          {"source_alias_index": 0, "alias_zh": "恶心", "source_role": "v1_preferred_display_label", "disposition": "display_label_only_pending_formal_terminology_review", "boundary_reason": "v1_preferred_display_label_not_formal_patient_expression_review", "display_label": true},
+          {"source_alias_index": 1, "alias_zh": "反胃", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "colloquial_expression_requires_formal_terminology_review", "display_label": false},
+          {"source_alias_index": 2, "alias_zh": "想吐", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "colloquial_expression_requires_formal_terminology_review", "display_label": false},
+          {"source_alias_index": 3, "alias_zh": "胃里难受", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "broad_or_ambiguous_expression_requires_semantic_scope_review", "display_label": false}
+        ]
+      },
+      {
+        "benchmark_id": "core-symptom-vomiting",
+        "benchmark_key": "vomiting",
+        "existing_concept_ref": "vomiting",
+        "preferred_zh": "呕吐",
+        "benchmark_label_en": "vomiting",
+        "aliases": [
+          {"source_alias_index": 0, "alias_zh": "呕吐", "source_role": "v1_preferred_display_label", "disposition": "display_label_only_pending_formal_terminology_review", "boundary_reason": "v1_preferred_display_label_not_formal_patient_expression_review", "display_label": true},
+          {"source_alias_index": 1, "alias_zh": "吐了", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "colloquial_expression_requires_formal_terminology_review", "display_label": false},
+          {"source_alias_index": 2, "alias_zh": "吐过", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "colloquial_expression_requires_formal_terminology_review", "display_label": false},
+          {"source_alias_index": 3, "alias_zh": "一直吐", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "colloquial_expression_requires_formal_terminology_review", "display_label": false}
+        ]
+      },
+      {
+        "benchmark_id": "core-symptom-diarrhea",
+        "benchmark_key": "diarrhea",
+        "existing_concept_ref": "diarrhea",
+        "preferred_zh": "腹泻",
+        "benchmark_label_en": "diarrhea",
+        "aliases": [
+          {"source_alias_index": 0, "alias_zh": "腹泻", "source_role": "v1_preferred_display_label", "disposition": "display_label_only_pending_formal_terminology_review", "boundary_reason": "v1_preferred_display_label_not_formal_patient_expression_review", "display_label": true},
+          {"source_alias_index": 1, "alias_zh": "拉肚子", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "colloquial_expression_requires_formal_terminology_review", "display_label": false},
+          {"source_alias_index": 2, "alias_zh": "大便稀", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "stool_description_requires_semantic_equivalence_review", "display_label": false},
+          {"source_alias_index": 3, "alias_zh": "稀便", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "stool_description_requires_semantic_equivalence_review", "display_label": false}
+        ]
+      },
+      {
+        "benchmark_id": "core-symptom-abdominal-pain",
+        "benchmark_key": "abdominal-pain",
+        "existing_concept_ref": "abdominal-pain",
+        "preferred_zh": "腹痛",
+        "benchmark_label_en": "abdominal pain",
+        "aliases": [
+          {"source_alias_index": 0, "alias_zh": "腹痛", "source_role": "v1_preferred_display_label", "disposition": "display_label_only_pending_formal_terminology_review", "boundary_reason": "v1_preferred_display_label_not_formal_patient_expression_review", "display_label": true},
+          {"source_alias_index": 1, "alias_zh": "肚子痛", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "broad_or_ambiguous_expression_requires_semantic_scope_review", "display_label": false},
+          {"source_alias_index": 2, "alias_zh": "肚子疼", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "broad_or_ambiguous_expression_requires_semantic_scope_review", "display_label": false},
+          {"source_alias_index": 3, "alias_zh": "胃痛", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "broad_or_ambiguous_expression_requires_semantic_scope_review", "display_label": false}
+        ]
+      },
+      {
+        "benchmark_id": "core-symptom-constipation",
+        "benchmark_key": "constipation",
+        "existing_concept_ref": "constipation",
+        "preferred_zh": "便秘",
+        "benchmark_label_en": "constipation",
+        "aliases": [
+          {"source_alias_index": 0, "alias_zh": "便秘", "source_role": "v1_preferred_display_label", "disposition": "display_label_only_pending_formal_terminology_review", "boundary_reason": "v1_preferred_display_label_not_formal_patient_expression_review", "display_label": true},
+          {"source_alias_index": 1, "alias_zh": "排便困难", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "functional_expression_requires_semantic_equivalence_review", "display_label": false},
+          {"source_alias_index": 2, "alias_zh": "大便干", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "stool_description_requires_semantic_equivalence_review", "display_label": false},
+          {"source_alias_index": 3, "alias_zh": "解不出来", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "functional_expression_requires_semantic_equivalence_review", "display_label": false}
+        ]
+      },
+      {
+        "benchmark_id": "core-symptom-decreased-appetite",
+        "benchmark_key": "decreased-appetite",
+        "existing_concept_ref": "decreased-appetite",
+        "preferred_zh": "食欲下降",
+        "benchmark_label_en": "decreased appetite",
+        "aliases": [
+          {"source_alias_index": 0, "alias_zh": "食欲下降", "source_role": "v1_preferred_display_label", "disposition": "display_label_only_pending_formal_terminology_review", "boundary_reason": "v1_preferred_display_label_not_formal_patient_expression_review", "display_label": true},
+          {"source_alias_index": 1, "alias_zh": "没胃口", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "colloquial_expression_requires_formal_terminology_review", "display_label": false},
+          {"source_alias_index": 2, "alias_zh": "不想吃东西", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "functional_expression_requires_semantic_equivalence_review", "display_label": false},
+          {"source_alias_index": 3, "alias_zh": "食欲差", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "colloquial_expression_requires_formal_terminology_review", "display_label": false}
+        ]
+      },
+      {
+        "benchmark_id": "core-symptom-fatigue",
+        "benchmark_key": "fatigue",
+        "existing_concept_ref": "fatigue",
+        "preferred_zh": "疲劳",
+        "benchmark_label_en": "fatigue",
+        "aliases": [
+          {"source_alias_index": 0, "alias_zh": "疲劳", "source_role": "v1_preferred_display_label", "disposition": "display_label_only_pending_formal_terminology_review", "boundary_reason": "v1_preferred_display_label_not_formal_patient_expression_review", "display_label": true},
+          {"source_alias_index": 1, "alias_zh": "疲倦", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "colloquial_expression_requires_formal_terminology_review", "display_label": false},
+          {"source_alias_index": 2, "alias_zh": "很累", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "broad_or_ambiguous_expression_requires_semantic_scope_review", "display_label": false},
+          {"source_alias_index": 3, "alias_zh": "没精神", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "broad_or_ambiguous_expression_requires_semantic_scope_review", "display_label": false}
+        ]
+      },
+      {
+        "benchmark_id": "core-symptom-dizziness",
+        "benchmark_key": "dizziness",
+        "existing_concept_ref": "dizziness",
+        "preferred_zh": "头晕",
+        "benchmark_label_en": "dizziness",
+        "aliases": [
+          {"source_alias_index": 0, "alias_zh": "头晕", "source_role": "v1_preferred_display_label", "disposition": "display_label_only_pending_formal_terminology_review", "boundary_reason": "v1_preferred_display_label_not_formal_patient_expression_review", "display_label": true},
+          {"source_alias_index": 1, "alias_zh": "晕乎乎", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "dizziness_expression_requires_subtype_disambiguation", "display_label": false},
+          {"source_alias_index": 2, "alias_zh": "头昏", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "dizziness_expression_requires_subtype_disambiguation", "display_label": false}
+        ]
+      },
+      {
+        "benchmark_id": "core-symptom-dyspnea",
+        "benchmark_key": "dyspnea",
+        "existing_concept_ref": "dyspnea",
+        "preferred_zh": "呼吸困难",
+        "benchmark_label_en": "dyspnea",
+        "aliases": [
+          {"source_alias_index": 0, "alias_zh": "呼吸困难", "source_role": "v1_preferred_display_label", "disposition": "display_label_only_pending_formal_terminology_review", "boundary_reason": "v1_preferred_display_label_not_formal_patient_expression_review", "display_label": true},
+          {"source_alias_index": 1, "alias_zh": "喘不上气", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "dyspnea_expression_cannot_imply_red_flag_or_emergency", "display_label": false},
+          {"source_alias_index": 2, "alias_zh": "气短", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "dyspnea_expression_cannot_imply_red_flag_or_emergency", "display_label": false},
+          {"source_alias_index": 3, "alias_zh": "不好呼吸", "source_role": "inherited_v1_alias", "disposition": "withheld_pending_formal_terminology_review", "boundary_reason": "dyspnea_expression_cannot_imply_red_flag_or_emergency", "display_label": false}
+        ]
+      }
+    ],
+    "terminology_review_status": "pending_formal_terminology_review",
+    "formal_terminologist_review_completed": false,
+    "clinical_patient_expression_validation_completed": false,
+    "technical_audit_only": true,
+    "contains_patient_data": false,
+    "release_ready": false,
+    "knowledge_effect": "informational_only",
+    "runtime_authority": "none"
+  }
+}

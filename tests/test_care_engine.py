@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
+
 import pytest
 
 from continucare.adapters.sqlite_store import SQLiteStore
 from continucare.care_engine import CareEngine
+from continucare.db import connect
 from continucare.demo_data import DEMO_PATIENT_ID
+from continucare.errors import ConcurrentWriteConflict
 from continucare.fhir.questionnaires import build_questionnaire_response
 from continucare.fhir.r4 import FHIRValidationError
 from continucare.fhir.terminology import UCUM
@@ -144,6 +149,10 @@ def test_complete_session_persists_response_and_deterministic_observations(tmp_p
     repeated = engine.complete(session.session_id, answers)
     assert repeated.questionnaire_response["id"] == result.questionnaire_response["id"]
     assert len(reopened.list_messages(DEMO_PATIENT_ID)) == 1
+    assert sum(
+        item.event_type == "questionnaire_response_completed"
+        for item in reopened.list_audit_events(DEMO_PATIENT_ID)
+    ) == 1
 
     with pytest.raises(ValueError, match="不同答案"):
         engine.complete(session.session_id, {"nausea-present": False})
@@ -178,3 +187,126 @@ def test_stopped_session_cannot_be_submitted(tmp_path):
     assert stopped.status == CareSessionStatus.STOPPED
     with pytest.raises(ValueError, match="只有进行中的"):
         engine.complete(session.session_id, {"nausea-present": True})
+
+
+def _completion_counts(store, session_id):
+    with connect(store.db_path) as connection:
+        session = connection.execute(
+            "SELECT * FROM care_sessions WHERE session_id=?", (session_id,)
+        ).fetchone()
+        return {
+            "session": dict(session),
+            "messages": connection.execute(
+                "SELECT COUNT(*) AS count FROM followup_messages"
+            ).fetchone()["count"],
+            "responses": connection.execute(
+                "SELECT COUNT(*) AS count FROM fhir_questionnaire_responses"
+            ).fetchone()["count"],
+            "observations": connection.execute(
+                "SELECT COUNT(*) AS count FROM fhir_observations"
+            ).fetchone()["count"],
+            "evidence": connection.execute(
+                "SELECT COUNT(*) AS count FROM observation_evidence"
+            ).fetchone()["count"],
+            "audits": connection.execute(
+                "SELECT COUNT(*) AS count FROM audit_events "
+                "WHERE event_type='questionnaire_response_completed'"
+            ).fetchone()["count"],
+        }
+
+
+@pytest.mark.parametrize(
+    "fault_stage",
+    [
+        "before_message",
+        "after_message",
+        "after_questionnaire_response",
+        "after_observation:0",
+        "after_evidence:0",
+        "after_session",
+        "after_audit",
+        "before_commit",
+    ],
+)
+def test_completion_faults_roll_back_resources_session_and_audit(
+    tmp_path, fault_stage
+):
+    store = SQLiteStore(tmp_path / f"completion-{fault_stage}.db")
+    engine = CareEngine(store)
+    session = engine.start_or_resume(DEMO_PATIENT_ID)
+    before = _completion_counts(store, session.session_id)
+
+    def inject(stage):
+        if stage == fault_stage:
+            raise RuntimeError(f"fault:{stage}")
+
+    store._completion_bundle_fault = inject
+    with pytest.raises(RuntimeError, match=fault_stage):
+        engine.complete(session.session_id, complete_answers())
+
+    assert _completion_counts(store, session.session_id) == before
+
+
+def test_completed_session_requires_the_joint_completion_audit_for_replay(tmp_path):
+    store = SQLiteStore(tmp_path / "completion-proof.db")
+    engine = CareEngine(store)
+    session = engine.start_or_resume(DEMO_PATIENT_ID)
+    answers = complete_answers()
+    engine.complete(session.session_id, answers)
+    with connect(store.db_path) as connection:
+        connection.execute(
+            "DELETE FROM audit_events WHERE event_type='questionnaire_response_completed'"
+        )
+
+    with pytest.raises(ConcurrentWriteConflict, match="incomplete or conflicting"):
+        engine.complete(session.session_id, answers)
+
+
+def test_concurrent_completion_has_one_complete_winner(tmp_path):
+    store = SQLiteStore(tmp_path / "completion-concurrent.db")
+    engine = CareEngine(store)
+    session = engine.start_or_resume(DEMO_PATIENT_ID)
+    barrier = Barrier(2)
+    original = store.complete_care_session_submission
+
+    def synchronized(**kwargs):
+        barrier.wait(timeout=5)
+        return original(**kwargs)
+
+    store.complete_care_session_submission = synchronized
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [
+            pool.submit(engine.complete, session.session_id, complete_answers())
+            for _ in range(2)
+        ]
+    winners = []
+    conflicts = []
+    for future in futures:
+        try:
+            winners.append(future.result())
+        except ConcurrentWriteConflict as exc:
+            conflicts.append(exc)
+
+    assert len(winners) == 1
+    assert len(conflicts) == 1
+    counts = _completion_counts(store, session.session_id)
+    assert counts["session"]["status"] == "completed"
+    assert counts["messages"] == 1
+    assert counts["responses"] == 1
+    assert counts["observations"] == 4
+    assert counts["evidence"] == 4
+    assert counts["audits"] == 1
+
+
+def test_completion_sqlite_busy_is_a_stable_conflict(tmp_path):
+    store = SQLiteStore(tmp_path / "completion-busy.db")
+    engine = CareEngine(store)
+    session = engine.start_or_resume(DEMO_PATIENT_ID)
+    before = _completion_counts(store, session.session_id)
+
+    with connect(store.db_path) as locked:
+        locked.execute("BEGIN IMMEDIATE")
+        with pytest.raises(ConcurrentWriteConflict, match="database is busy"):
+            engine.complete(session.session_id, complete_answers())
+
+    assert _completion_counts(store, session.session_id) == before

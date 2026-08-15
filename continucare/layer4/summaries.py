@@ -7,6 +7,7 @@ import json
 from datetime import datetime
 from typing import Iterable, cast
 
+from continucare.errors import ConcurrentWriteConflict
 from continucare.layer4.contracts import (
     DoctorReview,
     DoctorReviewDecision,
@@ -22,6 +23,7 @@ from continucare.layer4.contracts import (
 from continucare.layer4.fhir import build_provenance
 from continucare.layer4.memory import ClinicalMemoryService
 from continucare.layer4.repository import Layer4Repository
+from continucare.services.audit import build_audit_event
 
 
 SUMMARY_AGENT_REFERENCE = "Device/continucare-deterministic-summary"
@@ -76,6 +78,16 @@ def _canonical_evidence(evidence: EvidenceReference) -> str:
     )
 
 
+def _modified_items_digest(items: list[SummaryEvidenceItem] | None) -> str:
+    payload = json.dumps(
+        [item.model_dump(mode="json") for item in items] if items is not None else [],
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 class EvidenceSummaryService:
     """Project current Timeline events into evidence-bound deterministic bullets."""
 
@@ -117,7 +129,13 @@ class EvidenceSummaryService:
         items = [self._item_from_timeline(item) for item in timeline]
         source_ids = [item.timeline_event_id for item in timeline]
         summary_id = _stable_id(
-            "summary", patient_id, period_start, period_end
+            "summary-v2",
+            patient_id,
+            self.memory.pathway_code,
+            self.memory.pathway_version,
+            "timeline_evidence",
+            period_start,
+            period_end,
         )
         current = self.repository.get_contract("summary_draft", summary_id)
         if current is not None:
@@ -171,8 +189,11 @@ class EvidenceSummaryService:
             generator_version=self.GENERATOR_VERSION,
             created_at=generated_at,
         )
-        self.repository.save_fhir_resource(provenance, patient_id=patient_id)
-        self.repository.save_contract(summary)
+        self.repository.persist_summary_bundle(
+            expected_current=cast(Layer4SummaryDraft | None, current),
+            summary=summary,
+            provenance=provenance,
+        )
         return summary
 
     @staticmethod
@@ -226,24 +247,30 @@ class DoctorReviewService:
         if not reviewer:
             raise ValueError("doctor review requires reviewer_reference")
         _instant(reviewed_at)
-        note_text = note.strip() if note is not None else None
+        note_text = (note.strip() or None) if note is not None else None
         requested_items = (
             [SummaryEvidenceItem.model_validate(item) for item in modified_items]
             if modified_items is not None
             else None
         )
+        items_digest = _modified_items_digest(requested_items)
         review_id = _stable_id(
             "doctor-review",
             summary_id,
             summary_version,
-            decision.value,
             reviewer,
-            reviewed_at,
+            decision.value,
+            note_text or "",
+            items_digest,
         )
         existing = self.repository.get_contract("doctor_review", review_id)
         if existing is not None:
             return self._idempotent_retry(
                 review=cast(DoctorReview, existing),
+                summary_id=summary_id,
+                summary_version=summary_version,
+                reviewer_reference=reviewer,
+                decision=decision,
                 note=note_text,
                 modified_items=requested_items,
             )
@@ -254,9 +281,16 @@ class DoctorReviewService:
         if source_record is None:
             raise ValueError("summary version does not exist")
         source = cast(Layer4SummaryDraft, source_record)
+        if (
+            source.summary_kind == "timeline_evidence"
+            and not source.summary_id.startswith("summary-v2-")
+        ):
+            raise ValueError("legacy timeline Summary is read-only and cannot be reviewed")
         current = self.repository.get_contract("summary_draft", summary_id)
         if current is None or cast(Layer4SummaryDraft, current).version != summary_version:
-            raise ValueError("doctor review cannot act on a stale summary version")
+            raise ConcurrentWriteConflict(
+                "doctor review cannot act on a stale summary version"
+            )
         if source.status != SummaryDraftStatus.SAFETY_REVIEWED:
             raise ValueError("doctor review requires a safety-reviewed summary")
         if _instant(reviewed_at) <= _instant(source.created_at):
@@ -338,20 +372,61 @@ class DoctorReviewService:
                 *self._evidence_references(result_items),
             ],
         )
-        self.repository.save_fhir_resource(provenance, patient_id=source.patient_id)
-        self.repository.save_contract(result)
-        self.repository.save_contract(review)
-        return DoctorReviewOutcome(review=review, summary=result)
+        audit_event = build_audit_event(
+            event_id=_stable_id("audit", review_id, "doctor_reviewed_summary"),
+            patient_id=source.patient_id,
+            entity_type="Layer4SummaryDraft",
+            entity_id=summary_id,
+            event_type="doctor_reviewed_summary",
+            actor_type="doctor",
+            created_at=reviewed_at,
+            details={
+                "source_summary_version": summary_version,
+                "result_summary_version": result_version,
+                "review_id": review_id,
+                "reviewer_reference": reviewer,
+                "decision": decision.value,
+                "modified_items_digest": items_digest,
+                "clinical_assessment": "not_assessed",
+            },
+        )
+        created = self.repository.persist_doctor_review_bundle(
+            expected_source=source,
+            provenance=provenance,
+            result_summary=result,
+            review=review,
+            audit_event=audit_event,
+        )
+        return DoctorReviewOutcome(
+            review=review,
+            summary=result,
+            idempotent_replay=not created,
+        )
 
     def _idempotent_retry(
         self,
         *,
         review: DoctorReview,
+        summary_id: str,
+        summary_version: str,
+        reviewer_reference: str,
+        decision: DoctorReviewDecision,
         note: str | None,
         modified_items: list[SummaryEvidenceItem] | None,
     ) -> DoctorReviewOutcome:
+        if (
+            review.summary_id != summary_id
+            or review.summary_version != summary_version
+            or review.reviewer_reference != reviewer_reference
+            or review.decision != decision
+        ):
+            raise ConcurrentWriteConflict(
+                "doctor review identity conflicts with a different request"
+            )
         if review.note != note:
-            raise ValueError("doctor review identity conflicts with a different note")
+            raise ConcurrentWriteConflict(
+                "doctor review identity conflicts with a different note"
+            )
         if not review.result_summary_id or not review.result_summary_version:
             raise ValueError("stored doctor review has no result summary reference")
         result_record = self.repository.get_contract(
@@ -364,12 +439,62 @@ class DoctorReviewService:
         result = cast(Layer4SummaryDraft, result_record)
         if review.decision == DoctorReviewDecision.MODIFY:
             if modified_items != result.items:
-                raise ValueError(
+                raise ConcurrentWriteConflict(
                     "doctor review identity conflicts with different modified items"
                 )
         elif modified_items is not None:
             raise ValueError("stored accept/reject review has no modified items")
-        return DoctorReviewOutcome(review=review, summary=result)
+        source_record = self.repository.get_contract(
+            "summary_draft", summary_id, version=summary_version
+        )
+        if source_record is None:
+            raise ConcurrentWriteConflict("doctor review source summary is missing")
+        if not review.provenance_reference:
+            raise ConcurrentWriteConflict("doctor review Provenance is missing")
+        provenance = self.repository.get_fhir_resource(
+            "Provenance",
+            review.provenance_reference.removeprefix("Provenance/"),
+            version_id="1",
+        )
+        if provenance is None:
+            raise ConcurrentWriteConflict("doctor review Provenance is missing")
+        items_digest = _modified_items_digest(modified_items)
+        audit_event = build_audit_event(
+            event_id=_stable_id(
+                "audit", review.review_id, "doctor_reviewed_summary"
+            ),
+            patient_id=review.patient_id,
+            entity_type="Layer4SummaryDraft",
+            entity_id=summary_id,
+            event_type="doctor_reviewed_summary",
+            actor_type="doctor",
+            created_at=review.reviewed_at,
+            details={
+                "source_summary_version": summary_version,
+                "result_summary_version": result.version,
+                "review_id": review.review_id,
+                "reviewer_reference": review.reviewer_reference,
+                "decision": review.decision.value,
+                "modified_items_digest": items_digest,
+                "clinical_assessment": "not_assessed",
+            },
+        )
+        created = self.repository.persist_doctor_review_bundle(
+            expected_source=cast(Layer4SummaryDraft, source_record),
+            provenance=provenance,
+            result_summary=result,
+            review=review,
+            audit_event=audit_event,
+        )
+        if created:
+            raise ConcurrentWriteConflict(
+                "doctor review replay unexpectedly created new persistence facts"
+            )
+        return DoctorReviewOutcome(
+            review=review,
+            summary=result,
+            idempotent_replay=True,
+        )
 
     @staticmethod
     def _validate_modified_items(

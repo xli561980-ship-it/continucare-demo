@@ -1,0 +1,633 @@
+{
+  "file_id": "knowledge-ops-source-policies",
+  "file_version": 1,
+  "contract_version": "2.0.0",
+  "file_kind": "source_policy_registry",
+  "policies": [
+    {
+      "policy_id": "nmpa-cn-regulatory-metadata",
+      "policy_version": 1,
+      "display_name": "NMPA 中国大陆监管来源（元数据/链接）",
+      "issuing_authority": "国家药品监督管理局",
+      "source_types": [
+        "regulatory_product_information",
+        "regulatory_safety_communication"
+      ],
+      "source_jurisdictions": [{"system": "iso3166_1", "code": "CN"}],
+      "languages": ["zh-CN"],
+      "allowed_origins": ["https://www.nmpa.gov.cn"],
+      "allow_subdomains": false,
+      "allowed_query_parameters": [],
+      "allowed_content_types": ["text/html", "application/pdf"],
+      "maximum_response_bytes": 10000000,
+      "license_posture": "needs_verification",
+      "terms_uri": null,
+      "operation_rules": [
+        {
+          "operation": "register_link_metadata",
+          "decision": "allow",
+          "rationale": "机器可以登记精确链接和来源元数据，但这不是内容复用许可。"
+        },
+        {
+          "operation": "discover_metadata",
+          "decision": "allow",
+          "rationale": "只允许无患者数据的来源发现与元数据候选生成。"
+        },
+        {
+          "operation": "fetch_for_change_detection",
+          "decision": "offline_fixture_only",
+          "rationale": "本阶段仅用 synthetic offline fixture 验证变更检测。"
+        },
+        {
+          "operation": "persist_snapshot",
+          "decision": "offline_fixture_only",
+          "rationale": "真实正文持久化需先完成官方复用条款与 rights review。"
+        },
+        {
+          "operation": "persist_full_text",
+          "decision": "review_required",
+          "rationale": "公开可见不等于允许本地保存或商业复用。"
+        },
+        {
+          "operation": "short_quote",
+          "decision": "review_required",
+          "rationale": "引用范围和商业用途必须由 rights officer 判断。"
+        },
+        {
+          "operation": "translate",
+          "decision": "review_required",
+          "rationale": "翻译可能构成改编，且必须临床复核。"
+        },
+        {
+          "operation": "adapt",
+          "decision": "review_required",
+          "rationale": "不得从说明书自动综合生成 ContinuCare 临床主张。"
+        },
+        {
+          "operation": "commercial_use",
+          "decision": "review_required",
+          "rationale": "按未来商业产品标准逐项核验。"
+        },
+        {
+          "operation": "model_training",
+          "decision": "deny",
+          "rationale": "本阶段禁止将来源正文用于模型训练。"
+        },
+        {
+          "operation": "vector_index",
+          "decision": "deny",
+          "rationale": "本阶段不建立未经许可的正文向量索引。"
+        }
+      ],
+      "live_network_enabled": false,
+      "status": "active",
+      "registered_at": "2026-08-14T00:00:00+02:00",
+      "registered_by": "system:knowledge-ops-design",
+      "notes": [
+        "该 policy 是 default-deny 操作约束，不是正式许可结论。",
+        "NMPA 公开查询的系统化复用/API 条款目前保持 NEEDS_VERIFICATION。"
+      ]
+    },
+    {
+      "policy_id": "who-icd11-release-metadata",
+      "policy_version": 1,
+      "display_name": "WHO ICD-11 版本与官方中文元数据",
+      "issuing_authority": "World Health Organization",
+      "source_types": ["terminology_standard"],
+      "source_jurisdictions": [{"system": "global", "code": "GLOBAL"}],
+      "languages": ["en", "zh-CN"],
+      "allowed_origins": ["https://icd.who.int", "https://www.who.int"],
+      "allow_subdomains": false,
+      "allowed_query_parameters": [],
+      "allowed_content_types": ["text/html", "application/json", "application/pdf"],
+      "maximum_response_bytes": 20000000,
+      "license_posture": "needs_verification",
+      "terms_uri": "https://www.who.int/about/policies/publishing/copyright",
+      "operation_rules": [
+        {
+          "operation": "register_link_metadata",
+          "decision": "allow",
+          "rationale": "允许登记官方 release、语言和链接元数据。"
+        },
+        {
+          "operation": "discover_metadata",
+          "decision": "allow",
+          "rationale": "允许发现公开 release 元数据，不复制分类内容。"
+        },
+        {
+          "operation": "fetch_for_change_detection",
+          "decision": "offline_fixture_only",
+          "rationale": "真实 API/下载需要条款、凭据和版本策略另行批准。"
+        },
+        {
+          "operation": "persist_snapshot",
+          "decision": "offline_fixture_only",
+          "rationale": "本阶段只验证 synthetic snapshot。"
+        },
+        {
+          "operation": "persist_full_text",
+          "decision": "review_required",
+          "rationale": "分类内容的复制与商业使用需要 exact licence review。"
+        },
+        {
+          "operation": "translate",
+          "decision": "review_required",
+          "rationale": "仅使用官方中文版本；自制翻译需要 WHO 许可与临床/术语审核。"
+        },
+        {
+          "operation": "adapt",
+          "decision": "deny",
+          "rationale": "No-Derivatives 边界下默认禁止自行改编。"
+        },
+        {
+          "operation": "create_mapping",
+          "decision": "review_required",
+          "rationale": "映射是独立语义资产，需要许可和 terminologist 审核。"
+        },
+        {
+          "operation": "commercial_use",
+          "decision": "review_required",
+          "rationale": "未来商业用途需 WHO exact terms/协议确认。"
+        },
+        {
+          "operation": "model_training",
+          "decision": "deny",
+          "rationale": "本阶段禁止用于模型训练。"
+        },
+        {
+          "operation": "vector_index",
+          "decision": "deny",
+          "rationale": "本阶段不持久化分类正文或向量。"
+        }
+      ],
+      "live_network_enabled": false,
+      "status": "active",
+      "registered_at": "2026-08-14T00:00:00+02:00",
+      "registered_by": "system:knowledge-ops-design",
+      "notes": ["ICD-11 用于分类职责；不替代症状术语、检验编码或药物警戒术语。"]
+    },
+    {
+      "policy_id": "loinc-registered-distribution",
+      "policy_version": 1,
+      "display_name": "LOINC 注册分发与版本元数据",
+      "issuing_authority": "Regenstrief Institute",
+      "source_types": ["terminology_standard", "interoperability_standard"],
+      "source_jurisdictions": [{"system": "global", "code": "GLOBAL"}],
+      "languages": ["en", "zh-CN"],
+      "allowed_origins": ["https://loinc.org"],
+      "allow_subdomains": true,
+      "allowed_query_parameters": [],
+      "allowed_content_types": ["text/html", "application/zip", "text/csv"],
+      "maximum_response_bytes": 50000000,
+      "license_posture": "registration_required",
+      "terms_uri": "https://loinc.org/license/",
+      "operation_rules": [
+        {
+          "operation": "register_link_metadata",
+          "decision": "allow",
+          "rationale": "允许登记 release 和官方许可链接。"
+        },
+        {
+          "operation": "discover_metadata",
+          "decision": "allow",
+          "rationale": "允许发现 release 元数据。"
+        },
+        {
+          "operation": "fetch_for_change_detection",
+          "decision": "offline_fixture_only",
+          "rationale": "本轮不使用真实注册下载或 API。"
+        },
+        {
+          "operation": "persist_snapshot",
+          "decision": "offline_fixture_only",
+          "rationale": "只允许 synthetic fixture 验证。"
+        },
+        {
+          "operation": "persist_full_text",
+          "decision": "review_required",
+          "rationale": "下载、展示和再分发须满足 LOINC 许可义务。"
+        },
+        {
+          "operation": "translate",
+          "decision": "review_required",
+          "rationale": "翻译版本需来源、版本、许可和 terminologist 审核。"
+        },
+        {
+          "operation": "create_mapping",
+          "decision": "review_required",
+          "rationale": "本地映射必须独立版本化且不得伪装为官方映射。"
+        },
+        {
+          "operation": "commercial_use",
+          "decision": "review_required",
+          "rationale": "未来商业用途需要 rights officer 复核 exact distribution。"
+        },
+        {
+          "operation": "model_training",
+          "decision": "deny",
+          "rationale": "本阶段禁止模型训练。"
+        },
+        {
+          "operation": "vector_index",
+          "decision": "deny",
+          "rationale": "本阶段禁止正文向量化。"
+        }
+      ],
+      "live_network_enabled": false,
+      "status": "active",
+      "registered_at": "2026-08-14T00:00:00+02:00",
+      "registered_by": "system:knowledge-ops-design",
+      "notes": ["LOINC 适合观察、量表和问题编码，不是通用疾病分类。"]
+    },
+    {
+      "policy_id": "meddra-subscription-metadata",
+      "policy_version": 1,
+      "display_name": "MedDRA 订阅与版本元数据",
+      "issuing_authority": "ICH MedDRA Maintenance and Support Services Organization",
+      "source_types": ["terminology_standard"],
+      "source_jurisdictions": [{"system": "global", "code": "GLOBAL"}],
+      "languages": ["en", "zh-CN"],
+      "allowed_origins": ["https://www.meddra.org"],
+      "allow_subdomains": false,
+      "allowed_query_parameters": [],
+      "allowed_content_types": ["text/html", "application/pdf"],
+      "maximum_response_bytes": 10000000,
+      "license_posture": "license_required",
+      "terms_uri": "https://www.meddra.org/subscription",
+      "operation_rules": [
+        {
+          "operation": "register_link_metadata",
+          "decision": "allow",
+          "rationale": "允许登记 release、订阅状态和官方链接。"
+        },
+        {
+          "operation": "discover_metadata",
+          "decision": "allow",
+          "rationale": "允许发现公开版本元数据，不取得术语正文。"
+        },
+        {
+          "operation": "fetch_for_change_detection",
+          "decision": "offline_fixture_only",
+          "rationale": "本轮不连接订阅系统。"
+        },
+        {
+          "operation": "persist_snapshot",
+          "decision": "offline_fixture_only",
+          "rationale": "仅 synthetic fixture。"
+        },
+        {
+          "operation": "persist_full_text",
+          "decision": "review_required",
+          "rationale": "术语内容受订阅和分发限制。"
+        },
+        {
+          "operation": "redistribute",
+          "decision": "deny",
+          "rationale": "未取得精确授权前禁止第三方再分发。"
+        },
+        {
+          "operation": "create_mapping",
+          "decision": "review_required",
+          "rationale": "映射需订阅许可与 terminologist 审核。"
+        },
+        {
+          "operation": "commercial_use",
+          "decision": "review_required",
+          "rationale": "未来商业用途需确认订阅类别和部署边界。"
+        },
+        {
+          "operation": "model_training",
+          "decision": "deny",
+          "rationale": "禁止未经授权的模型训练。"
+        },
+        {
+          "operation": "vector_index",
+          "decision": "deny",
+          "rationale": "禁止未经授权的向量索引。"
+        }
+      ],
+      "live_network_enabled": false,
+      "status": "active",
+      "registered_at": "2026-08-14T00:00:00+02:00",
+      "registered_by": "system:knowledge-ops-design",
+      "notes": ["MedDRA 适合药物警戒术语职责，不是患者用语或发生率来源。"]
+    },
+    {
+      "policy_id": "hpo-official-release-metadata",
+      "policy_version": 1,
+      "display_name": "HPO 官方 release 元数据",
+      "issuing_authority": "Human Phenotype Ontology project",
+      "source_types": ["terminology_standard"],
+      "source_jurisdictions": [{"system": "global", "code": "GLOBAL"}],
+      "languages": ["en"],
+      "allowed_origins": [
+        "https://github.com",
+        "https://obophenotype.github.io"
+      ],
+      "allow_subdomains": false,
+      "allowed_query_parameters": [],
+      "allowed_content_types": [
+        "text/html",
+        "application/json",
+        "text/plain",
+        "application/octet-stream"
+      ],
+      "maximum_response_bytes": 50000000,
+      "license_posture": "needs_verification",
+      "terms_uri": "https://github.com/obophenotype/human-phenotype-ontology/blob/master/LICENSE.md",
+      "operation_rules": [
+        {
+          "operation": "register_link_metadata",
+          "decision": "allow",
+          "rationale": "允许登记官方 release 和 license 链接。"
+        },
+        {
+          "operation": "discover_metadata",
+          "decision": "allow",
+          "rationale": "允许发现 release 元数据。"
+        },
+        {
+          "operation": "fetch_for_change_detection",
+          "decision": "offline_fixture_only",
+          "rationale": "真实 GitHub release 获取在本轮关闭。"
+        },
+        {
+          "operation": "persist_snapshot",
+          "decision": "offline_fixture_only",
+          "rationale": "仅 synthetic fixture。"
+        },
+        {
+          "operation": "persist_full_text",
+          "decision": "review_required",
+          "rationale": "需核验 exact release、license、attribution 和商业边界。"
+        },
+        {
+          "operation": "translate",
+          "decision": "review_required",
+          "rationale": "中文翻译不是自动等价的官方资产。"
+        },
+        {
+          "operation": "create_mapping",
+          "decision": "review_required",
+          "rationale": "HPO 到其他体系的映射必须独立验证。"
+        },
+        {
+          "operation": "commercial_use",
+          "decision": "review_required",
+          "rationale": "未来商业用途需 rights officer 确认依赖和通知义务。"
+        },
+        {
+          "operation": "model_training",
+          "decision": "deny",
+          "rationale": "本阶段禁止模型训练。"
+        },
+        {
+          "operation": "vector_index",
+          "decision": "deny",
+          "rationale": "本阶段不构建 ontology 正文向量。"
+        }
+      ],
+      "live_network_enabled": false,
+      "status": "active",
+      "registered_at": "2026-08-14T00:00:00+02:00",
+      "registered_by": "system:knowledge-ops-design",
+      "notes": ["HPO 适合表型组织；疾病关联不能直接成为患者诊断依据。"]
+    },
+    {
+      "policy_id": "nci-pro-ctcae-metadata",
+      "policy_version": 1,
+      "display_name": "NCI PRO-CTCAE 元数据与授权门禁",
+      "issuing_authority": "US National Cancer Institute",
+      "source_types": ["standard_instrument"],
+      "source_jurisdictions": [{"system": "global", "code": "GLOBAL"}],
+      "languages": ["en", "zh-CN"],
+      "allowed_origins": ["https://healthcaredelivery.cancer.gov"],
+      "allow_subdomains": false,
+      "allowed_query_parameters": [],
+      "allowed_content_types": ["text/html", "application/pdf"],
+      "maximum_response_bytes": 20000000,
+      "license_posture": "license_required",
+      "terms_uri": "https://healthcaredelivery.cancer.gov/pro-ctcae/terms_of_use.html",
+      "operation_rules": [
+        {
+          "operation": "register_link_metadata",
+          "decision": "allow",
+          "rationale": "允许登记 overview、terms、官方语言和申请入口。"
+        },
+        {
+          "operation": "discover_metadata",
+          "decision": "allow",
+          "rationale": "允许发现公开元数据，不读取或复制量表条目。"
+        },
+        {
+          "operation": "fetch_for_change_detection",
+          "decision": "offline_fixture_only",
+          "rationale": "真实站点访问和表单/API 本轮关闭。"
+        },
+        {
+          "operation": "persist_snapshot",
+          "decision": "offline_fixture_only",
+          "rationale": "只允许 synthetic fixture 验证。"
+        },
+        {
+          "operation": "persist_full_text",
+          "decision": "review_required",
+          "rationale": "量表条目和表单不得在未获许可时复制。"
+        },
+        {
+          "operation": "short_quote",
+          "decision": "review_required",
+          "rationale": "量表措辞引用必须检查具体使用条款。"
+        },
+        {
+          "operation": "translate",
+          "decision": "review_required",
+          "rationale": "不得自行翻译；只可在获准范围使用官方语言版本。"
+        },
+        {
+          "operation": "adapt",
+          "decision": "review_required",
+          "rationale": "修改、缩写、跨场景使用可能破坏验证效度并违反条款。"
+        },
+        {
+          "operation": "redistribute",
+          "decision": "deny",
+          "rationale": "没有 exact agreement 时禁止第三方分发。"
+        },
+        {
+          "operation": "commercial_use",
+          "decision": "review_required",
+          "rationale": "竞赛原型许可不能自动覆盖未来商业产品。"
+        },
+        {
+          "operation": "model_training",
+          "decision": "deny",
+          "rationale": "量表内容禁止用于模型训练。"
+        },
+        {
+          "operation": "vector_index",
+          "decision": "deny",
+          "rationale": "量表内容禁止进入未经授权的向量索引。"
+        }
+      ],
+      "live_network_enabled": false,
+      "status": "active",
+      "registered_at": "2026-08-14T00:00:00+02:00",
+      "registered_by": "system:knowledge-ops-design",
+      "notes": [
+        "PRO-CTCAE 面向肿瘤临床研究，不自动适用于慢病或药物随访。",
+        "官方简体中文存在不等于 ContinuCare 已取得复制、分发或修改授权。"
+      ]
+    },
+    {
+      "policy_id": "nci-ctcae-metadata",
+      "policy_version": 1,
+      "display_name": "NCI CTCAE 版本元数据",
+      "issuing_authority": "US National Cancer Institute",
+      "source_types": ["standard_instrument"],
+      "source_jurisdictions": [{"system": "global", "code": "GLOBAL"}],
+      "languages": ["en"],
+      "allowed_origins": ["https://ctep.cancer.gov"],
+      "allow_subdomains": false,
+      "allowed_query_parameters": [],
+      "allowed_content_types": ["text/html", "application/pdf"],
+      "maximum_response_bytes": 20000000,
+      "license_posture": "needs_verification",
+      "terms_uri": null,
+      "operation_rules": [
+        {
+          "operation": "register_link_metadata",
+          "decision": "allow",
+          "rationale": "允许登记官方当前版本和历史版本链接。"
+        },
+        {
+          "operation": "discover_metadata",
+          "decision": "allow",
+          "rationale": "允许发现版本元数据。"
+        },
+        {
+          "operation": "fetch_for_change_detection",
+          "decision": "offline_fixture_only",
+          "rationale": "本轮只做 offline fixture。"
+        },
+        {
+          "operation": "persist_snapshot",
+          "decision": "offline_fixture_only",
+          "rationale": "本轮只做 synthetic snapshot。"
+        },
+        {
+          "operation": "persist_full_text",
+          "decision": "review_required",
+          "rationale": "需要 exact terms 与版本核验。"
+        },
+        {
+          "operation": "translate",
+          "decision": "review_required",
+          "rationale": "自制翻译需许可、术语和临床审核。"
+        },
+        {
+          "operation": "adapt",
+          "decision": "review_required",
+          "rationale": "从 clinician grading 派生患者阈值属于新的临床判断。"
+        },
+        {
+          "operation": "commercial_use",
+          "decision": "review_required",
+          "rationale": "商业复用条款必须正式核验。"
+        },
+        {
+          "operation": "model_training",
+          "decision": "deny",
+          "rationale": "本阶段禁止模型训练。"
+        },
+        {
+          "operation": "vector_index",
+          "decision": "deny",
+          "rationale": "本阶段禁止正文向量化。"
+        }
+      ],
+      "live_network_enabled": false,
+      "status": "active",
+      "registered_at": "2026-08-14T00:00:00+02:00",
+      "registered_by": "system:knowledge-ops-design",
+      "notes": [
+        "CTCAE clinician grade 不等于患者自报，也不自动适用于非肿瘤远程随访。",
+        "当前版本策略必须同时保留 PRO crosswalk 的历史版本事实。"
+      ]
+    },
+    {
+      "policy_id": "nlm-pubmed-metadata",
+      "policy_version": 1,
+      "display_name": "NLM PubMed 元数据",
+      "issuing_authority": "US National Library of Medicine",
+      "source_types": ["peer_reviewed_study"],
+      "source_jurisdictions": [{"system": "global", "code": "GLOBAL"}],
+      "languages": ["en", "zh-CN"],
+      "allowed_origins": [
+        "https://pubmed.ncbi.nlm.nih.gov",
+        "https://eutils.ncbi.nlm.nih.gov"
+      ],
+      "allow_subdomains": false,
+      "allowed_query_parameters": ["db", "id", "retmode", "rettype", "term"],
+      "allowed_content_types": ["text/html", "application/json", "application/xml"],
+      "maximum_response_bytes": 10000000,
+      "license_posture": "needs_verification",
+      "terms_uri": "https://www.ncbi.nlm.nih.gov/home/about/policies/",
+      "operation_rules": [
+        {
+          "operation": "register_link_metadata",
+          "decision": "allow",
+          "rationale": "允许登记 PMID、标题和官方 landing page。"
+        },
+        {
+          "operation": "discover_metadata",
+          "decision": "allow",
+          "rationale": "允许用无患者数据、受控术语发现论文元数据。"
+        },
+        {
+          "operation": "fetch_for_change_detection",
+          "decision": "offline_fixture_only",
+          "rationale": "本轮不调用 E-utilities。"
+        },
+        {
+          "operation": "persist_snapshot",
+          "decision": "offline_fixture_only",
+          "rationale": "只允许 synthetic fixture。"
+        },
+        {
+          "operation": "persist_full_text",
+          "decision": "deny",
+          "rationale": "PubMed 元数据不授予文章或摘要的统一复制权。"
+        },
+        {
+          "operation": "short_quote",
+          "decision": "review_required",
+          "rationale": "必须按具体出版物许可判断。"
+        },
+        {
+          "operation": "commercial_use",
+          "decision": "review_required",
+          "rationale": "未来商业用途按具体元数据和文章许可核验。"
+        },
+        {
+          "operation": "model_training",
+          "decision": "deny",
+          "rationale": "本阶段禁止将摘要或文章用于模型训练。"
+        },
+        {
+          "operation": "vector_index",
+          "decision": "deny",
+          "rationale": "本阶段禁止将摘要或文章进入向量索引。"
+        }
+      ],
+      "live_network_enabled": false,
+      "status": "active",
+      "registered_at": "2026-08-14T00:00:00+02:00",
+      "registered_by": "system:knowledge-ops-design",
+      "notes": [
+        "PubMed metadata 与受版权保护的摘要/全文必须分开治理。",
+        "文献发现不能自动生成或批准临床 Claim。"
+      ]
+    }
+  ]
+}

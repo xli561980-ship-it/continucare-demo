@@ -25,6 +25,7 @@
 | [22_layer_4_state_snapshot_and_numeric_trends.md](22_layer_4_state_snapshot_and_numeric_trends.md) | 第四层第 5 步：current/stale/unknown/conflict 状态快照与单位一致的原始数值趋势 |
 | [23_layer_4_doctor_workbench_read_model.md](23_layer_4_doctor_workbench_read_model.md) | 第四层第 6 步：Doctor Workbench 只读组合查询、历史回放、权限隔离、证据图和故障降级 |
 | [24_layer_4_controlled_llm_summary.md](24_layer_4_controlled_llm_summary.md) | 第四层增强项：动态 Fact Ledger、受控 LLM 编排、事实/证据锁与确定性回退 |
+| [26_m5_c_deterministic_doctor_brief.md](26_m5_c_deterministic_doctor_brief.md) | M5-C：从人工确认与受控护士处理证据生成确定性、版本化、可追溯的医生复诊前简报 |
 | [03_data_model_fhir.md](03_data_model_fhir.md) | FHIR风格数据模型和核心实体关系 |
 | [13_fhir_conformance_policy.md](13_fhir_conformance_policy.md) | FHIR R4 合规策略、验证层级和上线门槛 |
 | [clinical/glp1_14d_observation_evidence.md](clinical/glp1_14d_observation_evidence.md) | GLP-1 指标、术语映射与权威临床信源 |

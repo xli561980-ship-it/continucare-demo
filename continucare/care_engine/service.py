@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
-from uuid import uuid4
+from uuid import NAMESPACE_URL, uuid4, uuid5
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict
@@ -20,12 +20,14 @@ from continucare.fhir.terminology import CodingDefinition
 from continucare.models import (
     CareSession,
     CareSessionStatus,
+    ConfirmedAnswerContext,
+    ConfirmedSymptomReport,
     FollowUpMessage,
     Observation,
 )
 from continucare.pathways import load_builtin_pathways, load_fhir_artifact
 from continucare.pathways.mappings import load_observation_mapping
-from continucare.services.audit import record_audit_event
+from continucare.services.audit import build_audit_event, record_audit_event
 
 
 class CareSubmissionResult(BaseModel):
@@ -34,6 +36,19 @@ class CareSubmissionResult(BaseModel):
     session: CareSession
     questionnaire_response: dict[str, Any]
     observations: list[Observation]
+
+
+class CareSubmissionPlan(BaseModel):
+    """Validated Layer-2 resources that have not been persisted yet."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    session: CareSession
+    message: FollowUpMessage
+    questionnaire: dict[str, Any]
+    questionnaire_response: dict[str, Any]
+    observations: list[Observation]
+    completed_at: str
 
 
 class CareEngine:
@@ -155,14 +170,99 @@ class CareEngine:
         if existing.status == CareSessionStatus.COMPLETED:
             if answers != existing.answers:
                 raise ValueError("随访已经提交，不能用不同答案重复覆盖")
-            return self._completed_result(existing)
+            result = self._completed_result(existing)
+            message = self.store.get_message(result.questionnaire_response["id"])
+            if message is None:
+                raise ValueError("已完成随访缺少原始消息")
+            completed_at = existing.completed_at or existing.updated_at
+            self.store.complete_care_session_submission(
+                expected_session=existing,
+                session=existing,
+                message=message,
+                questionnaire_response=result.questionnaire_response,
+                questionnaire=self.questionnaire_for_session(existing),
+                observations=result.observations,
+                completed_at=completed_at,
+                audit_event=self._completion_audit(
+                    session=existing,
+                    response=result.questionnaire_response,
+                    observations=result.observations,
+                    completed_at=completed_at,
+                ),
+            )
+            return result
+        plan = self.prepare_completion(session_id, answers)
+        session = plan.session
+        self.store.complete_care_session_submission(
+            expected_session=existing,
+            session=session,
+            message=plan.message,
+            questionnaire_response=plan.questionnaire_response,
+            questionnaire=plan.questionnaire,
+            observations=plan.observations,
+            completed_at=plan.completed_at,
+            audit_event=self._completion_audit(
+                session=session,
+                response=plan.questionnaire_response,
+                observations=plan.observations,
+                completed_at=plan.completed_at,
+            ),
+        )
+        completed = self.store.get_care_session(session.session_id)
+        return CareSubmissionResult(
+            session=completed,
+            questionnaire_response=plan.questionnaire_response,
+            observations=plan.observations,
+        )
+
+    @staticmethod
+    def _completion_audit(
+        *,
+        session: CareSession,
+        response: dict[str, Any],
+        observations: list[Observation],
+        completed_at: str,
+    ):
+        identity = uuid5(
+            NAMESPACE_URL,
+            f"care-completion|{session.session_id}|{response['id']}",
+        ).hex
+        return build_audit_event(
+            event_id=f"audit-{identity}",
+            patient_id=session.patient_id,
+            entity_type="QuestionnaireResponse",
+            entity_id=response["id"],
+            event_type="questionnaire_response_completed",
+            actor_type="synthetic_patient",
+            created_at=completed_at,
+            details={
+                "session_id": session.session_id,
+                "answered_link_ids": sorted(session.answers),
+                "observation_refs": sorted(
+                    item.observation_id for item in observations
+                ),
+                "clinical_assessment": "not_assessed",
+            },
+        )
+
+    def prepare_completion(
+        self,
+        session_id: str,
+        answers: dict[str, Any],
+        *,
+        response_id: str | None = None,
+        completed_at: str | None = None,
+        answer_contexts: list[ConfirmedAnswerContext] | None = None,
+        symptom_reports: list[ConfirmedSymptomReport] | None = None,
+    ) -> CareSubmissionPlan:
+        """Build and validate a complete submission without writing any state."""
+
         session = self._in_progress_session(session_id)
         if not any(_has_answer(value) for value in answers.values()):
             raise ValueError("请至少回答一个问题后再提交")
-
         questionnaire = self.questionnaire_for_session(session)
-        now = utc_now_iso()
-        response_id = f"response-{uuid4().hex}"
+        now = completed_at or utc_now_iso()
+        response_id = response_id or f"response-{uuid4().hex}"
         response = build_questionnaire_response(
             questionnaire=questionnaire,
             response_id=response_id,
@@ -178,13 +278,18 @@ class CareEngine:
             or policy.pathway_version != session.pathway_version
         ):
             raise ValueError("Observation mapping policy does not match care session")
+        contexts = (
+            answer_contexts
+            if answer_contexts is not None
+            else self.store.list_active_answer_contexts(session.session_id)
+        )
         observations = map_response_to_observations(
             response=response,
             questionnaire=questionnaire,
             policy=policy,
             answer_contexts={
                 item.link_id: item
-                for item in self.store.list_active_answer_contexts(session.session_id)
+                for item in contexts
                 if answers.get(item.link_id) == item.answer
             },
         )
@@ -192,6 +297,7 @@ class CareEngine:
             self._patient_reported_symptom_observations(
                 session=session,
                 response=response,
+                reports=symptom_reports,
             )
         )
         message_text, _ = questionnaire_response_summary(response, questionnaire)
@@ -203,42 +309,30 @@ class CareEngine:
             source="patient_questionnaire_renderer",
             processing_status="structured_complete",
         )
-        session.answers = answers
-        self.store.complete_care_session_submission(
-            session=session,
+        planned_session = session.model_copy(update={"answers": answers})
+        return CareSubmissionPlan(
+            session=planned_session,
             message=message,
             questionnaire_response=response,
             questionnaire=questionnaire,
             observations=observations,
             completed_at=now,
         )
-        record_audit_event(
-            self.store,
-            patient_id=session.patient_id,
-            entity_type="QuestionnaireResponse",
-            entity_id=response_id,
-            event_type="questionnaire_response_completed",
-            actor_type="synthetic_patient",
-            details={
-                "session_id": session.session_id,
-                "answered_link_ids": sorted(answers),
-                "observation_refs": [item.observation_id for item in observations],
-                "clinical_assessment": "not_assessed",
-            },
-        )
-        completed = self.store.get_care_session(session.session_id)
-        return CareSubmissionResult(
-            session=completed,
-            questionnaire_response=response,
-            observations=observations,
-        )
 
     def _patient_reported_symptom_observations(
-        self, *, session: CareSession, response: dict[str, Any]
+        self,
+        *,
+        session: CareSession,
+        response: dict[str, Any],
+        reports: list[ConfirmedSymptomReport] | None = None,
     ) -> list[Observation]:
         """Map patient-confirmed catalog concepts not preselected by the Pathway."""
 
-        reports = self.store.list_active_symptom_reports(session.session_id)
+        reports = (
+            reports
+            if reports is not None
+            else self.store.list_active_symptom_reports(session.session_id)
+        )
         source_text, _ = questionnaire_response_summary(
             response, self.questionnaire_for_session(session)
         )
@@ -250,7 +344,13 @@ class CareEngine:
             coding = CodingDefinition(**report.coding)
             effective = report.effective_end or report.reported_at
             resource = build_patient_reported_observation(
-                observation_id=f"observation-{uuid4().hex}",
+                observation_id=(
+                    "observation-"
+                    + uuid5(
+                        NAMESPACE_URL,
+                        f"{response['id']}|patient-reported|{report.report_id}",
+                    ).hex
+                ),
                 patient_id=session.patient_id,
                 questionnaire_response_id=response["id"],
                 effective_time=effective,

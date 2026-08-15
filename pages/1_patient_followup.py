@@ -15,9 +15,17 @@ from continucare.agents.contracts import (
     SemanticStatus,
 )
 from continucare.care_agent import CareAgentService
+from continucare.care_agent.model_api import (
+    SemanticModelConfig,
+    UnconfiguredModelAdapter,
+)
 from continucare.care_engine import CareEngine
 from continucare.config import get_settings
-from continucare.demo_data import DEMO_PATIENT_ID, STRUCTURED_SCENARIOS
+from continucare.demo_data import (
+    DEMO_PATIENT_ID,
+    MANUAL_REVIEW_MESSAGE,
+    STRUCTURED_SCENARIOS,
+)
 from continucare.fhir.questionnaires import (
     flatten_questionnaire_items,
     visible_questionnaire_items,
@@ -26,7 +34,20 @@ from continucare.fhir.r4 import FHIRValidationError
 from continucare.fhir.terminology import UCUM
 from continucare.presentation import observation_text
 from continucare.models import CareSessionStatus
-from continucare.ui import inject_global_styles, render_mode_badges
+from continucare.ui import (
+    PATIENT_EMERGENCY_NOTICE,
+    PatientFollowupProjection,
+    inject_global_styles,
+    patient_recorded_meaning,
+    project_patient_followup,
+    render_mode_badges,
+)
+from continucare.services.confirmed_review import ConfirmedReviewService
+from continucare.services.competition_demo import (
+    CompetitionDemoConflict,
+    demo_write_guard,
+    read_competition_demo,
+)
 
 
 PRESETS = {
@@ -253,6 +274,10 @@ def _render_conversation_assist() -> None:
 
     run_key = _semantic_state_key("latest_run")
     run_id = st.session_state.get(run_key)
+    if progress.session_id == session.session_id and progress.run_id:
+        # Browser state is only a navigation hint. Persisted facts always win.
+        run_id = progress.run_id
+        st.session_state[run_key] = progress.run_id
     recent_records = list(reversed(store.list_agent_runs(session.session_id)[:5]))
     for prior in recent_records:
         if prior.run_id == run_id:
@@ -277,6 +302,10 @@ def _render_conversation_assist() -> None:
             result = SemanticResult.model_validate(record.output_json)
             _render_semantic_result(record, result)
 
+    if progress.session_id == session.session_id and progress.run_id:
+        st.info("比赛主线已锁定固定合成原话；请处理上方候选，不会在此创建第二条语义故事。")
+        return
+
     text_key = _semantic_state_key("input")
     patient_text = st.text_area(
         "输入身体状态",
@@ -296,7 +325,11 @@ def _render_conversation_assist() -> None:
             st.warning("请先输入一段合成的身体状态描述。")
         else:
             try:
-                interaction = agent_service.analyze(session.session_id, patient_text)
+                with demo_write_guard(
+                    settings.db_path,
+                    expected_generation=progress.generation,
+                ):
+                    interaction = agent_service.analyze(session.session_id, patient_text)
                 st.session_state[run_key] = interaction.result.run_id
                 st.rerun()
             except ValueError as exc:
@@ -341,8 +374,12 @@ def _render_semantic_result(record, result: SemanticResult) -> None:
 
         confirmed_key = _semantic_state_key("confirmed", result.run_id)
         confirmed = set(st.session_state.get(confirmed_key, []))
+        durable_decisions = store.conversation_action_decisions(session.session_id)
         available = [
-            item for item in result.candidates if item.candidate_id not in confirmed
+            item
+            for item in result.candidates
+            if item.candidate_id not in confirmed
+            and durable_decisions.get(item.candidate_id) not in {"accepted", "rejected"}
         ]
         if available:
             st.markdown("**请确认我整理的内容**")
@@ -351,6 +388,12 @@ def _render_semantic_result(record, result: SemanticResult) -> None:
                 with st.container(border=True):
                     st.write(candidate.patient_message)
                     st.caption(f"依据原话：‘{candidate.evidence_text}’")
+                    source_labels = {
+                        "deterministic_mock": "来源：本地确定性 Mock fallback（非真实模型）",
+                        "mimo": "来源：MiMo 候选（仍须 Safety 与患者确认）",
+                        "aily": "来源：Aily 候选（真实 API 未验证；仍须 Safety 与患者确认）",
+                    }
+                    st.caption(source_labels[candidate.source_mode.value])
                     if candidate.terminology_match is not None:
                         match = candidate.terminology_match
                         origin_label = (
@@ -371,24 +414,94 @@ def _render_semantic_result(record, result: SemanticResult) -> None:
                         selected.append(candidate.candidate_id)
             confirm_col, modify_col = st.columns([1.4, 1])
             with confirm_col:
+                manual_review_flow = record.input_text == MANUAL_REVIEW_MESSAGE
                 if st.button(
-                    "确认所选记录",
+                    (
+                        "确认全部并创建护士人工复核任务"
+                        if manual_review_flow
+                        else "确认所选记录"
+                    ),
                     type="primary",
                     width="stretch",
                     key=_semantic_state_key("confirm", result.run_id),
                     disabled=not selected,
                 ):
                     try:
-                        updated = agent_service.confirm_candidates(result.run_id, selected)
-                        st.session_state[confirmed_key] = [*confirmed, *selected]
-                        _set_widget_answers(session.session_id, updated.answers)
+                        if manual_review_flow:
+                            if set(selected) != {
+                                item.candidate_id for item in available
+                            }:
+                                raise ValueError("请确认本轮全部候选，或选择拒绝/不确定")
+                            with demo_write_guard(
+                                settings.db_path,
+                                expected_generation=progress.generation,
+                            ):
+                                review_service.accept_all(result.run_id, selected)
+                            st.session_state["care_submission_notice"] = (
+                                "患者确认成功：证据资源与常规护士人工复核任务已原子创建；"
+                                "临床评估仍为 not_assessed。"
+                            )
+                        else:
+                            with demo_write_guard(
+                                settings.db_path,
+                                expected_generation=progress.generation,
+                            ):
+                                updated = agent_service.confirm_candidates(
+                                    result.run_id, selected
+                                )
+                            st.session_state[confirmed_key] = [*confirmed, *selected]
+                            _set_widget_answers(session.session_id, updated.answers)
                         st.rerun()
-                    except ValueError as exc:
+                    except (ValueError, LookupError) as exc:
                         st.warning(str(exc))
             with modify_col:
-                st.caption("如有不准确，请取消勾选，或在下方完整问卷中修改。")
+                if manual_review_flow:
+                    reject, unsure = st.columns(2)
+                    if reject.button(
+                        "拒绝全部",
+                        key=_semantic_state_key("reject", result.run_id),
+                        width="stretch",
+                    ):
+                        try:
+                            with demo_write_guard(
+                                settings.db_path,
+                                expected_generation=progress.generation,
+                            ):
+                                agent_service.reject_candidates(
+                                    result.run_id,
+                                    [item.candidate_id for item in available],
+                                )
+                            st.rerun()
+                        except (CompetitionDemoConflict, ValueError) as exc:
+                            st.warning(str(exc))
+                    if unsure.button(
+                        "暂不确定",
+                        key=_semantic_state_key("unsure", result.run_id),
+                        width="stretch",
+                    ):
+                        try:
+                            with demo_write_guard(
+                                settings.db_path,
+                                expected_generation=progress.generation,
+                            ):
+                                agent_service.mark_candidates_unsure(
+                                    result.run_id,
+                                    [item.candidate_id for item in available],
+                                )
+                            st.rerun()
+                        except (CompetitionDemoConflict, ValueError) as exc:
+                            st.warning(str(exc))
+                    st.caption("拒绝或不确定只留决策审计，不创建临床资源或任务。")
+                else:
+                    st.caption("如有不准确，请取消勾选，或在下方完整问卷中修改。")
         elif result.candidates:
-            st.success("这些候选已由您确认，并保存到下方问卷草稿。")
+            if any(
+                durable_decisions.get(item.candidate_id) == "rejected"
+                for item in result.candidates
+            ):
+                st.info("这些候选已被拒绝；没有创建临床资源或护士任务。")
+            else:
+                st.success("这些候选已由您确认，并保存到下方问卷草稿。")
 
         resolved_key = _semantic_state_key("resolved", result.run_id)
         resolved = set(st.session_state.get(resolved_key, []))
@@ -413,11 +526,15 @@ def _render_semantic_result(record, result: SemanticResult) -> None:
                         ),
                     ):
                         try:
-                            updated = agent_service.resolve_clarification(
-                                result.run_id,
-                                clarification.clarification_id,
-                                option.option_id,
-                            )
+                            with demo_write_guard(
+                                settings.db_path,
+                                expected_generation=progress.generation,
+                            ):
+                                updated = agent_service.resolve_clarification(
+                                    result.run_id,
+                                    clarification.clarification_id,
+                                    option.option_id,
+                                )
                             st.session_state[resolved_key] = [
                                 *resolved,
                                 clarification.clarification_id,
@@ -440,7 +557,11 @@ def _render_semantic_result(record, result: SemanticResult) -> None:
                 key=_semantic_state_key("save_original", result.run_id),
             ):
                 try:
-                    updated = agent_service.confirm_original_text(result.run_id)
+                    with demo_write_guard(
+                        settings.db_path,
+                        expected_generation=progress.generation,
+                    ):
+                        updated = agent_service.confirm_original_text(result.run_id)
                     st.session_state[verbatim_key] = True
                     _set_widget_answers(session.session_id, updated.answers)
                     st.rerun()
@@ -568,169 +689,518 @@ def _render_pending_new_symptoms() -> None:
     )
 
 
+_PATIENT_PENDING_KEY = "cc_patient_pending_decision"
+_PATIENT_ERROR_KEY = "cc_patient_decision_error"
+
+
+def _queue_patient_decision(action: str, generation: str, run_id: str) -> None:
+    st.session_state.pop(_PATIENT_ERROR_KEY, None)
+    st.session_state[_PATIENT_PENDING_KEY] = {
+        "action": action,
+        "generation": generation,
+        "run_id": run_id,
+    }
+
+
+def _run_patient_decision(candidate_ids: tuple[str, ...]) -> None:
+    pending = st.session_state.get(_PATIENT_PENDING_KEY)
+    if not pending:
+        return
+    try:
+        with st.spinner("正在保存您的决定，请勿重复操作……"):
+            with demo_write_guard(
+                settings.db_path,
+                expected_generation=pending["generation"],
+            ):
+                if pending["action"] == "accept":
+                    review_service.accept_all(pending["run_id"], list(candidate_ids))
+                elif pending["action"] == "unsure":
+                    agent_service.mark_candidates_unsure(
+                        pending["run_id"], list(candidate_ids)
+                    )
+                elif pending["action"] == "reject":
+                    agent_service.reject_candidates(
+                        pending["run_id"], list(candidate_ids)
+                    )
+                else:
+                    raise ValueError("unknown patient decision")
+    except CompetitionDemoConflict:
+        st.session_state[_PATIENT_ERROR_KEY] = (
+            "这轮演示已在另一个页面重新开始。当前页面不会继续写入，请刷新后再操作。"
+        )
+    except Exception:
+        st.session_state[_PATIENT_ERROR_KEY] = (
+            "这次决定没有保存，原来的记录没有变化，也没有创建护士任务。"
+            "请重试；如果页面中的故事已经变化，请先刷新。"
+        )
+    finally:
+        st.session_state.pop(_PATIENT_PENDING_KEY, None)
+    st.rerun()
+
+
+def _render_patient_status(projection: PatientFollowupProjection) -> None:
+    if not projection.notice_title:
+        return
+    extra_class = " cc-patient-unsure" if projection.state == "candidate_unsure" else ""
+    detail = (
+        f"<p>{html.escape(projection.notice_detail)}</p>"
+        if projection.notice_detail
+        else ""
+    )
+    st.markdown(
+        f"""
+        <section class="cc-patient-status cc-patient-status--{projection.tone}{extra_class}"
+                 aria-live="polite">
+          <h2>{html.escape(projection.notice_title)}</h2>
+          {detail}
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_patient_statement(projection: PatientFollowupProjection) -> None:
+    if not projection.original_quote:
+        return
+    meaning_rows = "".join(
+        f"<strong>{html.escape(item)}</strong>" for item in projection.recorded_meanings
+    )
+    meaning_prompt = projection.question
+    if not meaning_prompt:
+        if projection.state == "candidate_rejected":
+            meaning_prompt = "这段内容没有写入确认记录。"
+        elif projection.tone == "error":
+            meaning_prompt = "这条记录的状态暂时无法确认。"
+        else:
+            meaning_prompt = "已由你本人确认。"
+    st.markdown(
+        f"""
+        <section class="cc-patient-prompt">
+          <span aria-hidden="true">“</span>
+          <div>
+            <h2>今天身体怎么样？</h2>
+            <p>可以像平时聊天一样告诉我。</p>
+          </div>
+        </section>
+        <section class="cc-patient-quote" aria-label="患者原话">
+          <span class="cc-patient-label">你说</span>
+          <blockquote>{html.escape(projection.original_quote)}</blockquote>
+        </section>
+        <section class="cc-patient-meaning" aria-label="待确认记录">
+          <span class="cc-patient-meaning-mark" aria-hidden="true">✓</span>
+          <div>
+            <span class="cc-patient-label">ContinuCare 帮你整理为</span>
+            {meaning_rows or '<strong>这段待确认内容</strong>'}
+            <p>{html.escape(meaning_prompt)}</p>
+          </div>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_patient_outcomes(projection: PatientFollowupProjection) -> None:
+    if not (projection.produced or projection.not_produced):
+        return
+    produced = "".join(f"<li>{html.escape(item)}</li>" for item in projection.produced)
+    not_produced = "".join(
+        f"<li>{html.escape(item)}</li>" for item in projection.not_produced
+    )
+    st.markdown(
+        f"""
+        <section class="cc-patient-outcomes" aria-label="本轮结果">
+          <div><h3>已经产生</h3><ul>{produced}</ul></div>
+          <div><h3>没有产生</h3><ul>{not_produced}</ul></div>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_patient_decisions(
+    projection: PatientFollowupProjection,
+    *,
+    candidate_ids: tuple[str, ...],
+    generation: str,
+    run_id: str,
+) -> None:
+    pending = st.session_state.get(_PATIENT_PENDING_KEY)
+    stale_pending = pending and (
+        pending.get("generation") != generation or pending.get("run_id") != run_id
+    )
+    if stale_pending:
+        st.session_state.pop(_PATIENT_PENDING_KEY, None)
+        st.session_state[_PATIENT_ERROR_KEY] = (
+            "这轮演示已在另一个页面重新开始。当前页面不会继续写入，请刷新后再操作。"
+        )
+        st.rerun()
+    submitting = bool(pending)
+    decision_container = (
+        "cc_patient_decisions_unsure"
+        if projection.state == "candidate_unsure"
+        else "cc_patient_decisions"
+    )
+    with st.container(key=decision_container):
+        for action, label in projection.decision_actions:
+            st.button(
+                label,
+                width="stretch",
+                key=f"cc_patient_decision_{action}",
+                disabled=submitting,
+                on_click=_queue_patient_decision,
+                args=(action, generation, run_id),
+            )
+    if submitting:
+        st.markdown(
+            '<div class="cc-patient-loading" role="status" aria-live="assertive">'
+            "正在保存您的决定，请勿重复操作……</div>",
+            unsafe_allow_html=True,
+        )
+        _run_patient_decision(candidate_ids)
+
+
+def _render_patient_links(projection: PatientFollowupProjection) -> None:
+    if projection.show_nurse_demo_link:
+        st.caption("角色切换仅用于合成演示，不代表已实现身份认证或权限控制。")
+        with st.container(key="cc_patient_nurse_link"):
+            st.page_link(
+                "pages/2_nurse_risk_center.py",
+                label="下一步：进入护士随访待办",
+                width="stretch",
+            )
+    if projection.show_record_link:
+        with st.container(key="cc_patient_record_link"):
+            st.page_link(
+                "pages/4_audit_log.py",
+                label="查看这一轮记录",
+                width="stretch",
+            )
+    if projection.show_home_link:
+        with st.container(key="cc_patient_home_link"):
+            st.page_link("app.py", label="返回演示首页", width="stretch")
+
+
+def _render_patient_main(
+    projection: PatientFollowupProjection,
+    *,
+    candidate_ids: tuple[str, ...] = (),
+    generation: str | None = None,
+    run_id: str | None = None,
+) -> None:
+    with st.container(key="cc_patient_page"):
+        st.markdown(
+            """
+            <header class="cc-role-topbar">
+              <span class="cc-role-topbar-brand"><i aria-hidden="true">C</i> ContinuCare</span>
+              <span class="cc-role-topbar-badge">合成数据演示</span>
+            </header>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.title("我的随访")
+        progress_label = {
+            "candidate_ready": "本轮随访 · 1 / 3",
+            "candidate_unsure": "本轮随访 · 1 / 3",
+            "confirmed": "本轮随访 · 已确认",
+            "read_only": "本轮随访 · 处理中",
+            "story_complete": "本轮随访 · 已完成",
+        }.get(projection.state, "本轮随访")
+        st.markdown(
+            f'<div class="cc-patient-progress"><span>{html.escape(progress_label)}</span>'
+            '<i aria-hidden="true"></i></div>',
+            unsafe_allow_html=True,
+        )
+        error_message = st.session_state.pop(_PATIENT_ERROR_KEY, None)
+        if error_message:
+            st.markdown(
+                '<section class="cc-patient-status cc-patient-status--error" '
+                f'role="alert" aria-live="assertive"><h2>这次没有保存</h2><p>{html.escape(error_message)}</p></section>',
+                unsafe_allow_html=True,
+            )
+        if projection.decision_actions:
+            _render_patient_statement(projection)
+            _render_patient_status(projection)
+            _render_patient_decisions(
+                projection,
+                candidate_ids=candidate_ids,
+                generation=generation or "",
+                run_id=run_id or "",
+            )
+        else:
+            _render_patient_status(projection)
+            _render_patient_statement(projection)
+        _render_patient_outcomes(projection)
+        if projection.state == "candidate_rejected":
+            st.markdown(
+                '<p class="cc-patient-fixed-note">'
+                "当前这一轮不能立即重新表述。如需演示新一轮，请由演示者明确重新开始。"
+                "</p>",
+                unsafe_allow_html=True,
+            )
+        st.markdown(
+            f'<div class="cc-patient-boundary">{html.escape(projection.boundary)}</div>',
+            unsafe_allow_html=True,
+        )
+        if projection.decision_actions:
+            with st.expander("这个选择会怎样影响本轮"):
+                st.write("“对，就是这个意思”：保存整轮确认，并创建一条例行护士记录核对任务。")
+                st.write("“我还不确定”：保留当前内容；之后仍可接受或拒绝。")
+                st.write("“不是这个意思”：整轮结束，不创建患者确认记录或护士任务。")
+        _render_patient_links(projection)
+        st.markdown(
+            f'<p class="cc-patient-emergency">{html.escape(PATIENT_EMERGENCY_NOTICE)}</p>',
+            unsafe_allow_html=True,
+        )
+
+
+def _render_technical_details() -> None:
+    with st.expander("技术详情：执行边界"):
+        render_mode_badges(st)
+        st.write("第三层只生成待确认内容与澄清问题，不能直接写 FHIR、生成风险等级或创建 Alert。")
+        st.write("患者确认后，答案才交给第二层完成问卷校验、条件分支和 Observation 映射。")
+        if agent_service.agent.model_adapter.configured:
+            st.write("小米 MiMo API 已配置；模型只生成待确认内容，异常时回退本地语义 Mock。")
+        else:
+            st.write("MiMo API Key 未配置；系统使用本地语义 Mock 安全回退。")
+        st.caption("当前 Pathway 为 draft / synthetic_only / not_reviewed。")
+
+    with st.expander("技术详情：查看当前 GLP-1 症状术语目录"):
+        catalog = agent_service.terminology.catalog
+        st.caption(
+            f"{catalog.catalog_id} v{catalog.version} · {catalog.status} · "
+            f"SNOMED CT {catalog.code_system_release.rsplit('/', 1)[-1]}"
+        )
+        st.warning(catalog.completeness_statement)
+        st.dataframe(
+            [
+                {
+                    "中文概念": item.preferred_zh,
+                    "SNOMED CT": item.coding.code,
+                    "英文显示": item.coding.display,
+                    "类别": item.category,
+                    "中文别名": "、".join(item.aliases_zh),
+                    "审核状态": item.approval_status,
+                }
+                for item in catalog.concepts
+            ],
+            hide_index=True,
+            width="stretch",
+        )
+
+
+def _render_legacy_questionnaire() -> None:
+    st.markdown("## 旧技术演示")
+    st.caption("以下能力用于检查既有 Questionnaire 和语义路径，不属于主比赛第一、第二信息层。")
+    st.markdown("### 最近一次随访结果")
+    _render_latest_submission()
+
+    if session.status == CareSessionStatus.COMPLETED:
+        st.info("这次技术演示已完成。页面只显示已保存记录，不再提供新的提交动作。")
+        return
+
+    profile, form_area = st.columns([1, 2.15], gap="large")
+    with profile:
+        with st.container(border=True):
+            st.markdown('<div class="cc-kicker">版本已锁定</div>', unsafe_allow_html=True)
+            st.markdown(f"### {patient.display_name}")
+            st.write(f"Pathway：`{session.pathway_code}`")
+            st.write(f"版本：`{session.pathway_version}`")
+            st.write(f"问卷：`{session.questionnaire_version}`")
+            st.write(f"下次复诊：{patient.next_visit_date}")
+            st.caption(f"会话：{session.session_id} · 合成患者")
+        with st.container(border=True):
+            st.markdown("#### 填写说明")
+            st.write("问题和选项来自已锁定的 FHIR Questionnaire，不由模型临时生成。")
+            st.write("不确定的数量可以留空，并在补充说明中保留原话。")
+            st.write("保存草稿后，可在同一设备继续填写。")
+
+    with form_area:
+        with st.container(border=True):
+            _render_conversation_assist()
+            _render_pending_new_symptoms()
+
+        st.markdown("### 或直接填写完整问卷")
+        st.caption("对话整理的确认结果会同步到这里；完整问卷保留为旧技术演示入口。")
+        st.markdown(f"### {questionnaire.get('title', '患者报告采集')}")
+        st.caption(questionnaire.get("description", ""))
+        preset_columns = st.columns(len(PRESETS))
+        for column, (label, preset) in zip(preset_columns, PRESETS.items()):
+            with column:
+                if st.button(f"载入：{label}", width="stretch", key=f"preset::{label}"):
+                    with demo_write_guard(
+                        settings.db_path,
+                        expected_generation=progress.generation,
+                    ):
+                        engine.save_draft(session.session_id, preset)
+                    _set_widget_answers(session.session_id, preset)
+                    st.rerun()
+
+        answers: dict[str, Any] = {}
+        all_items = flatten_questionnaire_items(questionnaire.get("item", []))
+        for item in all_items:
+            if item["type"] in {"display", "group"}:
+                continue
+            visible_ids = {
+                question["linkId"]
+                for question in visible_questionnaire_items(questionnaire, answers)
+            }
+            if item["linkId"] not in visible_ids:
+                st.session_state.pop(
+                    _widget_key(session.session_id, item["linkId"]), None
+                )
+                continue
+            with st.container(border=True):
+                value = _read_widget_answer(item, session.session_id)
+                if _has_answer(value):
+                    answers[item["linkId"]] = value
+                if item.get("required"):
+                    st.caption("必填")
+                elif item["type"] != "quantity":
+                    st.caption("可选；不确定时可以暂不回答")
+
+        visible_count = len(visible_questionnaire_items(questionnaire, answers))
+        answered_count = sum(_has_answer(value) for value in answers.values())
+        st.progress(
+            answered_count / visible_count if visible_count else 0,
+            text=f"已回答 {answered_count} / 当前可见 {visible_count} 个问题",
+        )
+
+        save_col, submit_col, stop_col = st.columns([1, 1.4, 1])
+        with save_col:
+            save_clicked = st.button("保存草稿", width="stretch")
+        with submit_col:
+            submit_clicked = st.button("确认并提交", type="primary", width="stretch")
+        with stop_col:
+            stop_clicked = st.button("放弃本次", width="stretch")
+
+        try:
+            if save_clicked:
+                with demo_write_guard(
+                    settings.db_path,
+                    expected_generation=progress.generation,
+                ):
+                    engine.save_draft(session.session_id, answers)
+                st.success("草稿已保存。问题版本和当前答案均已锁定。")
+            if submit_clicked:
+                with demo_write_guard(
+                    settings.db_path,
+                    expected_generation=progress.generation,
+                ):
+                    result = engine.complete(session.session_id, answers)
+                st.session_state["care_submission_notice"] = (
+                    "提交成功：完整 QuestionnaireResponse 已保存，形成 "
+                    f"{len(result.observations)} 条患者确认的 Observation；临床风险未评估。"
+                )
+                st.rerun()
+            if stop_clicked:
+                with demo_write_guard(
+                    settings.db_path,
+                    expected_generation=progress.generation,
+                ):
+                    engine.stop(session.session_id)
+                st.session_state["care_submission_notice"] = "本次草稿已停止，未形成临床事实。"
+                st.rerun()
+        except (CompetitionDemoConflict, ValueError, FHIRValidationError):
+            st.warning("这次技术演示操作没有保存。请刷新后重试。")
+
+
+def _render_other_methods() -> None:
+    with st.container(key="cc_patient_other_methods"):
+        expanded = st.toggle("其他填写方式", key="cc_patient_other_methods_toggle")
+    if not expanded:
+        return
+    if progress.run_id:
+        st.info(
+            "当前主比赛故事必须使用上方三个等权决定处理完整内容。"
+            "这里不会开放完整问卷提交，也不会创建第二条语义故事。"
+        )
+        _render_technical_details()
+        return
+    _render_legacy_questionnaire()
+    _render_technical_details()
+
+
 st.set_page_config(
-    page_title="患者随访 · ContinuCare",
-    page_icon="💬",
-    layout="wide",
+    page_title="我的随访 · ContinuCare",
+    layout="centered",
     initial_sidebar_state="collapsed",
 )
 inject_global_styles(st)
-st.title("患者随访（合成数据）")
-st.error("仅用于合成数据演示 · 不提供诊断、治疗或用药建议 · 不是急救通道")
+st.markdown('<div class="cc-patient-shell" aria-hidden="true"></div>', unsafe_allow_html=True)
 
 settings = get_settings()
-store = SQLiteStore(settings.db_path)
-patient = store.get_patient(DEMO_PATIENT_ID)
-if patient is None:
-    st.error("合成患者初始化失败，请返回首页重置 Demo。")
-    st.stop()
-
-engine = CareEngine(store)
-session = engine.start_or_resume(
-    DEMO_PATIENT_ID,
-    allow_repeat_same_day=False,
-    patient_timezone=settings.patient_timezone,
+progress = read_competition_demo(settings.db_path)
+store = SQLiteStore(settings.db_path, initialize=False) if settings.db_path.is_file() else None
+patient = store.get_patient(DEMO_PATIENT_ID) if store is not None else None
+record = store.get_agent_run(progress.run_id) if store is not None and progress.run_id else None
+semantic_result = (
+    SemanticResult.model_validate(record.output_json) if record is not None else None
 )
-questionnaire = engine.questionnaire_for_session(session)
-agent_service = CareAgentService(store, care_engine=engine)
+recorded_meanings = (
+    tuple(patient_recorded_meaning(item) for item in semantic_result.candidates)
+    if semantic_result is not None
+    else ()
+)
+projection = project_patient_followup(
+    progress,
+    original_quote=record.input_text if record is not None else None,
+    recorded_meanings=recorded_meanings,
+    has_round_record=bool(progress.generation or progress.audit_count),
+)
 
-notice = st.session_state.pop("care_submission_notice", None)
-if notice:
-    st.success(notice)
-
-st.markdown("## 最近一次随访结果")
-_render_latest_submission()
-
-if session.status == CareSessionStatus.COMPLETED:
-    st.info(
-        "患者当地日期的今日随访已经完成。短期对话已关闭，确认后的 Observation "
-        "已进入长期记录；下一当地日期会自动开启新的每日会话。"
+session = None
+engine = None
+questionnaire = None
+agent_service = None
+review_service = None
+if store is not None and patient is not None:
+    engine = CareEngine(store)
+    session = (
+        store.get_care_session(progress.session_id)
+        if progress.session_id is not None
+        else next(iter(store.list_care_sessions(DEMO_PATIENT_ID)), None)
     )
-    st.stop()
-
-st.markdown("## 完成本次随访")
-profile, form_area = st.columns([1, 2.15], gap="large")
-with profile:
-    with st.container(border=True):
-        st.markdown('<div class="cc-kicker">版本已锁定</div>', unsafe_allow_html=True)
-        st.markdown(f"### {patient.display_name}")
-        st.write(f"Pathway：`{session.pathway_code}`")
-        st.write(f"版本：`{session.pathway_version}`")
-        st.write(f"问卷：`{session.questionnaire_version}`")
-        st.write(f"下次复诊：{patient.next_visit_date}")
-        st.caption(f"会话：{session.session_id} · 合成患者")
-    with st.container(border=True):
-        st.markdown("#### 填写说明")
-        st.write("问题和选项来自已锁定的 FHIR Questionnaire，不由模型临时生成。")
-        st.write("不确定的数量可以留空，并在补充说明中保留原话。")
-        st.write("保存草稿后，可在同一设备继续填写。")
-
-with form_area:
-    with st.container(border=True):
-        _render_conversation_assist()
-        _render_pending_new_symptoms()
-
-    st.markdown("### 或直接填写完整问卷")
-    st.caption("对话整理的确认结果会同步到这里；完整问卷始终是可检查、可修改的兜底入口。")
-    st.markdown(f"### {questionnaire.get('title', '患者报告采集')}")
-    st.caption(questionnaire.get("description", ""))
-    preset_columns = st.columns(len(PRESETS))
-    for column, (label, preset) in zip(preset_columns, PRESETS.items()):
-        with column:
-            if st.button(f"载入：{label}", width="stretch", key=f"preset::{label}"):
-                engine.save_draft(session.session_id, preset)
-                _set_widget_answers(session.session_id, preset)
-                st.rerun()
-
-    answers: dict[str, Any] = {}
-    all_items = flatten_questionnaire_items(questionnaire.get("item", []))
-    for item in all_items:
-        if item["type"] in {"display", "group"}:
-            continue
-        visible_ids = {
-            question["linkId"]
-            for question in visible_questionnaire_items(questionnaire, answers)
-        }
-        if item["linkId"] not in visible_ids:
-            st.session_state.pop(
-                _widget_key(session.session_id, item["linkId"]), None
-            )
-            continue
-        with st.container(border=True):
-            value = _read_widget_answer(item, session.session_id)
-            if _has_answer(value):
-                answers[item["linkId"]] = value
-            if item.get("required"):
-                st.caption("必填")
-            elif item["type"] != "quantity":
-                st.caption("可选；不确定时可以暂不回答")
-
-    visible_count = len(visible_questionnaire_items(questionnaire, answers))
-    answered_count = sum(_has_answer(value) for value in answers.values())
-    st.progress(
-        answered_count / visible_count if visible_count else 0,
-        text=f"已回答 {answered_count} / 当前可见 {visible_count} 个问题",
-    )
-
-    save_col, submit_col, stop_col = st.columns([1, 1.4, 1])
-    with save_col:
-        save_clicked = st.button("保存草稿", width="stretch")
-    with submit_col:
-        submit_clicked = st.button(
-            "确认并提交", type="primary", width="stretch"
+    if session is not None:
+        questionnaire = engine.questionnaire_for_session(session)
+        agent_service = CareAgentService(
+            store,
+            care_engine=engine,
+            model_adapter=UnconfiguredModelAdapter(SemanticModelConfig()),
+            patient_timezone=settings.patient_timezone,
         )
-    with stop_col:
-        stop_clicked = st.button("放弃本次", width="stretch")
-
-    try:
-        if save_clicked:
-            engine.save_draft(session.session_id, answers)
-            st.success("草稿已保存。问题版本和当前答案均已锁定。")
-        if submit_clicked:
-            result = engine.complete(session.session_id, answers)
-            st.session_state["care_submission_notice"] = (
-                "提交成功：完整 QuestionnaireResponse 已保存，形成 "
-                f"{len(result.observations)} 条患者确认的 Observation；临床风险未评估。"
-            )
-            st.rerun()
-        if stop_clicked:
-            engine.stop(session.session_id)
-            st.session_state["care_submission_notice"] = "本次草稿已停止，未形成临床事实。"
-            st.rerun()
-    except (ValueError, FHIRValidationError) as exc:
-        st.warning(str(exc))
-
-with st.expander("第二层与第三层执行边界"):
-    render_mode_badges(st)
-    st.write("第三层只生成候选与澄清问题，不能直接写 FHIR、生成风险等级或创建 Alert。")
-    st.write("患者确认后，答案才交给第二层完成问卷校验、条件分支和 Observation 映射。")
-    if agent_service.agent.model_adapter.configured:
-        st.write(
-            "小米 MiMo API 已配置；模型只生成候选，异常时自动回退本地语义 Mock。"
+        review_service = ConfirmedReviewService(
+            store,
+            care_agent=agent_service,
+            care_engine=engine,
         )
-    else:
-        st.write("MiMo API Key 未配置；系统使用本地语义 Mock 安全回退。")
-    st.caption("当前 Pathway 为 draft / synthetic_only / not_reviewed。")
 
-with st.expander("查看当前 GLP-1 症状术语目录"):
-    catalog = agent_service.terminology.catalog
-    st.caption(
-        f"{catalog.catalog_id} v{catalog.version} · {catalog.status} · "
-        f"SNOMED CT {catalog.code_system_release.rsplit('/', 1)[-1]}"
+candidate_ids = (
+    tuple(item.candidate_id for item in semantic_result.candidates)
+    if semantic_result is not None
+    else ()
+)
+if projection.decision_actions and (
+    not candidate_ids or not progress.generation or not progress.run_id or review_service is None
+):
+    projection = project_patient_followup(
+        progress.model_copy(update={"integrity_issue": "patient story unavailable"}),
+        original_quote=record.input_text if record is not None else None,
+        recorded_meanings=recorded_meanings,
+        has_round_record=bool(progress.generation),
     )
-    st.warning(catalog.completeness_statement)
-    st.dataframe(
-        [
-            {
-                "中文概念": item.preferred_zh,
-                "SNOMED CT": item.coding.code,
-                "英文显示": item.coding.display,
-                "类别": item.category,
-                "中文别名": "、".join(item.aliases_zh),
-                "审核状态": item.approval_status,
-            }
-            for item in catalog.concepts
-        ],
-        hide_index=True,
-        width="stretch",
-    )
+
+_render_patient_main(
+    projection,
+    candidate_ids=candidate_ids,
+    generation=progress.generation,
+    run_id=progress.run_id,
+)
+
+show_other_methods = bool(projection.decision_actions or progress.run_id is None)
+if (
+    store is not None
+    and patient is not None
+    and session is not None
+    and show_other_methods
+):
+    _render_other_methods()

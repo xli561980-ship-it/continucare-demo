@@ -1,0 +1,29 @@
+{
+  "file_id": "knowledge-ops-safety-boundary",
+  "file_version": 1,
+  "contract_version": "2.0.0",
+  "file_kind": "safety_boundary",
+  "boundary": {
+    "knowledge_effect": "informational_only",
+    "runtime_authority": "none",
+    "launch_jurisdiction": "CN",
+    "launch_language": "zh-CN",
+    "allowed_intended_uses": [
+      "internal_knowledge_operations",
+      "acquisition_basis_explanation",
+      "informational_display"
+    ],
+    "prohibited_uses": [
+      "diagnosis",
+      "treatment_recommendation",
+      "emergency_triage",
+      "automated_clinical_decision",
+      "runtime_state_transition",
+      "patient_specific_web_search"
+    ],
+    "patient_data_allowed": false,
+    "live_network_default_enabled": false,
+    "automatic_clinical_approval_allowed": false,
+    "synthetic_approvals_count_toward_release": false
+  }
+}

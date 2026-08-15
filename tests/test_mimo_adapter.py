@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 import json
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from threading import Event, Thread
+
+import pytest
 
 from continucare.adapters.sqlite_store import SQLiteStore
 from continucare.agents.contracts import CandidateIssueAction, SemanticStatus
 from continucare.care_agent import CareAgentService
-from continucare.care_agent.mimo_adapter import MiMoSemanticAdapter
+from continucare.agents.errors import ModelRequestError
+from continucare.care_agent.mimo_adapter import MiMoSemanticAdapter, _post_json
 from continucare.care_agent.model_api import SemanticModelConfig
 from continucare.care_engine import CareEngine
 from continucare.demo_data import DEMO_PATIENT_ID
@@ -352,3 +357,60 @@ def test_mimo_adapter_rejects_non_official_endpoint(monkeypatch):
     )
 
     assert adapter.configured is False
+
+
+def test_mimo_transport_never_forwards_authorization_across_redirect():
+    redirected = Event()
+
+    class RedirectTarget(BaseHTTPRequestHandler):
+        def do_GET(self):
+            redirected.set()
+            self.send_response(200)
+            self.end_headers()
+
+        def do_POST(self):
+            redirected.set()
+            self.send_response(200)
+            self.end_headers()
+
+        def log_message(self, format, *args):
+            return None
+
+    target = HTTPServer(("127.0.0.1", 0), RedirectTarget)
+
+    class RedirectSource(BaseHTTPRequestHandler):
+        def do_POST(self):
+            self.send_response(302)
+            self.send_header(
+                "Location",
+                f"http://127.0.0.1:{target.server_port}/capture",
+            )
+            self.end_headers()
+
+        def log_message(self, format, *args):
+            return None
+
+    source = HTTPServer(("127.0.0.1", 0), RedirectSource)
+    threads = [
+        Thread(target=server.serve_forever, daemon=True)
+        for server in (source, target)
+    ]
+    for thread in threads:
+        thread.start()
+    try:
+        with pytest.raises(ModelRequestError, match="rejected HTTP redirect 302"):
+            _post_json(
+                f"http://127.0.0.1:{source.server_port}/v1/chat/completions",
+                {
+                    "Authorization": "Bearer sk-test-must-not-leak",
+                    "Content-Type": "application/json",
+                },
+                {"model": "mimo-v2.5"},
+                1,
+            )
+        assert not redirected.wait(0.1)
+    finally:
+        source.shutdown()
+        target.shutdown()
+        source.server_close()
+        target.server_close()

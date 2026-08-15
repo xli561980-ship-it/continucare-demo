@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 from uuid import NAMESPACE_URL, uuid5
 
@@ -17,7 +18,7 @@ from continucare.fhir.questionnaires import (
     questionnaire_response_summary,
 )
 from continucare.fhir.r4 import FHIRValidationError
-from continucare.fhir.terminology import CodingDefinition
+from continucare.fhir.terminology import UCUM, CodingDefinition
 from continucare.agents.contracts import CodingContract
 from continucare.models import ConfidenceTier, ConfirmedAnswerContext, Observation
 from continucare.pathways.mappings import ObservationMappingPolicy
@@ -163,11 +164,24 @@ def _mapped_value(mapping, answer: Any) -> tuple[str | None, Any]:
             per_day_quantity(answer, unit="vomiting episodes/24 hours"),
         )
     if mapping.kind == "millilitres_per_24_hours":
-        if not isinstance(answer, dict) or type(answer.get("value")) not in {int, float}:
+        if (
+            not isinstance(answer, dict)
+            or set(answer) != {"value", "unit", "system", "code"}
+            or type(answer.get("value")) not in {int, float}
+        ):
             raise FHIRValidationError(f"{mapping.link_id!r} requires a Quantity")
+        if type(answer["value"]) is float and not math.isfinite(answer["value"]):
+            raise FHIRValidationError(
+                f"{mapping.link_id!r} requires a finite quantity value"
+            )
         if answer["value"] < 0:
             raise FHIRValidationError(f"{mapping.link_id!r} cannot be negative")
-        if answer.get("code") not in mapping.accepted_quantity_unit_codes:
+        if (
+            answer["system"] != UCUM
+            or answer["unit"] != "mL"
+            or answer["code"] != "mL"
+            or answer["code"] not in mapping.accepted_quantity_unit_codes
+        ):
             raise FHIRValidationError(
                 f"{mapping.link_id!r} uses an unapproved quantity unit"
             )

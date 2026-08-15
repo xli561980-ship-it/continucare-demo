@@ -367,7 +367,15 @@ class ControlledSummaryService:
             timeline=timeline,
             snapshot=snapshot,
         )
-        summary_id = _stable_id("summary", patient_id, period_start, period_end)
+        summary_id = _stable_id(
+            "summary-v2",
+            patient_id,
+            self.memory.pathway_code,
+            self.memory.pathway_version,
+            "timeline_evidence",
+            period_start,
+            period_end,
+        )
 
         reusable = self._reusable_llm_summary(summary_id, ledger, snapshot)
         if reusable is not None:
@@ -864,8 +872,11 @@ class ControlledSummaryService:
             fallback_reason_codes=reasons,
             created_at=generated_at,
         )
-        self.repository.save_fhir_resource(provenance, patient_id=patient_id)
-        self.repository.save_contract(summary)
+        self.repository.persist_summary_bundle(
+            expected_current=current,
+            summary=summary,
+            provenance=provenance,
+        )
         return summary
 
     @staticmethod

@@ -7,6 +7,8 @@ official HL7 ``fhir.schema.json.zip`` to ``validate_official_json_schema``.
 
 from __future__ import annotations
 
+import hashlib
+import io
 import json
 import zipfile
 from pathlib import Path
@@ -26,6 +28,9 @@ from fhirclient.models.fhirabstractbase import FHIRValidationError as ClientVali
 from jsonschema import Draft6Validator
 
 FHIR_R4_VERSION = "4.0.1"
+OFFICIAL_R4_SCHEMA_SHA256 = (
+    "75e5560da3cf503895a44c8ca7af17a83b4cca6c2cb5ba1883d2aec0d1cb5ac6"
+)
 
 
 class FHIRValidationError(ValueError):
@@ -74,7 +79,10 @@ def validate_r4_resource(
 
 
 def validate_official_json_schema(
-    resource: dict[str, Any], schema_zip_path: str | Path
+    resource: dict[str, Any],
+    schema_zip_path: str | Path,
+    *,
+    expected_sha256: str = OFFICIAL_R4_SCHEMA_SHA256,
 ) -> None:
     """Validate with HL7's official R4 JSON Schema distribution.
 
@@ -87,9 +95,27 @@ def validate_official_json_schema(
     if not path.is_file():
         raise FHIRValidationError(f"official FHIR schema archive not found: {path}")
     try:
-        with zipfile.ZipFile(path) as archive:
+        archive_bytes = path.read_bytes()
+    except OSError as exc:
+        raise FHIRValidationError(f"invalid official FHIR schema archive: {path}") from exc
+
+    actual_sha256 = hashlib.sha256(archive_bytes).hexdigest()
+    if actual_sha256 != expected_sha256:
+        raise FHIRValidationError(
+            "official FHIR schema archive sha256 mismatch: "
+            f"expected {expected_sha256[:16]}, actual {actual_sha256[:16]}"
+        )
+
+    try:
+        with zipfile.ZipFile(io.BytesIO(archive_bytes)) as archive:
             schema = json.loads(archive.read("fhir.schema.json"))
-    except (OSError, KeyError, zipfile.BadZipFile, json.JSONDecodeError) as exc:
+    except (
+        OSError,
+        KeyError,
+        UnicodeDecodeError,
+        zipfile.BadZipFile,
+        json.JSONDecodeError,
+    ) as exc:
         raise FHIRValidationError(f"invalid official FHIR schema archive: {path}") from exc
 
     errors = sorted(

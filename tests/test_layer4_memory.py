@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+import pytest
+
 from continucare.adapters.sqlite_store import SQLiteStore
 from continucare.care_engine import CareEngine
 from continucare.demo_data import DEMO_PATIENT_ID
@@ -24,7 +26,7 @@ from continucare.layer4.contracts import (
     TimelineEventState,
 )
 from continucare.layer4.memory import ClinicalMemoryService
-from continucare.layer4.fhir import build_communication
+from continucare.layer4.fhir import build_communication, build_workflow_task
 from continucare.layer4.inputs import Layer4InputReader
 from continucare.models import AuditEvent
 
@@ -36,8 +38,12 @@ class MutableInputReader:
     def __init__(self, snapshot: Layer4InputSnapshot):
         self.snapshot = snapshot
 
-    def read(self, patient_id: str) -> Layer4InputSnapshot:
+    def read(
+        self, patient_id: str, *, pathway_code: str, pathway_version: str
+    ) -> Layer4InputSnapshot:
         assert patient_id == self.snapshot.patient_id
+        assert pathway_code == self.snapshot.pathway_code
+        assert pathway_version == self.snapshot.pathway_version
         return self.snapshot
 
 
@@ -80,6 +86,8 @@ def _nausea(observation_id: str, response_id: str, effective_time: str) -> dict:
 def _snapshot(*, responses: list[dict], observations: list[dict]) -> Layer4InputSnapshot:
     return Layer4InputSnapshot(
         patient_id=PATIENT_ID,
+        pathway_code="GLP1-14D",
+        pathway_version="1.0.0",
         questionnaire_responses=responses,
         observations=observations,
         audit_events=[
@@ -523,7 +531,7 @@ def test_real_layer3_boundary_builds_memory_and_keeps_rule_tasks_disabled(tmp_pa
     kinds = {item.kind for item in service.list_timeline(DEMO_PATIENT_ID)}
     assert MemoryEventKind.QUESTIONNAIRE_RESPONSE in kinds
     assert MemoryEventKind.OBSERVATION in kinds
-    assert MemoryEventKind.COMMUNICATION in kinds
+    assert MemoryEventKind.COMMUNICATION not in kinds
     assert repository.list_fhir_resources(
         patient_id=DEMO_PATIENT_ID, resource_type="Task"
     ) == []
@@ -596,3 +604,227 @@ def test_revision_overlay_hides_superseded_fact_but_preserves_history(tmp_path):
         and item.current is False
         for item in service.list_memory(PATIENT_ID, include_history=True)
     )
+
+
+def test_memory_projection_bundle_rolls_back_and_replays_after_commit(tmp_path):
+    response = _response("response-memory-atomic", "2026-08-02T10:00:00+00:00")
+    observation = _vomiting(
+        "observation-memory-atomic",
+        response["id"],
+        response["authored"],
+        2,
+    )
+    service, repository, _ = _service(
+        tmp_path, _snapshot(responses=[response], observations=[observation])
+    )
+
+    def rollback_fault(stage):
+        if stage == "memory:after_provenance":
+            raise RuntimeError("fault:memory:after_provenance")
+
+    repository._provenance_contract_bundle_fault = rollback_fault
+    with pytest.raises(RuntimeError, match="memory:after_provenance"):
+        service.rebuild(PATIENT_ID)
+    assert repository.list_contracts("memory_event", patient_id=PATIENT_ID) == []
+    assert repository.list_contracts("timeline_event", patient_id=PATIENT_ID) == []
+    assert repository.list_fhir_resources(
+        patient_id=PATIENT_ID, resource_type="Provenance", current_only=False
+    ) == []
+
+    def commit_fault(stage):
+        if stage == "memory:after_commit":
+            raise RuntimeError("fault:memory:after_commit")
+
+    repository._provenance_contract_bundle_fault = commit_fault
+    with pytest.raises(RuntimeError, match="memory:after_commit"):
+        service.rebuild(PATIENT_ID)
+    assert len(repository.list_contracts("memory_event", patient_id=PATIENT_ID)) == 1
+    assert len(
+        repository.list_contracts("timeline_event", patient_id=PATIENT_ID)
+    ) == 1
+    assert len(
+        repository.list_fhir_resources(
+            patient_id=PATIENT_ID,
+            resource_type="Provenance",
+            current_only=False,
+        )
+    ) == 1
+
+    repository._provenance_contract_bundle_fault = lambda stage: None
+    completed = service.rebuild(PATIENT_ID)
+    assert len(completed.memory_event_ids) == 3
+    assert len(repository.list_contracts("memory_event", patient_id=PATIENT_ID)) == 3
+    assert len(
+        repository.list_contracts("timeline_event", patient_id=PATIENT_ID)
+    ) == 3
+    assert len(
+        repository.list_fhir_resources(
+            patient_id=PATIENT_ID,
+            resource_type="Provenance",
+            current_only=False,
+        )
+    ) == 3
+
+
+def test_workflow_projection_and_supersede_revision_are_one_atomic_bundle(tmp_path):
+    service, repository, _ = _service(
+        tmp_path, _snapshot(responses=[], observations=[])
+    )
+    pathway = "urn:continucare:pathway:GLP1-14D|1.0.0"
+
+    def task(version: str, status: str, authored_on: str) -> dict:
+        return build_workflow_task(
+            patient_id=PATIENT_ID,
+            rule_id="synthetic-memory-atomic-rule",
+            rule_version="1.0.0",
+            task_code_system="urn:continucare:task-code",
+            task_code="synthetic-memory-atomic",
+            task_code_display="合成工作流原子性验证",
+            description="只验证 Memory 投影与修订原子性。",
+            requester_reference="Device/continucare-rule-engine",
+            owner_reference="PractitionerRole/synthetic-nurse",
+            authored_on=authored_on,
+            trigger_reference="Observation/synthetic-memory-trigger/_history/1",
+            due_at="2026-08-03T12:00:00+00:00",
+            status=status,
+            task_id="task-memory-workflow-atomic",
+            version_id=version,
+            based_on_references=[pathway],
+            evidence_references=[
+                "Observation/synthetic-memory-trigger/_history/1"
+            ],
+        )
+
+    version_1 = task("1", "requested", "2026-08-02T10:00:00+00:00")
+    repository.save_fhir_resource(version_1, patient_id=PATIENT_ID)
+    service.rebuild(PATIENT_ID)
+
+    version_2 = task("2", "in-progress", "2026-08-02T11:00:00+00:00")
+    repository.save_fhir_resource(version_2, patient_id=PATIENT_ID)
+
+    def rollback_fault(stage):
+        if stage == "memory:before_revision:0":
+            raise RuntimeError("fault:memory:before_revision:0")
+
+    repository._provenance_contract_bundle_fault = rollback_fault
+    with pytest.raises(RuntimeError, match="memory:before_revision:0"):
+        service.rebuild(PATIENT_ID)
+
+    projected_after_fault = [
+        item
+        for item in repository.list_contracts(
+            "memory_event", patient_id=PATIENT_ID
+        )
+        if item.source.reference == "Task/task-memory-workflow-atomic"
+    ]
+    assert [item.source.version_id for item in projected_after_fault] == ["1"]
+    assert repository.list_contracts(
+        "revision_link", patient_id=PATIENT_ID
+    ) == []
+
+    repository._provenance_contract_bundle_fault = lambda stage: None
+    service.rebuild(PATIENT_ID)
+
+    current = [
+        item
+        for item in service.list_memory(PATIENT_ID)
+        if item.source.reference == "Task/task-memory-workflow-atomic"
+    ]
+    history = [
+        item
+        for item in service.list_memory(PATIENT_ID, include_history=True)
+        if item.source.reference == "Task/task-memory-workflow-atomic"
+    ]
+    revisions = repository.list_contracts(
+        "revision_link", patient_id=PATIENT_ID
+    )
+    assert [item.source.version_id for item in current] == ["2"]
+    assert {item.source.version_id for item in history} == {"1", "2"}
+    assert len(revisions) == 1
+    assert revisions[0].predecessor.version_id == "1"
+    assert revisions[0].successor.version_id == "2"
+
+    version_3 = task("3", "completed", "2026-08-02T12:00:00+00:00")
+    repository.save_fhir_resource(version_3, patient_id=PATIENT_ID)
+
+    def commit_fault(stage):
+        if stage == "memory:after_commit":
+            raise RuntimeError("fault:memory:after_commit")
+
+    repository._provenance_contract_bundle_fault = commit_fault
+    with pytest.raises(RuntimeError, match="memory:after_commit"):
+        service.rebuild(PATIENT_ID)
+    committed_memory = repository.list_contracts(
+        "memory_event", patient_id=PATIENT_ID
+    )
+    committed_revisions = repository.list_contracts(
+        "revision_link", patient_id=PATIENT_ID
+    )
+
+    repository._provenance_contract_bundle_fault = lambda stage: None
+    service.rebuild(PATIENT_ID)
+
+    assert repository.list_contracts(
+        "memory_event", patient_id=PATIENT_ID
+    ) == committed_memory
+    assert repository.list_contracts(
+        "revision_link", patient_id=PATIENT_ID
+    ) == committed_revisions
+    assert [
+        item.source.version_id
+        for item in service.list_memory(PATIENT_ID)
+        if item.source.reference == "Task/task-memory-workflow-atomic"
+    ] == ["3"]
+
+
+def test_revision_bundle_rolls_back_and_replays_after_commit(tmp_path):
+    service, repository, _ = _service(
+        tmp_path, _snapshot(responses=[], observations=[])
+    )
+    arguments = {
+        "patient_id": PATIENT_ID,
+        "predecessor": ResourceReference(
+            reference="Observation/observation-revision-atomic", version_id="1"
+        ),
+        "successor": ResourceReference(
+            reference="Observation/observation-revision-atomic", version_id="2"
+        ),
+        "relationship": RevisionRelationship.CORRECTS,
+        "reason": "患者更正合成记录。",
+        "actor_reference": f"Patient/{PATIENT_ID}",
+        "recorded_at": "2026-08-02T11:00:00+00:00",
+    }
+
+    def rollback_fault(stage):
+        if stage == "revision:after_provenance":
+            raise RuntimeError("fault:revision:after_provenance")
+
+    repository._provenance_contract_bundle_fault = rollback_fault
+    with pytest.raises(RuntimeError, match="revision:after_provenance"):
+        service.record_revision(**arguments)
+    assert repository.list_contracts("revision_link", patient_id=PATIENT_ID) == []
+    assert repository.list_fhir_resources(
+        patient_id=PATIENT_ID, resource_type="Provenance", current_only=False
+    ) == []
+
+    def commit_fault(stage):
+        if stage == "revision:after_commit":
+            raise RuntimeError("fault:revision:after_commit")
+
+    repository._provenance_contract_bundle_fault = commit_fault
+    with pytest.raises(RuntimeError, match="revision:after_commit"):
+        service.record_revision(**arguments)
+    committed = repository.list_contracts("revision_link", patient_id=PATIENT_ID)
+    assert len(committed) == 1
+    assert len(
+        repository.list_fhir_resources(
+            patient_id=PATIENT_ID,
+            resource_type="Provenance",
+            current_only=False,
+        )
+    ) == 1
+
+    repository._provenance_contract_bundle_fault = lambda stage: None
+    replay = service.record_revision(**arguments)
+    assert replay == committed[0]
+    assert len(repository.list_contracts("revision_link", patient_id=PATIENT_ID)) == 1

@@ -1,0 +1,4 @@
+SYNTHETIC KNOWLEDGE CONNECTOR FIXTURE
+Domain: rare disease terminology
+Version: 1
+This file contains no ontology term, mapping, translation, or clinical assertion.

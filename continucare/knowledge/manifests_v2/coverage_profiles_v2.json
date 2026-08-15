@@ -1,0 +1,250 @@
+{
+  "file_id": "knowledge-ops-coverage-profiles",
+  "file_version": 1,
+  "contract_version": "2.0.0",
+  "file_kind": "coverage_validation_profiles",
+  "profiles": [
+    {
+      "profile_id": "fixture-medication-followup",
+      "profile_version": 1,
+      "domain": "medication_followup",
+      "display_name": "药物随访验证 fixture",
+      "purpose": "验证产品、药物说明书、患者问题、药物警戒限制和药师条件门禁；GLP-1 只是一项 synthetic fixture。",
+      "layers": [
+        "L1_terminology",
+        "L2_patient_question",
+        "L3_severity_grading",
+        "L4_high_risk_escalation",
+        "L5_frequency_pharmacovigilance",
+        "L6_patient_education"
+      ],
+      "scope": {
+        "domain": "clinical",
+        "jurisdictions": [{"system": "iso3166_1", "code": "CN"}],
+        "languages": ["zh-CN"],
+        "conditions": {"mode": "any"},
+        "products": {
+          "mode": "include",
+          "values": [
+            {
+              "system": "urn:continucare:synthetic-product",
+              "code": "MEDICATION-FOLLOWUP-FIXTURE",
+              "display": "Synthetic medication follow-up product"
+            }
+          ]
+        },
+        "care_settings": {
+          "mode": "include",
+          "values": [
+            {
+              "system": "urn:continucare:care-setting",
+              "code": "remote-followup",
+              "display": "Remote informational follow-up"
+            }
+          ]
+        },
+        "populations": {"mode": "any"},
+        "intended_uses": [
+          "internal_knowledge_operations",
+          "acquisition_basis_explanation",
+          "informational_display"
+        ]
+      },
+      "required_roles": [
+        "knowledge_curator",
+        "rights_officer",
+        "clinical_reviewer",
+        "pharmacist"
+      ],
+      "synthetic_fixture_only": true,
+      "clinical_content_seeded": false,
+      "notes": [
+        "自发报告数据不得用于估算发生率、证明因果或比较产品风险。",
+        "本 profile 不授权任何 GLP-1 或其他药物的 runtime rule。"
+      ]
+    },
+    {
+      "profile_id": "fixture-chronic-cardiopulmonary",
+      "profile_version": 1,
+      "domain": "chronic_cardiopulmonary",
+      "display_name": "慢病心肺验证 fixture",
+      "purpose": "验证跨病种症状术语、患者询问、严重程度与辖区化高风险依据。",
+      "layers": [
+        "L1_terminology",
+        "L2_patient_question",
+        "L3_severity_grading",
+        "L4_high_risk_escalation",
+        "L6_patient_education"
+      ],
+      "scope": {
+        "domain": "clinical",
+        "jurisdictions": [{"system": "iso3166_1", "code": "CN"}],
+        "languages": ["zh-CN"],
+        "conditions": {
+          "mode": "include",
+          "values": [
+            {
+              "system": "urn:continucare:validation-domain",
+              "code": "chronic-cardiopulmonary",
+              "display": "Synthetic chronic cardiopulmonary domain"
+            }
+          ]
+        },
+        "products": {"mode": "not_applicable"},
+        "care_settings": {
+          "mode": "include",
+          "values": [
+            {
+              "system": "urn:continucare:care-setting",
+              "code": "remote-followup",
+              "display": "Remote informational follow-up"
+            }
+          ]
+        },
+        "populations": {"mode": "any"},
+        "intended_uses": [
+          "internal_knowledge_operations",
+          "acquisition_basis_explanation",
+          "informational_display"
+        ]
+      },
+      "required_roles": [
+        "knowledge_curator",
+        "rights_officer",
+        "clinical_reviewer"
+      ],
+      "synthetic_fixture_only": true,
+      "clinical_content_seeded": false,
+      "notes": ["不从急诊量表或单一指南自动派生远程分诊规则。"]
+    },
+    {
+      "profile_id": "fixture-oncology-pro",
+      "profile_version": 1,
+      "domain": "oncology_pro",
+      "display_name": "肿瘤 PRO 验证 fixture",
+      "purpose": "验证正式患者报告结局工具的原文、翻译、量表适用性和许可门禁。",
+      "layers": [
+        "L1_terminology",
+        "L2_patient_question",
+        "L3_severity_grading",
+        "L4_high_risk_escalation",
+        "L6_patient_education"
+      ],
+      "scope": {
+        "domain": "clinical",
+        "jurisdictions": [{"system": "iso3166_1", "code": "CN"}],
+        "languages": ["zh-CN"],
+        "conditions": {
+          "mode": "include",
+          "values": [
+            {
+              "system": "urn:continucare:validation-domain",
+              "code": "oncology",
+              "display": "Synthetic oncology validation domain"
+            }
+          ]
+        },
+        "products": {"mode": "not_applicable"},
+        "care_settings": {"mode": "any"},
+        "populations": {"mode": "any"},
+        "intended_uses": [
+          "internal_knowledge_operations",
+          "acquisition_basis_explanation",
+          "informational_display"
+        ]
+      },
+      "required_roles": [
+        "knowledge_curator",
+        "rights_officer",
+        "terminologist",
+        "clinical_reviewer"
+      ],
+      "synthetic_fixture_only": true,
+      "clinical_content_seeded": false,
+      "notes": [
+        "PRO-CTCAE 的存在不授权复制、翻译、修改或跨场景外推。",
+        "患者自报不等同于 clinician CTCAE grade。"
+      ]
+    },
+    {
+      "profile_id": "fixture-acute-high-risk",
+      "profile_version": 1,
+      "domain": "acute_high_risk_symptoms",
+      "display_name": "急性高风险症状验证 fixture",
+      "purpose": "验证高风险依据从来源到 Claim、Binding 和 CoverageGap 的严格分离。",
+      "layers": [
+        "L1_terminology",
+        "L2_patient_question",
+        "L4_high_risk_escalation",
+        "L6_patient_education"
+      ],
+      "scope": {
+        "domain": "clinical",
+        "jurisdictions": [{"system": "iso3166_1", "code": "CN"}],
+        "languages": ["zh-CN"],
+        "conditions": {"mode": "any"},
+        "products": {"mode": "any"},
+        "care_settings": {
+          "mode": "include",
+          "values": [
+            {
+              "system": "urn:continucare:care-setting",
+              "code": "remote-informational-display",
+              "display": "Remote informational display"
+            }
+          ]
+        },
+        "populations": {"mode": "any"},
+        "intended_uses": [
+          "internal_knowledge_operations",
+          "acquisition_basis_explanation",
+          "informational_display"
+        ]
+      },
+      "required_roles": [
+        "knowledge_curator",
+        "rights_officer",
+        "clinical_reviewer"
+      ],
+      "synthetic_fixture_only": true,
+      "clinical_content_seeded": false,
+      "notes": [
+        "本 profile 不是急诊分诊协议，不能产生患者级升级决定。",
+        "没有足够来源和临床审核时必须保留 CoverageGap。"
+      ]
+    },
+    {
+      "profile_id": "fixture-rare-disease-terminology",
+      "profile_version": 1,
+      "domain": "rare_disease_terminology",
+      "display_name": "罕见病术语验证 fixture",
+      "purpose": "验证广覆盖 L1、版本固定、多术语体系职责分离和映射审核。",
+      "layers": ["L1_terminology"],
+      "scope": {
+        "domain": "terminology",
+        "jurisdictions": [{"system": "iso3166_1", "code": "CN"}],
+        "languages": ["zh-CN"],
+        "conditions": {"mode": "any"},
+        "products": {"mode": "not_applicable"},
+        "care_settings": {"mode": "not_applicable"},
+        "populations": {"mode": "any"},
+        "intended_uses": [
+          "internal_knowledge_operations",
+          "acquisition_basis_explanation",
+          "informational_display"
+        ]
+      },
+      "required_roles": [
+        "knowledge_curator",
+        "rights_officer",
+        "terminologist"
+      ],
+      "synthetic_fixture_only": true,
+      "clinical_content_seeded": false,
+      "notes": [
+        "SNOMED CT、ICD-11、LOINC、MedDRA 与 HPO 不是互相替代的术语体系。",
+        "任何跨体系映射都需要独立版本、许可和术语审核。"
+      ]
+    }
+  ]
+}

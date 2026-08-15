@@ -1,0 +1,182 @@
+{
+  "catalog_id": "continucare-core-symptom-catalog",
+  "catalog_version": "2.0.0",
+  "status": "draft-readiness-only",
+  "shared_owner": "continucare-shared-terminology",
+  "pathway_owned": false,
+  "ui_runtime_enabled": false,
+  "source_catalog_id": "continucare-glp1-patient-reported-symptoms",
+  "source_catalog_version": "1.0.0",
+  "records": [
+    {
+      "benchmark_id": "core-symptom-nausea",
+      "benchmark_key": "nausea",
+      "preferred_zh": "恶心",
+      "preferred_en": "nausea",
+      "concept_status": "reused_concept",
+      "existing_concept_ref": "nausea",
+      "aliases": [
+        {"value": "恶心", "language": "zh-CN", "alias_source": "glp1_catalog_v1_preferred", "review_status": "inherited_prototype_unverified_for_v2"},
+        {"value": "nausea", "language": "en", "alias_source": "benchmark_seed", "review_status": "pending_terminologist_review"}
+      ],
+      "mapping_status": "inherited_v1_reference_unverified",
+      "semantic_boundary_codes": ["symptom-only-no-clinical-inference"]
+    },
+    {
+      "benchmark_id": "core-symptom-vomiting",
+      "benchmark_key": "vomiting",
+      "preferred_zh": "呕吐",
+      "preferred_en": "vomiting",
+      "concept_status": "reused_concept",
+      "existing_concept_ref": "vomiting",
+      "aliases": [
+        {"value": "呕吐", "language": "zh-CN", "alias_source": "glp1_catalog_v1_preferred", "review_status": "inherited_prototype_unverified_for_v2"},
+        {"value": "vomiting", "language": "en", "alias_source": "benchmark_seed", "review_status": "pending_terminologist_review"}
+      ],
+      "mapping_status": "inherited_v1_reference_unverified",
+      "semantic_boundary_codes": ["symptom-only-no-clinical-inference"]
+    },
+    {
+      "benchmark_id": "core-symptom-diarrhea",
+      "benchmark_key": "diarrhea",
+      "preferred_zh": "腹泻",
+      "preferred_en": "diarrhea",
+      "concept_status": "reused_concept",
+      "existing_concept_ref": "diarrhea",
+      "aliases": [
+        {"value": "腹泻", "language": "zh-CN", "alias_source": "glp1_catalog_v1_preferred", "review_status": "inherited_prototype_unverified_for_v2"},
+        {"value": "diarrhea", "language": "en", "alias_source": "benchmark_seed", "review_status": "pending_terminologist_review"}
+      ],
+      "mapping_status": "inherited_v1_reference_unverified",
+      "semantic_boundary_codes": ["symptom-only-no-clinical-inference"]
+    },
+    {
+      "benchmark_id": "core-symptom-abdominal-pain",
+      "benchmark_key": "abdominal-pain",
+      "preferred_zh": "腹痛",
+      "preferred_en": "abdominal pain",
+      "concept_status": "reused_concept",
+      "existing_concept_ref": "abdominal-pain",
+      "aliases": [
+        {"value": "腹痛", "language": "zh-CN", "alias_source": "glp1_catalog_v1_preferred", "review_status": "inherited_prototype_unverified_for_v2"},
+        {"value": "abdominal pain", "language": "en", "alias_source": "benchmark_seed", "review_status": "pending_terminologist_review"}
+      ],
+      "mapping_status": "inherited_v1_reference_unverified",
+      "semantic_boundary_codes": ["symptom-only-no-clinical-inference"]
+    },
+    {
+      "benchmark_id": "core-symptom-constipation",
+      "benchmark_key": "constipation",
+      "preferred_zh": "便秘",
+      "preferred_en": "constipation",
+      "concept_status": "reused_concept",
+      "existing_concept_ref": "constipation",
+      "aliases": [
+        {"value": "便秘", "language": "zh-CN", "alias_source": "glp1_catalog_v1_preferred", "review_status": "inherited_prototype_unverified_for_v2"},
+        {"value": "constipation", "language": "en", "alias_source": "benchmark_seed", "review_status": "pending_terminologist_review"}
+      ],
+      "mapping_status": "inherited_v1_reference_unverified",
+      "semantic_boundary_codes": ["symptom-only-no-clinical-inference"]
+    },
+    {
+      "benchmark_id": "core-symptom-bloating",
+      "benchmark_key": "bloating",
+      "preferred_zh": "腹胀感",
+      "preferred_en": "bloating",
+      "concept_status": "alias_candidate",
+      "candidate_target_ref": "abdominal-distension",
+      "aliases": [
+        {"value": "腹胀感", "language": "zh-CN", "alias_source": "benchmark_seed", "review_status": "pending_terminologist_review"},
+        {"value": "bloating", "language": "en", "alias_source": "benchmark_seed", "review_status": "pending_terminologist_review"}
+      ],
+      "mapping_status": "pending_unverified",
+      "semantic_boundary_codes": ["alias-candidate-not-equivalence", "not-equivalent-to-flatulence"]
+    },
+    {
+      "benchmark_id": "core-symptom-decreased-appetite",
+      "benchmark_key": "decreased-appetite",
+      "preferred_zh": "食欲下降",
+      "preferred_en": "decreased appetite",
+      "concept_status": "reused_concept",
+      "existing_concept_ref": "decreased-appetite",
+      "aliases": [
+        {"value": "食欲下降", "language": "zh-CN", "alias_source": "glp1_catalog_v1_preferred", "review_status": "inherited_prototype_unverified_for_v2"},
+        {"value": "decreased appetite", "language": "en", "alias_source": "benchmark_seed", "review_status": "pending_terminologist_review"}
+      ],
+      "mapping_status": "inherited_v1_reference_unverified",
+      "semantic_boundary_codes": ["not-equivalent-to-reduced-intake"]
+    },
+    {
+      "benchmark_id": "core-symptom-fatigue",
+      "benchmark_key": "fatigue",
+      "preferred_zh": "疲劳",
+      "preferred_en": "fatigue",
+      "concept_status": "reused_concept",
+      "existing_concept_ref": "fatigue",
+      "aliases": [
+        {"value": "疲劳", "language": "zh-CN", "alias_source": "glp1_catalog_v1_preferred", "review_status": "inherited_prototype_unverified_for_v2"},
+        {"value": "fatigue", "language": "en", "alias_source": "benchmark_seed", "review_status": "pending_terminologist_review"}
+      ],
+      "mapping_status": "inherited_v1_reference_unverified",
+      "semantic_boundary_codes": ["symptom-only-no-clinical-inference"]
+    },
+    {
+      "benchmark_id": "core-symptom-dizziness",
+      "benchmark_key": "dizziness",
+      "preferred_zh": "头晕",
+      "preferred_en": "dizziness",
+      "concept_status": "reused_concept",
+      "existing_concept_ref": "dizziness",
+      "aliases": [
+        {"value": "头晕", "language": "zh-CN", "alias_source": "glp1_catalog_v1_preferred", "review_status": "inherited_prototype_unverified_for_v2"},
+        {"value": "dizziness", "language": "en", "alias_source": "benchmark_seed", "review_status": "pending_terminologist_review"}
+      ],
+      "mapping_status": "inherited_v1_reference_unverified",
+      "semantic_boundary_codes": ["not-equivalent-to-vertigo", "not-equivalent-to-presyncope", "not-equivalent-to-syncope"]
+    },
+    {
+      "benchmark_id": "core-symptom-dyspnea",
+      "benchmark_key": "dyspnea",
+      "preferred_zh": "呼吸困难",
+      "preferred_en": "dyspnea",
+      "concept_status": "reused_concept",
+      "existing_concept_ref": "dyspnea",
+      "aliases": [
+        {"value": "呼吸困难", "language": "zh-CN", "alias_source": "glp1_catalog_v1_preferred", "review_status": "inherited_prototype_unverified_for_v2"},
+        {"value": "dyspnea", "language": "en", "alias_source": "benchmark_seed", "review_status": "pending_terminologist_review"}
+      ],
+      "mapping_status": "inherited_v1_reference_unverified",
+      "semantic_boundary_codes": ["no-emergency-or-red-flag-inference"]
+    },
+    {
+      "benchmark_id": "core-symptom-chest-pain",
+      "benchmark_key": "chest-pain",
+      "preferred_zh": "胸痛",
+      "preferred_en": "chest pain",
+      "concept_status": "internal_candidate",
+      "aliases": [
+        {"value": "胸痛", "language": "zh-CN", "alias_source": "internal_candidate_seed", "review_status": "pending_terminologist_review"},
+        {"value": "chest pain", "language": "en", "alias_source": "internal_candidate_seed", "review_status": "pending_terminologist_review"}
+      ],
+      "mapping_status": "pending_unverified",
+      "semantic_boundary_codes": ["no-external-code-claimed", "no-emergency-or-red-flag-inference"]
+    },
+    {
+      "benchmark_id": "core-symptom-rash",
+      "benchmark_key": "rash",
+      "preferred_zh": "皮疹",
+      "preferred_en": "rash",
+      "concept_status": "alias_candidate",
+      "candidate_target_ref": "skin-eruption",
+      "aliases": [
+        {"value": "皮疹", "language": "zh-CN", "alias_source": "benchmark_seed", "review_status": "pending_terminologist_review"},
+        {"value": "rash", "language": "en", "alias_source": "benchmark_seed", "review_status": "pending_terminologist_review"}
+      ],
+      "mapping_status": "pending_unverified",
+      "semantic_boundary_codes": ["alias-candidate-not-equivalence", "not-equivalent-to-urticaria", "not-equivalent-to-pruritus", "not-equivalent-to-angioedema", "not-equivalent-to-anaphylaxis"]
+    }
+  ],
+  "release_ready": false,
+  "knowledge_effect": "informational_only",
+  "runtime_authority": "none"
+}

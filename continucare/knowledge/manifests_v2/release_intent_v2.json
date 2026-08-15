@@ -1,0 +1,26 @@
+{
+  "file_id": "knowledge-ops-release-intent",
+  "file_version": 1,
+  "contract_version": "2.0.0",
+  "file_kind": "knowledge_release_intent",
+  "intent": {
+    "release_intent_id": "cn-zh-informational-readiness",
+    "release_intent_version": 1,
+    "target_jurisdiction": "CN",
+    "target_language": "zh-CN",
+    "intended_uses": [
+      "internal_knowledge_operations",
+      "acquisition_basis_explanation",
+      "informational_display"
+    ],
+    "artifact_selection": "none_until_formal_review",
+    "selected_artifact_count": 0,
+    "formal_reviewers_available": false,
+    "formal_license_decisions_available": false,
+    "release_ready": false,
+    "status": "readiness_only_blocked",
+    "reason": "No formal reviewer or production license decision exists; synthetic fixture events never count toward release.",
+    "knowledge_effect": "informational_only",
+    "runtime_authority": "none"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "file_kind": "knowledge_ops_bundle_index",
+  "bundle_id": "continucare-knowledge-ops",
+  "bundle_version": 3,
+  "contract_version": "2.0.0",
+  "files": [
+    {
+      "ref": {"file_id": "knowledge-ops-safety-boundary", "file_version": 1},
+      "relative_path": "safety_boundary_v2.json",
+      "manifest_sha256": "64fb14f5562389cbd1a78bde579b702810b40b654a864c147c6b0ea98b69ad43",
+      "size": 846
+    },
+    {
+      "ref": {"file_id": "knowledge-ops-source-policies", "file_version": 1},
+      "relative_path": "source_policies_v2.json",
+      "manifest_sha256": "273dbdc2d50023b6687edbb56a8ceef818daa907837bd9b066cd748300a487bf",
+      "size": 23732
+    },
+    {
+      "ref": {"file_id": "knowledge-ops-source-policies", "file_version": 2},
+      "relative_path": "source_policies_v2_2.json",
+      "manifest_sha256": "6914b875081741ca039ef18cea89e1338d19dda7f78a6c51a0d64e56c5e8bccd",
+      "size": 19327
+    },
+    {
+      "ref": {"file_id": "knowledge-ops-coverage-profiles", "file_version": 1},
+      "relative_path": "coverage_profiles_v2.json",
+      "manifest_sha256": "ef939e3330b37cf8791b80a3942846fe7a2bda8c35670ca38122a99df787c298",
+      "size": 8217
+    },
+    {
+      "ref": {"file_id": "knowledge-ops-review-policy", "file_version": 1},
+      "relative_path": "review_policy_v2.json",
+      "manifest_sha256": "e6013664d1b126b60dec78522d988e296755ebe096c108f49d5862455a30709f",
+      "size": 3261
+    },
+    {
+      "ref": {"file_id": "knowledge-ops-release-intent", "file_version": 1},
+      "relative_path": "release_intent_v2.json",
+      "manifest_sha256": "edc2fcd5d191d1fd6ccf2bd44b626fc4a82ff2f81dff783e5d39e38f8a517c6f",
+      "size": 908
+    },
+    {
+      "ref": {"file_id": "knowledge-ops-readiness-gaps", "file_version": 1},
+      "relative_path": "readiness_gaps_v1.json",
+      "manifest_sha256": "9dea836f1d987b38d0cd76342bc10c053c2969c57d1c0ff8f8e7ff90f8475025",
+      "size": 7632
+    }
+  ],
+  "current_file_refs": [
+    {"file_id": "knowledge-ops-safety-boundary", "file_version": 1},
+    {"file_id": "knowledge-ops-source-policies", "file_version": 2},
+    {"file_id": "knowledge-ops-coverage-profiles", "file_version": 1},
+    {"file_id": "knowledge-ops-review-policy", "file_version": 1},
+    {"file_id": "knowledge-ops-release-intent", "file_version": 1},
+    {"file_id": "knowledge-ops-readiness-gaps", "file_version": 1}
+  ]
+}

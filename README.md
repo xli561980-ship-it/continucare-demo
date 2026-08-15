@@ -2,9 +2,15 @@
 
 用版本化 FHIR R4 `Questionnaire` 动态驱动合成患者随访，并通过受控 Care Agent 把患者自由表达整理成待确认候选；患者确认后，第二层将答案保存为完整 `QuestionnaireResponse`，把明确事实确定性沉淀为可追溯的 `Observation`。
 
-> **安全边界：仅使用合成数据。系统不是医疗急救通道，不生成诊断、治疗或用药建议。**
+> **安全边界：仅使用合成数据。系统不是医疗急救通道，不诊断、不治疗、不分诊，也不生成用药建议。**
 
-当前版本已接入小米 MiMo OpenAI-compatible 适配器；配置本地密钥时使用 `mimo-v2.5` JSON mode，分别承担受控抽取、Safety Critic 和患者语言改写。主抽取不可用时回退本地语义 Mock，辅助模型不可用时回退确定性硬规则或固定语言模板。无论哪种模式，Safety Agent 和患者确认门都不能绕过。飞书通知仍使用 Mock 适配器。
+当前仍是 Streamlit 本地合成 Web 原型，不是原生 App、临床试点或生产系统。比赛首页以“让院外一句话，变成复诊前可追溯的记录”为主张，主故事按五步展开：一句原话 → 本人确认 → 人工核对 → 复诊速览 → 完整留痕。开始新一轮会在用户明确同意后原子替换本地合成运行数据，并生成固定原话“我今天拉肚子。”的未确认候选；患者确认、护士核对记录和未发送沟通文字、医生生成/刷新复诊速览仍分别需要明确人工点击。进度从 SQLite 事实恢复，不依赖浏览器 session state。Knowledge 是独立资料库，不属于五步完成度。完整业务设计见 [M5-D 稳定的一键比赛 Demo](docs/28_m5_d_competition_demo.md)。
+
+当前版本已接入小米 MiMo OpenAI-compatible 适配器；配置本地密钥时使用 `mimo-v2.5` JSON mode，分别承担受控抽取、Safety Critic 和患者语言改写。主抽取不可用时回退本地语义 Mock，辅助模型不可用时回退确定性硬规则或固定语言模板。无论哪种模式，Safety Agent 和患者确认门都不能绕过。
+
+M5-E 增加了可选飞书 Bot、Aily 和 Bitable 协议适配器、统一配置工厂与 FakeTransport 合同测试。默认配置为飞书/Aily `mock`、Bitable `disabled`，不读取 Token、不创建真实 transport、不认证、不探活、不发送或写入；运行时 `SEND_ENABLED=False`，没有真实外部发送。代码已实现且 FakeTransport 合同已验证；真实租户验证和生产可用性均为否。详见 [飞书 / Aily 集成状态](docs/feishu_integration.md) 与 [M5-E 设计验收](docs/29_m5_e_optional_feishu_aily_adapters.md)。
+
+Knowledge 页面现在读取正式的 Knowledge Ops 治理只读模型，按“来源库 / 术语治理 / 审核流程 / 发布状态”展示已经建立的版本、来源策略、人工门禁和待补治理证据。患者端采用“受控语义层生成候选 → 本人确认后写入”的口语标准化模式；这不等于 Knowledge alias 自动匹配。Core Symptom v2 alias consumer integration 仍未实施，页面不导入 alias consumer API、不直接匹配患者文本；Knowledge 保持 `knowledge_effect=informational_only`、`runtime_authority=none`，不授权运行时动作。
 
 ## 本地运行
 
@@ -14,10 +20,19 @@
 python3.11 -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]'
 .venv/bin/python -m pytest -q
-.venv/bin/streamlit run app.py
+.venv/bin/streamlit run streamlit_app.py
 ```
 
-打开 Streamlit 输出的本地地址即可进入首页。运行数据默认保存在 `data/continucare.db`，该目录已被 Git 忽略。
+打开 Streamlit 输出的本地地址即可进入演示控制台。三个角色端使用同一服务和同一条本地合成记录，但拥有彼此独立的固定入口：
+
+- 演示控制台：`http://localhost:8501/`
+- 患者端“我的随访”：`http://localhost:8501/patient`
+- 护士端“随访待办”：`http://localhost:8501/nurse`
+- 医生端“复诊准备”：`http://localhost:8501/doctor`
+
+可以把三个角色端分别放在不同浏览器标签页或演示设备上。当前拆分属于比赛演示级角色界面隔离，不代表已经实现登录、身份认证或权限控制。运行数据默认保存在 `data/continucare.db`，该目录已被 Git 忽略。
+
+普通离线测试不下载外部文件；未设置 `FHIR_R4_SCHEMA_ZIP` 时，依赖 HL7 官方 JSON Schema 的 3 项测试会明确标记为 skipped。比赛提交或发布验收不能把这些 skip 当作通过，必须按下方“验收命令”下载并核对固定哈希后重新运行全量测试。
 
 ## 小米 MiMo 配置
 
@@ -64,7 +79,20 @@ MiMo 不生成医学代码。已知 Questionnaire 字段和患者自述新症状
 
 密钥不会进入 AgentRun、审计日志或 Git。当前只允许官方 `*.xiaomimimo.com` HTTPS 地址，并且只发送合成演示文本。[MiMo 官方快速接入](https://mimo.mi.com/docs/en-US/quick-start/summary/first-api-call) · [JSON mode](https://mimo.mi.com/docs/en-US/quick-start/usage-guide/text-generation/structured-output)
 
-## 三个核心价值
+## 可选飞书 / Aily / Bitable 配置
+
+`.env.example` 的安全默认值是：
+
+```dotenv
+CONTINUCARE_FEISHU_MODE=mock
+CONTINUCARE_AILY_MODE=mock
+CONTINUCARE_BITABLE_MODE=disabled
+CONTINUCARE_EXTERNAL_EGRESS_ENABLED=false
+```
+
+仅将 mode 改为 `test_tenant` 不足以创建外部 client；还必须同时设置对应 capability flag、全局 egress flag 和完整配置。偶然存在凭据不会自动启用。`test_tenant` 配置缺失时 fail-closed。当前仓库没有 `production` 模式；本轮也未用真实凭据或调用任何外部 API。
+
+## 核心价值与工程保障
 
 - 原始回答与 FHIR Observation 通过 `derivedFrom` 可追溯；
 - 患者端由 Questionnaire 动态渲染，结构化答案不依赖 LLM；
@@ -78,11 +106,12 @@ MiMo 不生成医学代码。已知 Questionnaire 字段和患者自述新症状
 
 ## 页面
 
-- 首页：先展示最终交付物，以及患者 → 护士 → 医生的闭环；
-- 患者随访：先展示本次结果、患者原话、记录事实和明确下一步；
-- 护士任务中心：先展示今天要处理什么、为什么进入队列以及任务最终结果；
-- 医生复诊简报：首屏用 30 秒呈现“患者报告、团队处理、复诊待确认”；
-- 工作流证据链：用人类可读的六阶段时间线还原结果形成过程，技术记录按需展开。
+- 比赛演示首页：先说明三端接力价值，再展示当前角色、当前步骤和下一步；
+- 我的随访：以对话式首屏展示患者原话、待确认记录和三个明确选择；
+- 随访待办：并排核对患者原话、已确认记录和“患者本人确认”来源，并处理未发送文字；
+- 复诊准备：用“30 秒速览”分开呈现患者确认、护理接力和复诊时仍需补充的信息；
+- 记录追溯：用人类可读的中文说明记录如何形成或停止，技术详情按需展开；
+- Knowledge 中心：展示来源、术语治理、审核和发布状态；独立只读，不读取患者故事，也不参与五步完成判定。
 
 ## 临床与标准依据
 
@@ -115,9 +144,10 @@ MiMo 不生成医学代码。已知 Questionnaire 字段和患者自述新症状
 - 第四层第 3 步工程基线：双审批规则执行门、逐条件证据解释、Task 去重、版本化责任状态机及 Clinical Memory 历史；仓库无 active 临床规则，产品路径仍为 not_assessed
 - 第四层第 4 步工程基线：当前 Timeline 的确定性证据简报、生成时点门、Summary 版本链及医生接受/修改/拒绝；LLM 摘要仍未启用
 - 第四层第 5 步工程基线：版本化指标定义、current/stale/unknown/conflict 状态、单位一致的端点数值方向、快照版本链及 Provenance；不输出好转/恶化或风险解释
-- 第四层第 6 步工程基线：Timeline/State/Summary/Task 只读组合查询、patient/pathway 权限隔离、历史 as-of 回放、版本化证据图及组件级故障降级；尚未替换旧医生页面或接入真实 IAM/EMR
+- 第四层第 6 步工程基线：Timeline/State/Summary/Task 只读组合查询、patient/pathway 权限隔离、历史 as-of 回放、版本化证据图及组件级故障降级；真实 IAM/EMR 仍未接入
 - 旧 M0–M5 自由文本链继续作为兼容测试夹具，不是患者端主流程
-- M6：真实飞书/Aily 接入，明确不在第一版范围内
+- M5-E：可选飞书/Aily/Bitable 合同、FakeTransport 与零 Token Mock fallback；真实租户联调仍未进行
+- M6：真实租户验收、回调与医院集成，仍不在本轮范围内
 
 ## 演示
 
@@ -129,12 +159,28 @@ MiMo 不生成医学代码。已知 Questionnaire 字段和患者自述新症状
 
 ## 验收命令
 
+以下命令均从仓库根目录运行。FHIR R4 Schema 是固定版本的外部验收材料，不提交进仓库；先验证 SHA-256，成功后才运行依赖它的测试：
+
 ```bash
-curl -L https://hl7.org/fhir/R4/fhir.schema.json.zip -o /tmp/fhir-r4-schema.zip
-FHIR_R4_SCHEMA_ZIP=/tmp/fhir-r4-schema.zip .venv/bin/python -m pytest -q
-.venv/bin/python scripts/validate_fhir_r4.py --schema /tmp/fhir-r4-schema.zip
+FHIR_R4_SCHEMA_PATH=/tmp/fhir-r4-schema.zip
+FHIR_R4_SCHEMA_SHA256=75e5560da3cf503895a44c8ca7af17a83b4cca6c2cb5ba1883d2aec0d1cb5ac6
+
+curl --fail --location --retry 3 \
+  https://hl7.org/fhir/R4/fhir.schema.json.zip \
+  --output "$FHIR_R4_SCHEMA_PATH"
+printf '%s  %s\n' "$FHIR_R4_SCHEMA_SHA256" "$FHIR_R4_SCHEMA_PATH" \
+  | shasum -a 256 --check
+
+FHIR_R4_SCHEMA_ZIP="$FHIR_R4_SCHEMA_PATH" \
+  .venv/bin/python -m pytest -q -p no:cacheprovider
+.venv/bin/python scripts/validate_fhir_r4.py \
+  --schema "$FHIR_R4_SCHEMA_PATH"
 .venv/bin/python scripts/evaluate_semantic_layer.py
-.venv/bin/streamlit run app.py
+.venv/bin/streamlit run streamlit_app.py
 ```
+
+哈希检查必须输出 `/tmp/fhir-r4-schema.zip: OK`。全量 pytest 必须以退出码 0 完成，且官方 Schema 可用时不应再出现上述 3 个 skip；独立校验器应逐项输出 `valid`。任一步失败都应停止验收，不得仅根据一次新下载结果修改仓库中的固定哈希。
+
+`/tmp` 可能在重启或系统清理后被删除；发生这种情况时重新执行下载和哈希检查即可。
 
 所有演示身份、消息和结果均为合成数据。禁止把运行数据库、密钥或真实患者信息提交到仓库。

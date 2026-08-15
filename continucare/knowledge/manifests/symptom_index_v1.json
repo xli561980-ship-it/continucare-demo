@@ -1,0 +1,83 @@
+{
+  "file_kind": "symptom_index",
+  "file_id": "knowledge-symptom-index",
+  "file_version": 1,
+  "contract_version": "1.0.0",
+  "records": [
+    {
+      "symptom_index_id": "diarrhea",
+      "record_version": 1,
+      "catalog_term": {"catalog_id": "continucare-glp1-patient-reported-symptoms", "catalog_version": "1.0.0", "concept_id": "diarrhea"},
+      "claim_refs": [{"claim_id": "glp1-diarrhea-collection-rationale", "claim_version": 1}],
+      "binding_refs": [],
+      "coverage_gap_refs": [
+        {"gap_id": "glp1-gap-diarrhea-concept-basis", "gap_version": 1},
+        {"gap_id": "m5k-gap-diarrhea-patient-expression-evidence", "gap_version": 1}
+      ],
+      "lifecycle": "active",
+      "supersedes": null,
+      "registered_at": "2026-08-13T00:00:00+00:00"
+    },
+    {
+      "symptom_index_id": "nausea",
+      "record_version": 1,
+      "catalog_term": {"catalog_id": "continucare-glp1-patient-reported-symptoms", "catalog_version": "1.0.0", "concept_id": "nausea"},
+      "claim_refs": [
+        {"claim_id": "glp1-nausea-collection-rationale", "claim_version": 1},
+        {"claim_id": "loinc-81660-3-nausea-severity-terminology", "claim_version": 1}
+      ],
+      "binding_refs": [
+        {"binding_id": "glp1-qitem-nausea-present-collection", "binding_version": 1},
+        {"binding_id": "glp1-qitem-nausea-severity-terminology", "binding_version": 1},
+        {"binding_id": "glp1-map-nausea-severity-terminology", "binding_version": 1},
+        {"binding_id": "glp1-qbinding-nausea-severity-terminology", "binding_version": 1}
+      ],
+      "coverage_gap_refs": [
+        {"gap_id": "glp1-gap-nausea-positive-only-governance", "gap_version": 1},
+        {"gap_id": "glp1-gap-nausea-qbinding-snomed-version", "gap_version": 1},
+        {"gap_id": "glp1-gap-nausea-concept-basis", "gap_version": 1},
+        {"gap_id": "m5k-gap-nausea-patient-expression-evidence", "gap_version": 1}
+      ],
+      "lifecycle": "active",
+      "supersedes": null,
+      "registered_at": "2026-08-13T00:00:00+00:00"
+    },
+    {
+      "symptom_index_id": "vomiting",
+      "record_version": 1,
+      "catalog_term": {"catalog_id": "continucare-glp1-patient-reported-symptoms", "catalog_version": "1.0.0", "concept_id": "vomiting"},
+      "claim_refs": [
+        {"claim_id": "glp1-vomiting-collection-rationale", "claim_version": 1},
+        {"claim_id": "loinc-94070-0-emesis-count-24h-terminology", "claim_version": 1}
+      ],
+      "binding_refs": [
+        {"binding_id": "glp1-qitem-vomiting-count-collection", "binding_version": 1},
+        {"binding_id": "glp1-map-vomiting-count-terminology", "binding_version": 1},
+        {"binding_id": "glp1-qbinding-vomiting-count-terminology", "binding_version": 1}
+      ],
+      "coverage_gap_refs": [
+        {"gap_id": "glp1-gap-vomiting-concept-basis", "gap_version": 1},
+        {"gap_id": "m5k-gap-vomiting-patient-expression-evidence", "gap_version": 1}
+      ],
+      "lifecycle": "active",
+      "supersedes": null,
+      "registered_at": "2026-08-13T00:00:00+00:00"
+    },
+    {
+      "symptom_index_id": "abdominal-pain",
+      "record_version": 1,
+      "catalog_term": {"catalog_id": "continucare-glp1-patient-reported-symptoms", "catalog_version": "1.0.0", "concept_id": "abdominal-pain"},
+      "claim_refs": [{"claim_id": "glp1-abdominal-pain-collection-rationale", "claim_version": 1}],
+      "binding_refs": [{"binding_id": "glp1-qitem-abdominal-pain-collection", "binding_version": 1}],
+      "coverage_gap_refs": [
+        {"gap_id": "glp1-gap-abdominal-pain-positive-only-governance", "gap_version": 1},
+        {"gap_id": "glp1-gap-abdominal-pain-qbinding-snomed-version", "gap_version": 1},
+        {"gap_id": "glp1-gap-abdominal-pain-concept-basis", "gap_version": 1},
+        {"gap_id": "m5k-gap-abdominal-pain-patient-expression-evidence", "gap_version": 1}
+      ],
+      "lifecycle": "active",
+      "supersedes": null,
+      "registered_at": "2026-08-13T00:00:00+00:00"
+    }
+  ]
+}

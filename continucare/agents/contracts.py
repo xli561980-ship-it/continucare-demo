@@ -85,6 +85,12 @@ class CandidateOrigin(str, Enum):
     PATIENT_REPORTED_NEW = "patient_reported_new"
 
 
+class CandidateSource(str, Enum):
+    DETERMINISTIC_MOCK = "deterministic_mock"
+    MIMO = "mimo"
+    AILY = "aily"
+
+
 class CodingContract(StrictModel):
     system: str
     code: str
@@ -118,6 +124,7 @@ class ReportedSymptomMention(StrictModel):
     subject: SubjectType = SubjectType.PATIENT
     temporality: Temporality = Temporality.UNSPECIFIED
     negated: bool = False
+    source_mode: CandidateSource = CandidateSource.DETERMINISTIC_MOCK
 
     @model_validator(mode="after")
     def validate_span(self) -> "ReportedSymptomMention":
@@ -291,6 +298,7 @@ class SemanticCandidate(StrictModel):
     template_id: str
     origin: CandidateOrigin = CandidateOrigin.PATHWAY_MONITORED
     terminology_match: TerminologyMatchContract | None = None
+    source_mode: CandidateSource = CandidateSource.DETERMINISTIC_MOCK
 
     @model_validator(mode="after")
     def validate_span(self) -> "SemanticCandidate":

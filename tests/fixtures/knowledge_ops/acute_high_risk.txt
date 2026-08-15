@@ -1,0 +1,4 @@
+SYNTHETIC KNOWLEDGE CONNECTOR FIXTURE
+Domain: acute high-risk symptom evidence
+Version: 1
+This file contains no triage rule, escalation threshold, diagnosis, or advice.

@@ -83,3 +83,9 @@ SQLiteStore 原子提交
 - `SQLiteStore`：保存完整资源；数据库索引列只是投影，不能替代 FHIR 资源。
 
 业务服务不导入 Streamlit、飞书 SDK 或特定外部模型 SDK。医院对接时须增加目标 Profile、CapabilityStatement、术语服务和安全规范，而不是修改或伪造 FHIR 基础字段。
+
+## M5-E 可选外部适配器边界
+
+飞书 Bot、Aily 与 Bitable 通过统一 `AdapterFactory` 和 provider-neutral `HttpTransport` 隔离。默认 `mock/mock/disabled` 不创建真实 transport；`test_tenant` 必须同时满足精确 mode、能力 flag、全局 egress flag 与完整配置。真实 transport 只允许官方飞书 HTTPS host，禁用代理与 redirect，并限制 timeout/response size。
+
+Aily 仅实现 Layer 3 `SemanticModelAdapter`，输出仍经过本地全量 Schema、安全门、terminology 重绑和患者确认。Bitable 是 write-only 合成投影，不是 store；Bot notifier 未接入 manual-review Communication。完整边界见 `docs/29_m5_e_optional_feishu_aily_adapters.md`。

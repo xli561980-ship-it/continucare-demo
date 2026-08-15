@@ -254,6 +254,13 @@ def test_short_value_answers_one_pending_question_with_traceable_binding(tmp_pat
         severity_question.clarification_id
     )
     assert severity.effective_time.basis.value == "pending_question"
+    replay = service.analyze(
+        session.session_id,
+        "轻度",
+        received_at="2026-08-02T01:02:00+00:00",
+    )
+    assert replay.idempotent_replay is True
+    assert replay.result == second.result
     service.confirm_candidates(second.result.run_id, [severity.candidate_id])
     assert store.get_care_session(session.session_id).answers[
         "nausea-severity"

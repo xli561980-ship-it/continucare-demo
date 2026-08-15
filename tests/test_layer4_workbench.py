@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+from copy import deepcopy
 from dataclasses import dataclass
 
 import pytest
@@ -10,6 +12,7 @@ from continucare.fhir.observations import build_patient_reported_observation
 from continucare.fhir.questionnaires import build_free_text_questionnaire_response
 from continucare.fhir.terminology import BODY_WEIGHT
 from continucare.layer4 import (
+    ApprovedRuleEngine,
     ClinicalMemoryService,
     ClinicalStateService,
     ComponentReadStatus,
@@ -25,8 +28,24 @@ from continucare.layer4 import (
     WorkbenchPurpose,
     WorkbenchRole,
     build_workflow_task,
+    build_patient_confirmed_review_task,
 )
-from continucare.layer4.contracts import DoctorReviewDecision, SummaryDraftStatus
+from continucare.layer4.contracts import (
+    ApprovalDecision,
+    ClinicalRuleDefinition,
+    DoctorReviewDecision,
+    EvidenceReference,
+    EvidenceRole,
+    ResourceReference,
+    RuleApplicability,
+    RuleApproval,
+    RuleCondition,
+    RuleLifecycle,
+    RuleObservationInput,
+    RuleOperator,
+    RuleTaskAction,
+    SummaryDraftStatus,
+)
 
 
 PATIENT_ID = "P-DEMO-001"
@@ -39,13 +58,24 @@ class MutableInputReader:
     def __init__(self, snapshot: Layer4InputSnapshot):
         self.snapshot = snapshot
 
-    def read(self, patient_id: str) -> Layer4InputSnapshot:
+    def read(
+        self,
+        patient_id: str,
+        *,
+        pathway_code: str,
+        pathway_version: str,
+        assembled_at: str | None = None,
+    ) -> Layer4InputSnapshot:
         assert patient_id == self.snapshot.patient_id
-        return self.snapshot
+        assert pathway_code == self.snapshot.pathway_code
+        assert pathway_version == self.snapshot.pathway_version
+        if assembled_at is None:
+            return self.snapshot
+        return self.snapshot.model_copy(update={"assembled_at": assembled_at})
 
 
 class FailingInputReader:
-    def read(self, patient_id: str) -> Layer4InputSnapshot:
+    def read(self, patient_id: str, **_kwargs) -> Layer4InputSnapshot:
         raise RuntimeError("synthetic input outage")
 
 
@@ -125,6 +155,8 @@ def _weight(
 def _snapshot(observations: list[dict]) -> Layer4InputSnapshot:
     return Layer4InputSnapshot(
         patient_id=PATIENT_ID,
+        pathway_code=PATHWAY_CODE,
+        pathway_version=PATHWAY_VERSION,
         questionnaire_responses=[_response()],
         observations=observations,
         assembled_at="2026-08-02T12:00:00+00:00",
@@ -145,6 +177,70 @@ def _definition() -> StateMetricDefinition:
         lookback_hours=72,
         stale_after_hours=24,
         trend_window_hours=72,
+    )
+
+
+def _workbench_rule() -> ClinicalRuleDefinition:
+    return ClinicalRuleDefinition(
+        rule_id="synthetic-workbench-rule",
+        version="1.0.0",
+        title="Synthetic workbench admission rule",
+        description="Test-only governed rule for positive Workbench admission.",
+        lifecycle=RuleLifecycle.ACTIVE,
+        applicability=RuleApplicability(
+            pathway_code=PATHWAY_CODE,
+            pathway_version=PATHWAY_VERSION,
+            synthetic_only=True,
+            population="synthetic tests",
+            region="DE-demo",
+        ),
+        evidence_refs=[
+            EvidenceReference(
+                evidence_id="workbench-rule-source",
+                resource=ResourceReference(
+                    reference="PlanDefinition/workbench-test", version_id="1"
+                ),
+                role=EvidenceRole.SOURCE,
+            )
+        ],
+        inputs=[
+            RuleObservationInput(
+                input_id="weight",
+                code_system=BODY_WEIGHT.system,
+                code=BODY_WEIGHT.code,
+                unit="kg",
+                lookback_hours=24,
+            )
+        ],
+        conditions=[
+            RuleCondition(
+                input_id="weight",
+                operator=RuleOperator.GTE,
+                expected_value=1,
+                unit="kg",
+            )
+        ],
+        action=RuleTaskAction(
+            task_code_system="urn:continucare:task-code",
+            task_code="review",
+            task_code_display="Synthetic review",
+            title="Synthetic review",
+            description="Synthetic task for read-only replay.",
+            owner_role="nurse",
+            sla_hours=4,
+            deduplication_window_hours=24,
+        ),
+        approval=RuleApproval(
+            clinical_status=ApprovalDecision.APPROVED,
+            terminology_status=ApprovalDecision.APPROVED,
+            clinical_approver="Practitioner/clinical-reviewer",
+            terminology_approver="Practitioner/terminology-reviewer",
+            clinical_approved_at="2026-08-02T09:00:00+00:00",
+            terminology_approved_at="2026-08-02T09:05:00+00:00",
+        ),
+        test_case_ids=["workbench-positive-admission"],
+        rollback_plan="Delete the isolated test database.",
+        created_at="2026-08-02T08:00:00+00:00",
     )
 
 
@@ -172,29 +268,24 @@ def _scenario(tmp_path) -> Scenario:
         pathway_code=PATHWAY_CODE,
         pathway_version=PATHWAY_VERSION,
     )
-    task = build_workflow_task(
-        patient_id=PATIENT_ID,
-        rule_id="synthetic-workbench-rule",
-        rule_version="1.0.0",
-        task_code_system="urn:continucare:task-code",
-        task_code="review",
-        task_code_display="Synthetic review",
-        description="Synthetic task for read-only replay.",
+    repository.save_contract(_workbench_rule())
+    evaluation = ApprovedRuleEngine(
+        repository,
+        input_reader=reader,
         requester_reference="Organization/continucare",
-        owner_reference="PractitionerRole/nurse",
-        authored_on="2026-08-02T10:30:00+00:00",
-        trigger_reference="Observation/weight-workbench-recent/_history/1",
-        due_at="2026-08-02T14:30:00+00:00",
-        task_id="task-workbench",
-        based_on_references=[
-            "urn:continucare:clinical-rule:synthetic-workbench-rule|1.0.0",
-            f"urn:continucare:pathway:{PATHWAY_CODE}|{PATHWAY_VERSION}",
-        ],
-        evidence_references=[
-            "Observation/weight-workbench-recent/_history/1"
-        ],
+        owner_references={"nurse": "PractitionerRole/nurse"},
+    ).evaluate(
+        patient_id=PATIENT_ID,
+        observations=[recent],
+        pathway_code=PATHWAY_CODE,
+        pathway_version=PATHWAY_VERSION,
+        evaluated_at="2026-08-02T10:30:00+00:00",
+        region="DE-demo",
+        synthetic_data=True,
     )
-    repository.save_fhir_resource(task, patient_id=PATIENT_ID)
+    task_id = evaluation.task_references[0].removeprefix("Task/")
+    task = repository.get_fhir_resource("Task", task_id)
+    assert task is not None
     memory.rebuild(PATIENT_ID)
     TaskWorkflowService(repository).transition(
         patient_id=PATIENT_ID,
@@ -471,6 +562,240 @@ def test_workbench_excludes_other_pathway_summary_and_task(tmp_path):
 
     assert view.summary.summary_id == scenario.summary_id
     assert {item["id"] for item in view.tasks} == {scenario.task_id}
+
+
+def test_workbench_excludes_same_pathway_manual_review_task(tmp_path):
+    scenario = _scenario(tmp_path)
+    manual = build_patient_confirmed_review_task(
+        patient_id=PATIENT_ID,
+        receipt_digest="b" * 64,
+        questionnaire_response_reference="QuestionnaireResponse/response-workbench",
+        observation_references=["Observation/weight-workbench-recent"],
+        pathway_reference=f"urn:continucare:pathway:{PATHWAY_CODE}|{PATHWAY_VERSION}",
+        authored_on="2026-08-02T12:06:00+00:00",
+        task_id="task-manual-review-workbench",
+    )
+    scenario.repository.save_fhir_resource(manual, patient_id=PATIENT_ID)
+    completed_manual = deepcopy(manual)
+    completed_manual["status"] = "completed"
+    completed_manual["meta"] = {
+        **completed_manual["meta"],
+        "versionId": "2",
+        "lastUpdated": "2026-08-02T12:06:30+00:00",
+    }
+    completed_manual["executionPeriod"] = {
+        "start": "2026-08-02T12:06:10+00:00",
+        "end": "2026-08-02T12:06:30+00:00",
+    }
+    scenario.repository.save_fhir_resource(completed_manual, patient_id=PATIENT_ID)
+
+    view = scenario.workbench.query(
+        patient_id=PATIENT_ID,
+        access=_access(),
+        as_of="2026-08-02T12:07:00+00:00",
+        generated_at="2026-08-02T12:07:00+00:00",
+    )
+
+    assert {item["id"] for item in view.tasks} == {scenario.task_id}
+
+
+@pytest.mark.parametrize(
+    "broken_contract",
+    [
+        "no_rule",
+        "inactive_rule",
+        "single_approval",
+        "rule_version",
+        "pathway",
+        "missing_creation_provenance",
+        "wrong_agent",
+        "wrong_activity",
+        "wrong_target",
+        "wrong_entity",
+        "knowledge_evidence",
+        "broken_transition_provenance",
+        "broken_task_version_chain",
+    ],
+)
+def test_workbench_fail_closed_clinical_rule_task_admission_matrix(
+    tmp_path, broken_contract
+):
+    scenario = _scenario(tmp_path / broken_contract)
+    task_id = scenario.task_id
+
+    def rewrite_task(mutator):
+        with connect(scenario.repository.db_path) as connection:
+            rows = connection.execute(
+                "SELECT version_id, resource_json FROM layer4_fhir_resources "
+                "WHERE resource_type='Task' AND resource_id=?",
+                (task_id,),
+            ).fetchall()
+            for row in rows:
+                resource = json.loads(row["resource_json"])
+                mutator(resource)
+                connection.execute(
+                    "UPDATE layer4_fhir_resources SET resource_json=? "
+                    "WHERE resource_type='Task' AND resource_id=? AND version_id=?",
+                    (
+                        json.dumps(resource, ensure_ascii=False, separators=(",", ":")),
+                        task_id,
+                        row["version_id"],
+                    ),
+                )
+
+    def creation_provenance_row(connection):
+        for row in connection.execute(
+            "SELECT resource_id, resource_json FROM layer4_fhir_resources "
+            "WHERE resource_type='Provenance'"
+        ).fetchall():
+            resource = json.loads(row["resource_json"])
+            if any(
+                item.get("reference") == f"Task/{task_id}/_history/1"
+                for item in resource.get("target", [])
+            ) and any(
+                coding.get("code") == "EXECUTE"
+                for coding in resource.get("activity", {}).get("coding", [])
+            ):
+                return row["resource_id"], resource
+        raise AssertionError("positive fixture is missing creation Provenance")
+
+    if broken_contract == "no_rule":
+        with connect(scenario.repository.db_path) as connection:
+            connection.execute(
+                "DELETE FROM layer4_contract_records WHERE record_type='clinical_rule'"
+            )
+    elif broken_contract in {"inactive_rule", "single_approval"}:
+        with connect(scenario.repository.db_path) as connection:
+            row = connection.execute(
+                "SELECT record_id, record_version, record_json "
+                "FROM layer4_contract_records WHERE record_type='clinical_rule'"
+            ).fetchone()
+            resource = json.loads(row["record_json"])
+            if broken_contract == "inactive_rule":
+                resource["lifecycle"] = "draft"
+            else:
+                resource["approval"]["terminology_status"] = "not_reviewed"
+                resource["approval"]["terminology_approver"] = None
+                resource["approval"]["terminology_approved_at"] = None
+            connection.execute(
+                "UPDATE layer4_contract_records SET record_json=? "
+                "WHERE record_type='clinical_rule' AND record_id=? AND record_version=?",
+                (
+                    json.dumps(resource, ensure_ascii=False, separators=(",", ":")),
+                    row["record_id"],
+                    row["record_version"],
+                ),
+            )
+    elif broken_contract == "rule_version":
+        rewrite_task(
+            lambda resource: (
+                resource["identifier"][0].update(
+                    {"value": "synthetic-workbench-rule|9.0.0"}
+                ),
+                resource["basedOn"][0].update(
+                    {
+                        "reference": (
+                            "urn:continucare:clinical-rule:"
+                            "synthetic-workbench-rule|9.0.0"
+                        )
+                    }
+                ),
+            )
+        )
+    elif broken_contract == "pathway":
+        rewrite_task(
+            lambda resource: resource["basedOn"][1].update(
+                {"reference": "urn:continucare:pathway:OTHER|1.0.0"}
+            )
+        )
+    elif broken_contract in {
+        "missing_creation_provenance",
+        "wrong_agent",
+        "wrong_activity",
+        "wrong_target",
+        "wrong_entity",
+    }:
+        with connect(scenario.repository.db_path) as connection:
+            provenance_id, resource = creation_provenance_row(connection)
+            if broken_contract == "missing_creation_provenance":
+                connection.execute(
+                    "DELETE FROM layer4_fhir_resources "
+                    "WHERE resource_type='Provenance' AND resource_id=?",
+                    (provenance_id,),
+                )
+            else:
+                if broken_contract == "wrong_agent":
+                    resource["agent"][0]["who"]["reference"] = "Device/forged"
+                elif broken_contract == "wrong_activity":
+                    resource["activity"]["coding"][0]["code"] = "CREATE"
+                elif broken_contract == "wrong_target":
+                    resource["target"][-1]["reference"] = "Task/forged/_history/1"
+                else:
+                    resource["entity"][0]["what"]["reference"] = (
+                        "urn:continucare:clinical-rule:forged|1.0.0"
+                    )
+                connection.execute(
+                    "UPDATE layer4_fhir_resources SET resource_json=? "
+                    "WHERE resource_type='Provenance' AND resource_id=?",
+                    (
+                        json.dumps(resource, ensure_ascii=False, separators=(",", ":")),
+                        provenance_id,
+                    ),
+                )
+    elif broken_contract == "knowledge_evidence":
+        knowledge_reference = "urn:continucare:knowledge:claim|1.0.0"
+
+        def replace_evidence(resource):
+            resource["reasonReference"]["reference"] = knowledge_reference
+            resource["input"][0]["valueReference"]["reference"] = knowledge_reference
+
+        rewrite_task(replace_evidence)
+        with connect(scenario.repository.db_path) as connection:
+            provenance_id, resource = creation_provenance_row(connection)
+            resource["entity"][1]["what"]["reference"] = knowledge_reference
+            connection.execute(
+                "UPDATE layer4_fhir_resources SET resource_json=? "
+                "WHERE resource_type='Provenance' AND resource_id=?",
+                (
+                    json.dumps(resource, ensure_ascii=False, separators=(",", ":")),
+                    provenance_id,
+                ),
+            )
+    elif broken_contract == "broken_transition_provenance":
+        with connect(scenario.repository.db_path) as connection:
+            rows = connection.execute(
+                "SELECT resource_id, resource_json FROM layer4_fhir_resources "
+                "WHERE resource_type='Provenance'"
+            ).fetchall()
+            transition_id = next(
+                row["resource_id"]
+                for row in rows
+                if json.loads(row["resource_json"]).get("activity", {})
+                .get("coding", [{}])[0]
+                .get("display")
+                == "Task requested -> received"
+            )
+            connection.execute(
+                "DELETE FROM layer4_fhir_resources "
+                "WHERE resource_type='Provenance' AND resource_id=?",
+                (transition_id,),
+            )
+    else:
+        with connect(scenario.repository.db_path) as connection:
+            connection.execute(
+                "DELETE FROM layer4_fhir_resources "
+                "WHERE resource_type='Task' AND resource_id=? AND version_id='1'",
+                (task_id,),
+            )
+
+    view = scenario.workbench.query(
+        patient_id=PATIENT_ID,
+        access=_access(),
+        as_of="2026-08-02T12:07:00+00:00",
+        generated_at="2026-08-02T12:07:00+00:00",
+    )
+
+    assert view.tasks == []
 
 
 def test_evidence_resolution_does_not_cross_requested_patient_scope(tmp_path):

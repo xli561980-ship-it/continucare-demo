@@ -222,19 +222,46 @@ class ClinicalMemoryService:
         *,
         missing_expectations: Iterable[MissingDataExpectation] = (),
     ) -> ClinicalMemoryBuildResult:
-        snapshot = self.input_reader.read(patient_id)
+        snapshot = self.input_reader.read(
+            patient_id,
+            pathway_code=self.pathway_code,
+            pathway_version=self.pathway_version,
+        )
+        if (
+            snapshot.pathway_code != self.pathway_code
+            or snapshot.pathway_version != self.pathway_version
+        ):
+            raise ValueError("Layer-4 input snapshot Pathway does not match memory service")
         memory_ids: list[str] = []
         timeline_ids: list[str] = []
         provenance_ids: list[str] = []
 
         resources = [*snapshot.questionnaire_responses, *snapshot.observations]
-        resources.extend(
-            item
-            for item in self.repository.list_fhir_resources(
-                patient_id=patient_id, current_only=True
-            )
-            if item["resourceType"] in {"Communication", "Task"}
+        pathway_reference = (
+            f"urn:continucare:pathway:{self.pathway_code}|{self.pathway_version}"
         )
+        workflow_history = self.repository.list_fhir_resources(
+            patient_id=patient_id, current_only=False
+        )
+        pathway_task_references = {
+            f"Task/{item['id']}/_history/{item['meta']['versionId']}"
+            for item in workflow_history
+            if item["resourceType"] == "Task"
+            and self._has_exact_pathway(item, pathway_reference)
+        }
+        for item in self.repository.list_fhir_resources(
+            patient_id=patient_id, current_only=True
+        ):
+            if item["resourceType"] == "Task" and self._has_exact_pathway(
+                item, pathway_reference
+            ):
+                resources.append(item)
+            elif item["resourceType"] == "Communication" and (
+                self._communication_has_exact_task(
+                    item, pathway_task_references
+                )
+            ):
+                resources.append(item)
         resources.sort(
             key=lambda item: (
                 _instant(_resource_times(item)[0]),
@@ -284,6 +311,31 @@ class ClinicalMemoryService:
             missing_event_ids=sorted(item[0].event_id for item in missing),
         )
 
+    @staticmethod
+    def _has_exact_pathway(resource: dict[str, Any], expected: str) -> bool:
+        pathway_references = [
+            reference
+            for reference in (
+                item.get("reference") for item in resource.get("basedOn", [])
+            )
+            if isinstance(reference, str)
+            and reference.startswith("urn:continucare:pathway:")
+        ]
+        return pathway_references == [expected]
+
+    @staticmethod
+    def _communication_has_exact_task(
+        resource: dict[str, Any], admitted_task_references: set[str]
+    ) -> bool:
+        task_references = [
+            reference
+            for reference in (
+                item.get("reference") for item in resource.get("basedOn", [])
+            )
+            if isinstance(reference, str) and reference.startswith("Task/")
+        ]
+        return len(task_references) == 1 and task_references[0] in admitted_task_references
+
     def list_timeline(
         self,
         patient_id: str,
@@ -294,7 +346,12 @@ class ClinicalMemoryService:
         records = self.repository.list_contracts(
             "timeline_event", patient_id=patient_id, current_only=True
         )
-        timeline = [cast(TimelineEvent, item) for item in records]
+        timeline = [
+            cast(TimelineEvent, item)
+            for item in records
+            if cast(TimelineEvent, item).pathway_code == self.pathway_code
+            and cast(TimelineEvent, item).pathway_version == self.pathway_version
+        ]
         revision_states = self._revision_states(patient_id)
         timeline = [self._timeline_with_revision_state(item, revision_states) for item in timeline]
         if not include_audit:
@@ -326,7 +383,12 @@ class ClinicalMemoryService:
             "memory_event", patient_id=patient_id, current_only=True
         )
         revision_states = self._revision_states(patient_id)
-        memory = [cast(MemoryEvent, item) for item in records]
+        memory = [
+            cast(MemoryEvent, item)
+            for item in records
+            if cast(MemoryEvent, item).pathway_code == self.pathway_code
+            and cast(MemoryEvent, item).pathway_version == self.pathway_version
+        ]
         memory = [
             item.model_copy(update={"current": False})
             if _event_revision_state(
@@ -382,6 +444,32 @@ class ClinicalMemoryService:
         actor_reference: str,
         recorded_at: str,
     ) -> RevisionLink:
+        link, provenance = self._build_revision_bundle(
+            patient_id=patient_id,
+            predecessor=predecessor,
+            successor=successor,
+            relationship=relationship,
+            reason=reason,
+            actor_reference=actor_reference,
+            recorded_at=recorded_at,
+        )
+        self.repository.persist_revision_link_bundle(
+            link=link,
+            provenance=provenance,
+        )
+        return link
+
+    @staticmethod
+    def _build_revision_bundle(
+        *,
+        patient_id: str,
+        predecessor: ResourceReference,
+        successor: ResourceReference,
+        relationship: RevisionRelationship,
+        reason: str,
+        actor_reference: str,
+        recorded_at: str,
+    ) -> tuple[RevisionLink, dict[str, Any]]:
         link_id = _stable_id(
             "revision",
             patient_id,
@@ -401,7 +489,6 @@ class ClinicalMemoryService:
             activity_display=relationship.value,
             entity_source_references=[_versioned_reference(predecessor)],
         )
-        self.repository.save_fhir_resource(provenance, patient_id=patient_id)
         link = RevisionLink(
             link_id=link_id,
             patient_id=patient_id,
@@ -413,16 +500,32 @@ class ClinicalMemoryService:
             provenance_reference=f"Provenance/{provenance_id}",
             created_at=recorded_at,
         )
-        self.repository.save_contract(link)
-        return link
+        return link, provenance
 
     def _revision_states(self, patient_id: str) -> dict[str, TimelineEventState]:
+        scoped_memory = self.repository.list_contracts(
+            "memory_event", patient_id=patient_id, current_only=True
+        )
+        scoped_sources = {
+            _versioned_reference(cast(MemoryEvent, item).source)
+            for item in scoped_memory
+            if cast(MemoryEvent, item).pathway_code == self.pathway_code
+            and cast(MemoryEvent, item).pathway_version == self.pathway_version
+        }
+        scoped_sources.update(
+            f"urn:continucare:memory-event:{cast(MemoryEvent, item).event_id}"
+            for item in scoped_memory
+            if cast(MemoryEvent, item).pathway_code == self.pathway_code
+            and cast(MemoryEvent, item).pathway_version == self.pathway_version
+        )
         records = self.repository.list_contracts(
             "revision_link", patient_id=patient_id, current_only=True
         )
         states: dict[str, TimelineEventState] = {}
         for record in records:
             link = cast(RevisionLink, record)
+            if _versioned_reference(link.predecessor) not in scoped_sources:
+                continue
             state = (
                 TimelineEventState.ENTERED_IN_ERROR
                 if link.relationship
@@ -478,7 +581,16 @@ class ClinicalMemoryService:
                 )
             )
         entered_in_error = resource.get("status") == "entered-in-error"
-        result = self._persist_event(
+        revision_bundles = (
+            self._workflow_revision_bundles(
+                patient_id=patient_id,
+                successor=source,
+                recorded_at=recorded_at,
+            )
+            if resource["resourceType"] in {"Communication", "Task"}
+            else []
+        )
+        return self._persist_event(
             patient_id=patient_id,
             kind=_event_kind(resource["resourceType"]),
             source=source,
@@ -495,14 +607,8 @@ class ClinicalMemoryService:
                 else TimelineEventState.CURRENT
             ),
             current=not entered_in_error,
+            revision_bundles=revision_bundles,
         )
-        if resource["resourceType"] in {"Communication", "Task"}:
-            self._supersede_prior_workflow_versions(
-                patient_id=patient_id,
-                successor=source,
-                recorded_at=recorded_at,
-            )
-        return result
 
     def _persist_audit_event(
         self, audit: AuditEvent
@@ -547,6 +653,7 @@ class ClinicalMemoryService:
         current: bool = True,
         conflict_group_id: str | None = None,
         expectation_id: str | None = None,
+        revision_bundles: list[tuple[RevisionLink, dict[str, Any]]] | None = None,
     ) -> tuple[MemoryEvent, TimelineEvent, str]:
         source_version = _versioned_reference(source)
         deduplication_key = "|".join(
@@ -577,7 +684,6 @@ class ClinicalMemoryService:
             activity_display="deterministic projection",
             entity_source_references=[source_version],
         )
-        self.repository.save_fhir_resource(provenance, patient_id=patient_id)
         provenance_reference = ResourceReference(
             reference=f"Provenance/{provenance_id}", version_id="1"
         )
@@ -617,28 +723,37 @@ class ClinicalMemoryService:
             conflict_group_id=conflict_group_id,
             expectation_id=expectation_id,
         )
-        self.repository.save_contract(memory)
-        self.repository.save_contract(timeline)
+        self.repository.persist_memory_projection_bundle(
+            memory=memory,
+            timeline=timeline,
+            provenance=provenance,
+            revision_bundles=revision_bundles,
+        )
         return memory, timeline, provenance_id
 
-    def _supersede_prior_workflow_versions(
+    def _workflow_revision_bundles(
         self,
         *,
         patient_id: str,
         successor: ResourceReference,
         recorded_at: str,
-    ) -> None:
+    ) -> list[tuple[RevisionLink, dict[str, Any]]]:
         records = self.repository.list_contracts(
             "memory_event", patient_id=patient_id, current_only=True
         )
-        for record in records:
-            event = cast(MemoryEvent, record)
-            if (
-                event.source.reference != successor.reference
-                or event.source.version_id == successor.version_id
-            ):
-                continue
-            self.record_revision(
+        prior = sorted(
+            (
+                cast(MemoryEvent, record)
+                for record in records
+                if cast(MemoryEvent, record).pathway_code == self.pathway_code
+                and cast(MemoryEvent, record).pathway_version == self.pathway_version
+                and cast(MemoryEvent, record).source.reference == successor.reference
+                and cast(MemoryEvent, record).source.version_id != successor.version_id
+            ),
+            key=lambda item: _versioned_reference(item.source),
+        )
+        return [
+            self._build_revision_bundle(
                 patient_id=patient_id,
                 predecessor=event.source,
                 successor=successor,
@@ -647,6 +762,8 @@ class ClinicalMemoryService:
                 actor_reference=MEMORY_AGENT_REFERENCE,
                 recorded_at=recorded_at,
             )
+            for event in prior
+        ]
 
     def _persist_conflicts(
         self, patient_id: str, observations: list[dict[str, Any]]

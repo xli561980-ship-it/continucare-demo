@@ -1,0 +1,4 @@
+SYNTHETIC KNOWLEDGE CONNECTOR FIXTURE
+Domain: oncology patient-reported outcomes
+Version: 1
+This file does not reproduce any instrument item, option, translation, or score.

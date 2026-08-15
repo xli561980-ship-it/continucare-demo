@@ -61,7 +61,10 @@ def test_layer4_reader_consumes_only_final_resources_and_audit(tmp_path):
         AssertionError("Layer 4 must use only final Observation resources")
     )
     snapshot = Layer4InputReader(store).read(
-        DEMO_PATIENT_ID, assembled_at="2026-08-02T12:00:00+00:00"
+        DEMO_PATIENT_ID,
+        pathway_code=session.pathway_code,
+        pathway_version=session.pathway_version,
+        assembled_at="2026-08-02T12:00:00+00:00",
     )
 
     assert snapshot.contract_version == LAYER3_RELEASE.version
@@ -76,6 +79,8 @@ def test_layer4_reader_consumes_only_final_resources_and_audit(tmp_path):
     assert set(snapshot.model_dump()) == {
         "contract_version",
         "patient_id",
+        "pathway_code",
+        "pathway_version",
         "questionnaire_responses",
         "observations",
         "audit_events",
@@ -98,4 +103,8 @@ def test_layer4_reader_rejects_non_final_observation(tmp_path):
     store.list_final_observations = lambda *_args, **_kwargs: [preliminary]
 
     with pytest.raises(ValueError, match="only accepts final Observation"):
-        Layer4InputReader(store).read(DEMO_PATIENT_ID)
+        Layer4InputReader(store).read(
+            DEMO_PATIENT_ID,
+            pathway_code=session.pathway_code,
+            pathway_version=session.pathway_version,
+        )

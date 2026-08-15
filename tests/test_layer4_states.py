@@ -30,8 +30,12 @@ class MutableInputReader:
     def __init__(self, snapshot: Layer4InputSnapshot):
         self.snapshot = snapshot
 
-    def read(self, patient_id: str) -> Layer4InputSnapshot:
+    def read(
+        self, patient_id: str, *, pathway_code: str, pathway_version: str
+    ) -> Layer4InputSnapshot:
         assert patient_id == self.snapshot.patient_id
+        assert pathway_code == self.snapshot.pathway_code
+        assert pathway_version == self.snapshot.pathway_version
         return self.snapshot
 
 
@@ -123,6 +127,8 @@ def _nausea_definition() -> StateMetricDefinition:
 def _snapshot(observations: list[dict]) -> Layer4InputSnapshot:
     return Layer4InputSnapshot(
         patient_id=PATIENT_ID,
+        pathway_code=PATHWAY_CODE,
+        pathway_version=PATHWAY_VERSION,
         observations=observations,
         assembled_at=AS_OF,
     )
@@ -405,3 +411,56 @@ def test_snapshot_contract_rejects_pathway_mismatch(tmp_path):
 
     with pytest.raises(ValueError, match="pathway does not match"):
         service.build(patient_id=PATIENT_ID, definitions=[wrong], as_of=AS_OF)
+
+
+def test_state_snapshot_bundle_rolls_back_and_replays_after_commit(tmp_path):
+    observation = _quantity_observation(
+        "weight-state-atomic",
+        effective_time="2026-08-02T10:00:00+00:00",
+        value=72,
+    )
+    service, repository, _ = _service(tmp_path, _snapshot([observation]))
+    arguments = {
+        "patient_id": PATIENT_ID,
+        "definitions": [_definition()],
+        "as_of": AS_OF,
+        "generated_at": "2026-08-02T12:05:00+00:00",
+    }
+
+    def rollback_fault(stage):
+        if stage == "state:after_provenance":
+            raise RuntimeError("fault:state:after_provenance")
+
+    repository._provenance_contract_bundle_fault = rollback_fault
+    with pytest.raises(RuntimeError, match="state:after_provenance"):
+        service.build(**arguments)
+    assert repository.list_contracts("state_snapshot", patient_id=PATIENT_ID) == []
+    assert repository.list_fhir_resources(
+        patient_id=PATIENT_ID, resource_type="Provenance", current_only=False
+    ) == []
+
+    def commit_fault(stage):
+        if stage == "state:after_commit":
+            raise RuntimeError("fault:state:after_commit")
+
+    repository._provenance_contract_bundle_fault = commit_fault
+    with pytest.raises(RuntimeError, match="state:after_commit"):
+        service.build(**arguments)
+    committed = repository.list_contracts(
+        "state_snapshot", patient_id=PATIENT_ID
+    )
+    assert len(committed) == 1
+    assert len(
+        repository.list_fhir_resources(
+            patient_id=PATIENT_ID,
+            resource_type="Provenance",
+            current_only=False,
+        )
+    ) == 1
+
+    repository._provenance_contract_bundle_fault = lambda stage: None
+    replay = service.build(**arguments)
+    assert replay == committed[0]
+    assert len(
+        repository.list_contracts("state_snapshot", patient_id=PATIENT_ID)
+    ) == 1

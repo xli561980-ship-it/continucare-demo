@@ -1,0 +1,107 @@
+{
+  "fixture_set_id": "knowledge-ops-five-domain-fixtures",
+  "fixture_set_version": 1,
+  "synthetic": true,
+  "resources": [
+    {
+      "stable_id": "medication-followup-v1",
+      "validation_profile_id": "fixture-medication-followup",
+      "policy_id": "nmpa-cn-regulatory-metadata",
+      "canonical_url": "https://www.nmpa.gov.cn/synthetic-offline-fixture/medication-followup-v1",
+      "title": "Synthetic medication follow-up source candidate",
+      "issuing_authority": "ContinuCare synthetic fixture; not NMPA content",
+      "source_type": "regulatory_product_information",
+      "jurisdictions": [{"system": "iso3166_1", "code": "CN"}],
+      "languages": ["zh-CN"],
+      "document_version": "synthetic-v1",
+      "content_path": "medication_followup.txt",
+      "content_sha256": "1cd713ba219ce9f44eef5d10c3b55b3ca28dda1582eddf6e4be280427877ae6e",
+      "content_type": "text/html",
+      "metadata": {
+        "fixture_domain": "medication_followup",
+        "contains_clinical_content": false
+      },
+      "synthetic": true
+    },
+    {
+      "stable_id": "chronic-cardiopulmonary-v1",
+      "validation_profile_id": "fixture-chronic-cardiopulmonary",
+      "policy_id": "nlm-pubmed-metadata",
+      "canonical_url": "https://pubmed.ncbi.nlm.nih.gov/synthetic-offline-fixture/chronic-cardiopulmonary-v1/",
+      "title": "Synthetic chronic cardiopulmonary source candidate",
+      "issuing_authority": "ContinuCare synthetic fixture; not NLM content",
+      "source_type": "peer_reviewed_study",
+      "jurisdictions": [{"system": "global", "code": "GLOBAL"}],
+      "languages": ["en"],
+      "document_version": "synthetic-v1",
+      "content_path": "chronic_cardiopulmonary.txt",
+      "content_sha256": "b08231777232ff9cce548fe6b13f68e3aaf1bb9c7f369c2aa378ee599e165dac",
+      "content_type": "text/html",
+      "metadata": {
+        "fixture_domain": "chronic_cardiopulmonary",
+        "contains_clinical_content": false
+      },
+      "synthetic": true
+    },
+    {
+      "stable_id": "oncology-pro-v1",
+      "validation_profile_id": "fixture-oncology-pro",
+      "policy_id": "nci-pro-ctcae-metadata",
+      "canonical_url": "https://healthcaredelivery.cancer.gov/synthetic-offline-fixture/oncology-pro-v1/",
+      "title": "Synthetic oncology PRO source candidate",
+      "issuing_authority": "ContinuCare synthetic fixture; not NCI instrument content",
+      "source_type": "standard_instrument",
+      "jurisdictions": [{"system": "global", "code": "GLOBAL"}],
+      "languages": ["en", "zh-CN"],
+      "document_version": "synthetic-v1",
+      "content_path": "oncology_pro.txt",
+      "content_sha256": "71a5e8eebe7d62625ec0b4a6545625b9cb02b8d05e0afa379f4451ec12be4571",
+      "content_type": "text/html",
+      "metadata": {
+        "fixture_domain": "oncology_pro",
+        "contains_instrument_content": false
+      },
+      "synthetic": true
+    },
+    {
+      "stable_id": "acute-high-risk-v1",
+      "validation_profile_id": "fixture-acute-high-risk",
+      "policy_id": "nmpa-cn-regulatory-metadata",
+      "canonical_url": "https://www.nmpa.gov.cn/synthetic-offline-fixture/acute-high-risk-v1",
+      "title": "Synthetic acute high-risk evidence source candidate",
+      "issuing_authority": "ContinuCare synthetic fixture; not NMPA content",
+      "source_type": "regulatory_safety_communication",
+      "jurisdictions": [{"system": "iso3166_1", "code": "CN"}],
+      "languages": ["zh-CN"],
+      "document_version": "synthetic-v1",
+      "content_path": "acute_high_risk.txt",
+      "content_sha256": "062da286e160ede3923a830dee0e8a516cccb0a1ace17d2dfe64efdf19c7e96e",
+      "content_type": "text/html",
+      "metadata": {
+        "fixture_domain": "acute_high_risk_symptoms",
+        "contains_triage_content": false
+      },
+      "synthetic": true
+    },
+    {
+      "stable_id": "rare-terminology-v1",
+      "validation_profile_id": "fixture-rare-disease-terminology",
+      "policy_id": "hpo-official-release-metadata",
+      "canonical_url": "https://github.com/obophenotype/human-phenotype-ontology/synthetic-offline-fixture/rare-terminology-v1",
+      "title": "Synthetic rare disease terminology source candidate",
+      "issuing_authority": "ContinuCare synthetic fixture; not HPO ontology content",
+      "source_type": "terminology_standard",
+      "jurisdictions": [{"system": "global", "code": "GLOBAL"}],
+      "languages": ["en"],
+      "document_version": "synthetic-v1",
+      "content_path": "rare_terminology.txt",
+      "content_sha256": "b43c58b187e30383fa5ed2496a2610ebc08e1b4eafbfc199ba475499caa52cca",
+      "content_type": "text/plain",
+      "metadata": {
+        "fixture_domain": "rare_disease_terminology",
+        "contains_terminology_content": false
+      },
+      "synthetic": true
+    }
+  ]
+}
