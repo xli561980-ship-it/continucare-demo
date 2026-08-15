@@ -223,21 +223,56 @@ def _render_notice(projection) -> None:
 
 
 def _render_facts(projection) -> None:
+    display_labels = {
+        "患者确认的表述": "本轮患者确认",
+        "护理动作": "护理接力",
+        "当前边界": "复诊时需要补充",
+    }
+    icons = {
+        "患者确认的表述": "✓",
+        "护理动作": "↗",
+        "当前边界": "!",
+    }
+    display_values = {
+        "尚未提供临床评估": "尚无临床评估，需进一步询问",
+        "护士已完成记录核对": "记录已由护士核对；沟通文字未发送",
+    }
     rows = "".join(
-        "<div class=\"cc-doctor-fact\">"
-        f"<dt>{html.escape(item.label)}</dt>"
-        f"<dd>{html.escape(item.value)}</dd>"
-        "</div>"
+        "<article class=\"cc-doctor-fact\">"
+        f"<span aria-hidden=\"true\">{icons.get(item.label, '·')}</span>"
+        "<div>"
+        f"<dt>{html.escape(display_labels.get(item.label, item.label))}</dt>"
+        f"<dd>{html.escape(display_values.get(item.value, item.value))}</dd>"
+        "</div></article>"
         for item in projection.facts
     )
     st.markdown(
-        f'<dl class="cc-doctor-facts" aria-label="复诊前的三项事实">{rows}</dl>',
+        f"""
+        <section class="cc-doctor-brief-card" aria-label="30 秒速览">
+          <header><span aria-hidden="true">30</span><div><p>PRE-VISIT BRIEF</p><h2>30 秒速览</h2></div></header>
+          <dl class="cc-doctor-facts">{rows}</dl>
+        </section>
+        """,
         unsafe_allow_html=True,
     )
 
 
 def _render_source_rail(projection) -> str | None:
-    st.markdown('<h2 class="cc-doctor-source-title">来源</h2>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <section class="cc-doctor-evidence-head">
+          <p>EVIDENCE CHAIN</p>
+          <h2>证据链</h2>
+        </section>
+        <ol class="cc-doctor-evidence-chain">
+          <li><span>01</span><strong>患者原话</strong></li>
+          <li><span>02</span><strong>本人确认</strong></li>
+          <li><span>03</span><strong>护士核对</strong></li>
+        </ol>
+        <p class="cc-doctor-source-title">查看来源详情</p>
+        """,
+        unsafe_allow_html=True,
+    )
     source_options = tuple(
         (key, label) for key, label in projection.source_actions if key != "audit"
     )
@@ -356,17 +391,23 @@ def _render_outcomes(projection) -> None:
 
 
 st.set_page_config(
-    page_title="复诊速览 · ContinuCare",
+    page_title="复诊准备 · ContinuCare",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 inject_global_styles(st)
 st.markdown('<span class="cc-doctor-shell" aria-hidden="true"></span>', unsafe_allow_html=True)
-st.title("复诊速览")
 st.markdown(
-    f'<p class="cc-doctor-boundary">{html.escape(DOCTOR_ROLE_BOUNDARY)}</p>',
+    """
+    <header class="cc-role-topbar">
+      <span class="cc-role-topbar-brand"><i aria-hidden="true">C</i> ContinuCare</span>
+      <span class="cc-role-topbar-badge">合成数据演示</span>
+    </header>
+    """,
     unsafe_allow_html=True,
 )
+st.title("复诊准备")
+st.caption("在接诊前，先看清已确认事实、护理接力和仍需补充的信息。")
 _show_feedback()
 
 settings = get_settings()
@@ -389,6 +430,7 @@ nursing_detail = None
 stale = False
 trace = None
 view_degraded = False
+patient_label = "合成患者"
 
 if settings.db_path.is_file():
     try:
@@ -397,6 +439,7 @@ if settings.db_path.is_file():
         patient = store.get_patient(DEMO_PATIENT_ID)
         if patient is None:
             raise ValueError("synthetic patient source missing")
+        patient_label = patient.display_name
         pathway = load_builtin_pathways().get(patient.pathway_code)
         briefs = ManualReviewBriefService(
             store,
@@ -492,9 +535,21 @@ projection = project_doctor_visit_brief(
     unresolved_references=tuple(trace.unresolved_references) if trace else (),
     trace_truncated=bool(trace and trace.truncated),
 )
+patient_initial = html.escape(patient_label[:1] or "患")
+
+st.markdown(
+    f"""
+    <section class="cc-doctor-patient-strip">
+      <span aria-hidden="true">{patient_initial}</span>
+      <div><small>本轮复诊准备</small><strong>{html.escape(patient_label)}</strong></div>
+      <p>记录来源完整可回看</p>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
 
 with st.container(key="cc_doctor_workspace"):
-    main_column, source_column = st.columns([4.7, 1], gap="large", vertical_alignment="top")
+    main_column, source_column = st.columns([3.2, 1.15], gap="large", vertical_alignment="top")
     with main_column:
         _render_facts(projection)
         _render_notice(projection)
@@ -510,7 +565,12 @@ with st.container(key="cc_doctor_workspace"):
             )
         if projection.primary_action and projection.primary_label:
             with st.container(key="cc_doctor_primary"):
-                if st.button(projection.primary_label, type="primary", width="stretch"):
+                primary_label = (
+                    "生成本轮速览"
+                    if projection.primary_action == "generate"
+                    else "按最新记录刷新速览"
+                )
+                if st.button(primary_label, type="primary", width="stretch"):
                     try:
                         with st.spinner("正在按当前来源生成速览……"):
                             _guarded_generate(
@@ -537,7 +597,7 @@ with st.container(key="cc_doctor_workspace"):
             with st.container(key="cc_doctor_nurse_link"):
                 st.page_link(
                     "pages/2_nurse_risk_center.py",
-                    label="返回护士工作台核对文字",
+                    label="返回随访待办核对文字",
                     width="stretch",
                 )
 
@@ -689,3 +749,8 @@ if projection.show_knowledge_link:
             label="打开独立 Knowledge 资料库",
             width="stretch",
         )
+
+st.markdown(
+    f'<footer class="cc-role-footer-boundary">{html.escape(DOCTOR_ROLE_BOUNDARY)} · 合成数据演示，不真实发送。</footer>',
+    unsafe_allow_html=True,
+)

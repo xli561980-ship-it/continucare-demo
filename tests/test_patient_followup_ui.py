@@ -70,7 +70,7 @@ def test_ready_projection_matches_the_frozen_first_viewport_contract():
 
     assert projection.original_quote == "我今天拉肚子。"
     assert projection.recorded_meanings == ("今天有腹泻",)
-    assert projection.question == "这和您想表达的是同一个意思吗？"
+    assert projection.question == "这和你的意思一致吗？"
     assert projection.consequence == PATIENT_CONSEQUENCE
     assert projection.decision_actions == PATIENT_DECISION_ACTIONS
     assert projection.boundary == PATIENT_DECISION_BOUNDARY

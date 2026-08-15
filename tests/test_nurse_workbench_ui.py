@@ -459,10 +459,10 @@ def test_nurse_page_removes_alert_dashboard_and_keeps_role_styles_scoped():
     source = NURSE_PAGE.read_text("utf-8")
     ui_source = UI_SOURCE.read_text("utf-8")
 
-    assert 'st.title("护士工作台")' in source
+    assert 'st.title("随访待办")' in source
     assert "project_nurse_workbench" in source
     assert "按提交时间排序" in source
-    assert "例行记录核对" in source
+    assert "核对记录与来源" in source
     assert "AlertService" not in source
     assert ".metric(" not in source
     assert "剩余 SLA" not in source

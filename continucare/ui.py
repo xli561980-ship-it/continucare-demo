@@ -25,11 +25,11 @@ COMPETITION_STEP_LABELS = (
 
 
 DEMO_GUIDE_STEPS = (
-    "患者表达",
-    "患者确认",
-    "护士核对",
-    "医生速览",
-    "记录追溯",
+    "一句原话",
+    "本人确认",
+    "人工核对",
+    "复诊速览",
+    "完整留痕",
 )
 
 
@@ -46,7 +46,7 @@ PATIENT_CONSEQUENCE = (
 
 
 PATIENT_DECISION_BOUNDARY = (
-    "确认的是您说的话有没有记对，不是确认诊断。本演示不会发送消息。"
+    "确认前不会写入随访记录。"
 )
 
 
@@ -1873,7 +1873,7 @@ def project_patient_followup(
             notice_title="这一轮记录暂时无法读取。",
             notice_detail=(
                 "页面没有继续保存任何决定，原来的本地记录也没有变化。"
-                "请先刷新；如仍无法读取，请返回合成演示导览。"
+                "请先刷新；如仍无法读取，请返回演示首页。"
             ),
             **common,
         )
@@ -1901,7 +1901,7 @@ def project_patient_followup(
             ),
             original_quote=quote,
             recorded_meanings=meanings,
-            question="这和您想表达的是同一个意思吗？",
+            question="这和你的意思一致吗？",
             consequence=PATIENT_CONSEQUENCE,
             decision_actions=PATIENT_DECISION_ACTIONS,
             boundary=PATIENT_DECISION_BOUNDARY,
@@ -2135,9 +2135,9 @@ def project_demo_guide(progress) -> DemoGuideProjection:
             status_detail="患者确认已保存，下一步是例行记录核对，不是风险警报。",
             context_lines=nurse_context,
             previous_event="患者已经确认表述，例行记录核对任务已经准备好。",
-            next_destination="前往“护士工作台”接手这项核对。",
+            next_destination="前往“随访待办”接手这项核对。",
             next_page="pages/2_nurse_risk_center.py",
-            next_label="前往护士工作台",
+            next_label="前往随访待办",
             tone="active",
         )
     if stage == "nurse_received":
@@ -2149,9 +2149,9 @@ def project_demo_guide(progress) -> DemoGuideProjection:
             status_detail="这一步只核对记录，不判断风险，也不提供诊疗建议。",
             context_lines=nurse_context,
             previous_event="护士已经接手这条例行记录核对。",
-            next_destination="返回“护士工作台”开始核对。",
+            next_destination="返回“随访待办”开始核对。",
             next_page="pages/2_nurse_risk_center.py",
-            next_label="继续护士核对",
+            next_label="继续随访核对",
             tone="active",
         )
     if stage == "nurse_in_progress":
@@ -2163,9 +2163,9 @@ def project_demo_guide(progress) -> DemoGuideProjection:
             status_detail="核对结果只描述记录处理，不生成诊断、风险等级或治疗建议。",
             context_lines=nurse_context,
             previous_event="护士已接手并开始核对患者确认的记录。",
-            next_destination="返回“护士工作台”记录受控结果。",
+            next_destination="返回“随访待办”记录核对结果。",
             next_page="pages/2_nurse_risk_center.py",
-            next_label="继续护士核对",
+            next_label="继续随访核对",
             tone="active",
         )
     if stage == "communication_pending":
@@ -2191,9 +2191,9 @@ def project_demo_guide(progress) -> DemoGuideProjection:
             status_detail="速览不是临床结论；沟通文字也没有发送。",
             context_lines=doctor_context,
             previous_event="医生已按当前来源生成一版速览，来源关系保持不变。",
-            next_destination="返回“护士工作台”核对沟通文字。",
+            next_destination="返回“随访待办”核对沟通文字。",
             next_page="pages/2_nurse_risk_center.py",
-            next_label="返回护士工作台",
+            next_label="返回随访待办",
             tone="caution",
         )
     if stage == "communication_ready":
@@ -2338,8 +2338,8 @@ def render_demo_guide(
 
     projection = project_demo_guide(progress)
     state_labels = {
-        "complete": "已完成",
-        "current": "当前步骤",
+        "complete": "完成",
+        "current": "现在",
         "upcoming": "待进行",
         "stopped": "已停止",
         "skipped": "未发生",
@@ -2365,24 +2365,13 @@ def render_demo_guide(
         "</div>"
         for label, value in projection.context_lines
     )
-    proof_rows = "".join(
-        f"<li>{html.escape(item)}</li>"
-        for item in (
-            "同一条记录，按角色只显示当前所需",
-            "每条交接内容都能一跳回到来源",
-            "停止路径同样说明原因和未产生的内容",
-        )
-    )
-    non_claim_rows = "".join(
-        f"<li>{html.escape(item)}</li>"
-        for item in (
-            "没有真实患者",
-            "没有临床评估、诊断或风险分级",
-            "没有真实发送或真实外部集成",
-        )
-    )
     st.markdown(
         f"""
+        <section class="cc-guide-stage-head">
+          <span>LIVE DEMO</span>
+          <h2>当前接力进度</h2>
+          <p>沿着同一条合成记录，依次打开三个角色端。</p>
+        </section>
         <nav class="cc-guide" aria-label="合成演示五步导览">
           <ol class="cc-guide-steps">{''.join(steps)}</ol>
         </nav>
@@ -2390,56 +2379,39 @@ def render_demo_guide(
         unsafe_allow_html=True,
     )
     with st.container(key="cc_demo_guide_layout"):
-        main_column, proof_column = st.columns(
-            [2, 0.95], gap="large", vertical_alignment="top"
+        st.markdown(
+            f"""
+            <article class="cc-guide-current cc-guide-current--{projection.tone}" aria-live="polite">
+              <div class="cc-guide-current-head">
+                <p class="cc-guide-role">当前接力 · {html.escape(projection.current_role)}</p>
+                <span>{projection.current_step} / {len(DEMO_GUIDE_STEPS)}</span>
+              </div>
+              <h2>{html.escape(projection.status_title)}</h2>
+              <p class="cc-guide-detail">{html.escape(projection.status_detail)}</p>
+              <dl class="cc-guide-facts">{context_rows}</dl>
+              <div class="cc-guide-meta">
+                <div>
+                  <h3>刚刚发生</h3>
+                  <p>{html.escape(projection.previous_event)}</p>
+                </div>
+                <div>
+                  <h3>接下来</h3>
+                  <p>{html.escape(projection.next_destination)}</p>
+                </div>
+              </div>
+            </article>
+            """,
+            unsafe_allow_html=True,
         )
-        with main_column:
-            st.markdown(
-                f"""
-                <article class="cc-guide-current cc-guide-current--{projection.tone}" aria-live="polite">
-                  <p class="cc-guide-role">当前演示角色：{html.escape(projection.current_role)}</p>
-                  <h2>{html.escape(projection.status_title)}</h2>
-                  <p class="cc-guide-detail">{html.escape(projection.status_detail)}</p>
-                  <dl class="cc-guide-facts">{context_rows}</dl>
-                  <div class="cc-guide-meta">
-                    <div>
-                      <h3>上一步发生了什么</h3>
-                      <p>{html.escape(projection.previous_event)}</p>
-                    </div>
-                    <div>
-                      <h3>下一步去哪里</h3>
-                      <p>{html.escape(projection.next_destination)}</p>
-                    </div>
-                  </div>
-                </article>
-                """,
-                unsafe_allow_html=True,
-            )
-            if projection.next_page and projection.next_label:
-                with st.container(key="cc_demo_primary_action"):
-                    st.page_link(
-                        projection.next_page,
-                        label=projection.next_label,
-                        width="stretch",
-                    )
-            elif render_primary_action is not None:
-                render_primary_action()
-        with proof_column:
-            st.markdown(
-                f"""
-                <aside class="cc-guide-proof" aria-label="演示能力边界">
-                  <section>
-                    <h2>这一分钟证明什么</h2>
-                    <ul>{proof_rows}</ul>
-                  </section>
-                  <section>
-                    <h2>不声称什么</h2>
-                    <ul>{non_claim_rows}</ul>
-                  </section>
-                </aside>
-                """,
-                unsafe_allow_html=True,
-            )
+        if projection.next_page and projection.next_label:
+            with st.container(key="cc_demo_primary_action"):
+                st.page_link(
+                    projection.next_page,
+                    label=projection.next_label,
+                    width="stretch",
+                )
+        elif render_primary_action is not None:
+            render_primary_action()
     return projection
 
 
@@ -3551,6 +3523,488 @@ def inject_global_styles(st) -> None:
             .cc-knowledge-history li {display:block;}
             .cc-knowledge-history span {display:block; margin-top:.1rem; text-align:left;}
         }
+        /* Competition product-demo refresh: keep business state, replace the
+           former verification-console presentation with role-first surfaces. */
+        :root {
+            --cc-bg:#FFFFFF;
+            --cc-canvas:#F5F8F7;
+            --cc-surface-subtle:#EFF6F5;
+            --cc-surface-aqua:#E4F2F1;
+            --cc-text:#132326;
+            --cc-muted:#617073;
+            --cc-border:#D9E4E2;
+            --cc-accent:#007C7A;
+            --cc-accent-strong:#005C5A;
+            --cc-caution:#A56612;
+            --cc-caution-bg:#FFF7E8;
+            --cc-danger:#B42318;
+            --cc-danger-bg:#FFF3F1;
+            --cc-shadow:0 18px 48px rgba(21,55,57,.08);
+        }
+        html, body, [class*="css"] {
+            font-family:Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont,
+                "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        .stApp {background:var(--cc-canvas); color:var(--cc-text);}
+        .block-container {max-width:1280px; padding:1rem 1.5rem 4rem;}
+        .cc-role-topbar {
+            display:flex; align-items:center; justify-content:space-between; gap:1rem;
+            min-height:64px; margin-bottom:1.35rem; padding-bottom:1rem;
+            border-bottom:1px solid var(--cc-border);
+        }
+        .cc-role-topbar-brand {
+            display:flex; align-items:center; gap:.65rem; color:var(--cc-text);
+            font-size:1.05rem; font-weight:760; letter-spacing:-.02em;
+        }
+        .cc-role-topbar-brand i,
+        .cc-demo-brand-mark {
+            width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center;
+            border-radius:10px; background:var(--cc-accent); color:#fff;
+            font-style:normal; font-size:1rem; font-weight:800;
+        }
+        .cc-role-topbar-badge,
+        .cc-demo-badge {
+            display:inline-flex; align-items:center; min-height:30px; padding:.25rem .65rem;
+            border:1px solid #BBDAD7; border-radius:999px; background:#F1FAF9;
+            color:var(--cc-accent-strong); font-size:.78rem; font-weight:680;
+        }
+        .cc-role-footer-boundary {
+            margin-top:1.5rem; padding:1rem 0; border-top:1px solid var(--cc-border);
+            color:var(--cc-muted); font-size:.8rem; line-height:1.55; text-align:center;
+        }
+
+        /* Demo home */
+        .stApp:has(.cc-demo-header) .block-container {max-width:1280px; padding-top:.65rem;}
+        .cc-demo-header {
+            display:flex; align-items:center; justify-content:space-between; gap:1rem;
+            min-height:64px; padding:.45rem 0 1rem; border:0;
+            border-bottom:1px solid var(--cc-border);
+        }
+        .cc-demo-brand {display:flex; align-items:center; gap:.7rem;}
+        .cc-demo-brand strong {font-size:1.22rem; letter-spacing:-.025em;}
+        .cc-demo-nav-label {color:var(--cc-muted); font-size:.86rem; font-weight:620;}
+        .cc-demo-hero {
+            display:grid; grid-template-columns:minmax(0, 1.03fr) minmax(31rem, .97fr);
+            gap:4rem; align-items:center; min-height:480px; padding:4.6rem 0 4rem;
+        }
+        .cc-demo-eyebrow,
+        .cc-guide-stage-head > span,
+        .cc-role-section-head > p {
+            margin:0 0 .75rem; color:var(--cc-accent); font-size:.72rem;
+            line-height:1.3; font-weight:780; letter-spacing:.15em;
+        }
+        .cc-demo-hero h1 {
+            max-width:760px; margin:0; color:var(--cc-text);
+            font-size:clamp(2.9rem, 5.4vw, 5rem); line-height:1.08;
+            letter-spacing:-.065em; font-weight:790;
+        }
+        .cc-demo-lead {
+            max-width:690px; margin:1.5rem 0 0; color:var(--cc-muted);
+            font-size:1.12rem; line-height:1.85;
+        }
+        .cc-demo-chain {
+            padding:2rem; border:1px solid var(--cc-border); border-radius:22px;
+            background:var(--cc-bg); box-shadow:var(--cc-shadow);
+        }
+        .cc-demo-chain-roles {
+            display:grid; grid-template-columns:1fr auto 1fr auto 1fr;
+            gap:.7rem; align-items:center;
+        }
+        .cc-demo-chain-roles > div {min-width:0; text-align:center;}
+        .cc-demo-chain-roles > div > span {
+            width:52px; height:52px; display:flex; align-items:center; justify-content:center;
+            margin:0 auto .8rem; border-radius:16px; background:var(--cc-surface-aqua);
+            color:var(--cc-accent-strong); font-size:.88rem; font-weight:780;
+        }
+        .cc-demo-chain-roles strong {display:block; font-size:1rem; line-height:1.4;}
+        .cc-demo-chain-roles small {
+            display:block; margin-top:.25rem; color:var(--cc-muted); line-height:1.45;
+        }
+        .cc-demo-chain-roles i {color:var(--cc-accent); font-size:1.3rem; font-style:normal;}
+        .cc-demo-chain-proof {
+            display:grid; grid-template-columns:repeat(4, 1fr); gap:.45rem;
+            margin-top:1.7rem; padding-top:1.25rem; border-top:1px solid var(--cc-border);
+        }
+        .cc-demo-chain-proof span {
+            position:relative; padding-top:.65rem; color:var(--cc-accent-strong);
+            font-size:.78rem; line-height:1.4; font-weight:670; text-align:center;
+        }
+        .cc-demo-chain-proof span::before {
+            content:""; position:absolute; top:0; left:calc(50% - 3px);
+            width:6px; height:6px; border-radius:50%; background:var(--cc-accent);
+        }
+        .cc-guide-stage-head {
+            display:grid; grid-template-columns:1fr auto; align-items:end; gap:.2rem 1.5rem;
+            margin:1rem 0 1.25rem; padding-top:2.8rem; border-top:1px solid var(--cc-border);
+        }
+        .cc-guide-stage-head > span {grid-column:1; margin:0;}
+        .cc-guide-stage-head h2 {
+            grid-column:1; margin:0; color:var(--cc-text); font-size:2rem; letter-spacing:-.04em;
+        }
+        .cc-guide-stage-head p {grid-column:2; grid-row:1 / span 2; margin:0; color:var(--cc-muted);}
+        .cc-guide {margin:.5rem 0 1.1rem; padding:1.2rem 1.4rem; border-radius:16px; background:#EAF4F3;}
+        .cc-guide-steps::before {top:2.08rem; background:#B8D4D2;}
+        .cc-guide-index {font-size:.78rem; color:var(--cc-muted);}
+        .cc-guide-node {border-color:#83AAA7; background:#fff;}
+        .cc-guide-label {font-size:.88rem;}
+        .cc-guide-state {font-size:.67rem;}
+        .cc-guide-step--complete .cc-guide-node {background:var(--cc-accent); border-color:var(--cc-accent);}
+        .st-key-cc_demo_guide_layout {margin-top:0;}
+        .cc-guide-current {
+            padding:1.5rem 1.6rem; border:1px solid var(--cc-border); border-radius:18px;
+            background:var(--cc-bg); box-shadow:0 10px 30px rgba(21,55,57,.05);
+        }
+        .cc-guide-current--caution, .cc-guide-current--stopped {border-color:#E2C18B;}
+        .cc-guide-current--error {border-color:#E8B5AF; background:var(--cc-danger-bg);}
+        .cc-guide-current-head {display:flex; align-items:center; justify-content:space-between; gap:1rem;}
+        .cc-guide-current-head > span {
+            color:var(--cc-muted); font-size:.78rem; font-weight:700; letter-spacing:.08em;
+        }
+        .cc-guide-role {margin:0; color:var(--cc-accent); font-size:.78rem; letter-spacing:.08em;}
+        .cc-guide-current h2 {margin:.55rem 0 .25rem; font-size:1.55rem; letter-spacing:-.025em;}
+        .cc-guide-detail {margin:0 0 1rem;}
+        .cc-guide-facts {
+            display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:.7rem;
+            padding:1rem 0; border-top:1px solid var(--cc-border); border-bottom:1px solid var(--cc-border);
+        }
+        .cc-guide-fact {display:block; padding:0 .8rem; border:0; border-left:2px solid #B8D4D2;}
+        .cc-guide-fact dt {color:var(--cc-muted); font-size:.74rem;}
+        .cc-guide-fact dd {margin:.3rem 0 0; line-height:1.5; font-weight:620;}
+        .cc-guide-meta {margin-top:1rem; padding:0; border:0;}
+        .cc-guide-meta > div {display:block;}
+        .cc-guide-meta h3 {margin-bottom:.25rem; font-size:.76rem; letter-spacing:.04em;}
+        .cc-guide-meta p {color:var(--cc-muted);}
+        .st-key-cc_demo_primary_action,
+        .st-key-cc_demo_start_action {max-width:380px; margin:.9rem 0 0;}
+        .st-key-cc_demo_primary_action a,
+        .st-key-cc_demo_start_action button {
+            min-height:54px !important; border:0 !important; border-radius:12px !important;
+            background:var(--cc-accent) !important; font-size:1rem !important;
+            box-shadow:0 8px 20px rgba(0,124,122,.16) !important;
+        }
+        .cc-role-section-head {
+            margin:4.5rem 0 1.2rem; padding-top:3rem; border-top:1px solid var(--cc-border);
+        }
+        .cc-role-section-head > p {margin-bottom:.45rem;}
+        .cc-role-section-head h2 {margin:0; font-size:2rem; letter-spacing:-.04em;}
+        .cc-role-section-head > span {display:block; margin-top:.4rem; color:var(--cc-muted);}
+        .st-key-cc_role_card_patient,
+        .st-key-cc_role_card_nurse,
+        .st-key-cc_role_card_doctor {
+            height:100%; padding:1.4rem; border:1px solid var(--cc-border); border-radius:18px;
+            background:var(--cc-bg); box-shadow:0 10px 28px rgba(21,55,57,.04);
+        }
+        .cc-role-card-copy {min-height:175px;}
+        .cc-role-number {color:var(--cc-accent); font-size:.75rem; font-weight:780; letter-spacing:.1em;}
+        .cc-role-card-copy p {margin:1rem 0 .15rem; color:var(--cc-muted); font-size:.82rem;}
+        .cc-role-card-copy h3 {margin:0 0 .6rem; font-size:1.32rem; letter-spacing:-.025em;}
+        .cc-role-card-copy > span:last-child {color:var(--cc-muted); line-height:1.6;}
+        .st-key-cc_role_card_patient a,
+        .st-key-cc_role_card_nurse a,
+        .st-key-cc_role_card_doctor a {
+            min-height:48px; display:flex; align-items:center; justify-content:center;
+            border:0 !important; border-radius:10px !important; background:var(--cc-surface-subtle) !important;
+            color:var(--cc-accent-strong) !important; font-weight:690 !important; text-decoration:none !important;
+        }
+        .st-key-cc_role_card_patient a *,
+        .st-key-cc_role_card_nurse a *,
+        .st-key-cc_role_card_doctor a * {color:var(--cc-accent-strong) !important;}
+        .cc-demo-footer {
+            display:flex; align-items:center; justify-content:space-between; gap:1rem;
+            margin-top:2rem; padding:1.3rem 0; border-top:1px solid var(--cc-border);
+            color:var(--cc-muted); font-size:.78rem;
+        }
+        .cc-demo-footer strong {color:var(--cc-text);}
+
+        /* Patient experience */
+        .stApp:has(.cc-patient-shell) {background:#ECF3F2;}
+        .stApp:has(.cc-patient-shell) .block-container {
+            max-width:720px; margin:1.4rem auto 3rem; padding:1.2rem 2.8rem 2.4rem;
+            border:1px solid var(--cc-border); border-radius:28px; background:var(--cc-bg);
+            box-shadow:var(--cc-shadow);
+        }
+        .stApp:has(.cc-patient-shell) h1 {
+            margin:0; padding:.25rem 0 .3rem; border:0; text-align:left;
+            font-size:2.1rem; letter-spacing:-.04em;
+        }
+        .cc-patient-progress {margin:.15rem 0 1.4rem; color:var(--cc-muted); font-size:.82rem;}
+        .cc-patient-progress i {
+            position:relative; display:block; height:5px; margin-top:.65rem;
+            border-radius:5px; background:#DDEBE9; overflow:hidden;
+        }
+        .cc-patient-progress i::after {
+            content:""; position:absolute; inset:0 auto 0 0; width:34%; background:var(--cc-accent);
+        }
+        .cc-patient-prompt {display:grid; grid-template-columns:48px 1fr; gap:1rem; align-items:start; margin:1.7rem 0;}
+        .cc-patient-prompt > span {
+            width:48px; height:48px; display:flex; align-items:center; justify-content:center;
+            border-radius:16px; background:var(--cc-surface-aqua); color:var(--cc-accent);
+            font-family:Georgia, serif; font-size:2.4rem; line-height:1;
+        }
+        .cc-patient-prompt h2 {margin:0; font-size:1.65rem; letter-spacing:-.03em;}
+        .cc-patient-prompt p {margin:.35rem 0 0; color:var(--cc-muted); font-size:1rem;}
+        .cc-patient-quote {display:flex; flex-direction:column; align-items:flex-end; margin:.5rem 0 1.25rem; padding:0; text-align:left;}
+        .cc-patient-quote .cc-patient-label {margin-right:.3rem;}
+        .cc-patient-quote blockquote {
+            max-width:82%; margin:0; padding:1rem 1.2rem; border:0; border-radius:18px 18px 4px 18px;
+            background:var(--cc-surface-aqua); color:var(--cc-text);
+            font-family:inherit; font-size:1.2rem; line-height:1.55; font-weight:620;
+        }
+        .cc-patient-meaning {
+            display:grid; grid-template-columns:52px minmax(0, 1fr); gap:1rem; align-items:center;
+            margin:0 0 1rem; padding:1.2rem; border:1px solid #BBDAD7; border-radius:18px;
+            background:#F7FBFA; text-align:left;
+        }
+        .cc-patient-meaning-mark {
+            width:52px; height:52px; display:flex; align-items:center; justify-content:center;
+            border-radius:17px; background:var(--cc-surface-aqua); color:var(--cc-accent);
+            font-size:1.55rem; font-weight:780;
+        }
+        .cc-patient-meaning .cc-patient-label {margin:0 0 .2rem; text-align:left;}
+        .cc-patient-meaning strong {display:block; color:var(--cc-text); font-size:1.28rem; line-height:1.45;}
+        .cc-patient-meaning p {margin:.35rem 0 0; color:var(--cc-muted); font-size:.9rem; line-height:1.5;}
+        .cc-patient-status {
+            margin:.8rem 0; padding:.9rem 1rem; border:0; border-radius:14px;
+            background:var(--cc-surface-subtle);
+        }
+        .cc-patient-status--caution, .cc-patient-status--stopped {background:var(--cc-caution-bg);}
+        .st-key-cc_patient_decisions button,
+        .st-key-cc_patient_decisions_unsure button {
+            min-height:56px !important; border-radius:12px !important; font-size:1.02rem !important;
+        }
+        .st-key-cc_patient_decision_accept button {
+            border-color:var(--cc-accent) !important; background:var(--cc-accent) !important;
+            color:#fff !important; box-shadow:0 8px 20px rgba(0,124,122,.15) !important;
+        }
+        .cc-patient-boundary {
+            margin:.7rem 0 0; padding:.55rem 0; border:0; background:transparent;
+            color:var(--cc-muted); font-size:.8rem;
+        }
+        .cc-patient-boundary::before {content:"🔒"; margin-right:.35rem; filter:grayscale(1);}
+        .cc-patient-emergency {
+            margin-top:1.25rem; padding-top:.85rem; border-top:1px solid var(--cc-border);
+            color:var(--cc-muted); font-size:.78rem; line-height:1.55;
+        }
+
+        /* Nurse experience */
+        .stApp:has(.cc-nurse-shell) .block-container {max-width:1280px; padding:1rem 1.5rem 4rem;}
+        .stApp:has(.cc-nurse-shell) h1 {
+            margin:0; padding:0; border:0; font-size:2.15rem; letter-spacing:-.045em;
+        }
+        .cc-nurse-count {
+            padding:.75rem 1rem; border:1px solid var(--cc-border); border-radius:12px;
+            background:var(--cc-bg); color:var(--cc-muted); text-align:center;
+        }
+        .cc-nurse-count strong {color:var(--cc-accent); font-size:1.2rem;}
+        .st-key-cc_nurse_workspace {margin-top:1.4rem;}
+        .st-key-cc_nurse_workspace [data-testid="stHorizontalBlock"]:has(.cc-nurse-sort) {
+            gap:1.4rem !important;
+        }
+        .st-key-cc_nurse_workspace [data-testid="stHorizontalBlock"]:has(.cc-nurse-sort)
+        > [data-testid="stColumn"]:first-child {
+            padding:1rem; border:1px solid var(--cc-border); border-radius:18px; background:var(--cc-bg);
+        }
+        .st-key-cc_nurse_workspace [data-testid="stHorizontalBlock"]:has(.cc-nurse-sort)
+        > [data-testid="stColumn"]:last-child {
+            padding:0; border:0; min-width:0;
+        }
+        .cc-nurse-sort {margin:.15rem 0 .65rem; font-size:.78rem;}
+        [class*="st-key-cc_nurse_task_"] button {
+            padding:.8rem .8rem .2rem !important; border:0 !important; border-radius:12px 12px 0 0 !important;
+            background:transparent !important; font-size:1rem !important;
+        }
+        [class*="st-key-cc_nurse_task_selected_"] button {background:var(--cc-surface-subtle) !important; border-left:3px solid var(--cc-accent) !important;}
+        .cc-nurse-task-meta {
+            margin:0 0 .45rem; padding:.25rem .8rem .8rem; border-radius:0 0 12px 12px;
+            color:var(--cc-muted); background:transparent;
+        }
+        .cc-nurse-review-head {
+            display:flex; align-items:flex-start; justify-content:space-between; gap:1rem;
+            margin:0 0 1rem; padding:1.2rem 1.3rem; border:1px solid var(--cc-border);
+            border-radius:16px; background:var(--cc-bg);
+        }
+        .cc-nurse-review-head > div {order:-1;}
+        .cc-nurse-review-head h2 {margin:0; font-size:1.45rem; letter-spacing:-.03em;}
+        .cc-nurse-review-head p {margin:.35rem 0 0; color:var(--cc-muted); line-height:1.55;}
+        .cc-nurse-review-badge {
+            flex:0 0 auto; padding:.38rem .65rem; border:1px solid #E5C48E;
+            border-radius:999px; background:var(--cc-caution-bg); color:var(--cc-caution);
+            font-size:.76rem; font-weight:720;
+        }
+        .cc-nurse-review-badge--complete {border-color:#BBDAD7; background:#F0F8F7; color:var(--cc-accent-strong);}
+        .cc-nurse-evidence-grid {display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:.8rem;}
+        .cc-nurse-evidence-grid article {
+            min-height:150px; padding:1rem; border:1px solid var(--cc-border);
+            border-radius:14px; background:var(--cc-bg);
+        }
+        .cc-nurse-evidence-grid article > span {color:var(--cc-muted); font-size:.78rem; font-weight:650;}
+        .cc-nurse-evidence-grid article > p {margin:1.5rem 0 0; font-size:1.12rem; line-height:1.55; font-weight:650;}
+        .cc-nurse-why {
+            display:grid; grid-template-columns:36px 1fr; gap:.8rem; align-items:center;
+            margin:1rem 0; padding:.85rem 1rem; border:1px solid var(--cc-border);
+            border-radius:12px; background:#F9FBFA;
+        }
+        .cc-nurse-why > span {
+            width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+            border:1px solid #A8CFCC; border-radius:50%; color:var(--cc-accent); font-weight:760;
+        }
+        .cc-nurse-why p {margin:.15rem 0 0; color:var(--cc-muted); line-height:1.45;}
+        .cc-nurse-communication {
+            display:block; margin:1rem 0; padding:1rem; border:1px solid var(--cc-border);
+            border-radius:14px; background:var(--cc-bg);
+        }
+        .cc-nurse-communication h3 {margin:0 0 .7rem; font-size:1rem;}
+        .cc-nurse-communication p {padding:.65rem .75rem; border-radius:10px; background:var(--cc-surface-subtle);}
+        .cc-nurse-communication .cc-nurse-mock {
+            display:inline-block; margin-top:.55rem; padding:.2rem .5rem; background:#F2F4F4;
+            color:var(--cc-muted) !important; font-size:.72rem;
+        }
+        .cc-nurse-action-title {margin:1rem 0 .35rem; color:var(--cc-muted); font-size:.76rem; letter-spacing:.04em;}
+        .st-key-cc_nurse_primary button,
+        .st-key-cc_nurse_primary_link a {
+            min-height:52px !important; border:0 !important; border-radius:12px !important;
+            box-shadow:0 8px 20px rgba(0,124,122,.14) !important;
+        }
+
+        /* Doctor experience */
+        .stApp:has(.cc-doctor-shell) .block-container {max-width:1280px; padding:1rem 1.5rem 4rem;}
+        .stApp:has(.cc-doctor-shell) h1 {
+            margin:0; padding:0; border:0; font-size:2.15rem; letter-spacing:-.045em;
+        }
+        .cc-doctor-patient-strip {
+            display:flex; align-items:center; gap:1rem; margin:1.4rem 0 1.2rem;
+            padding:1rem 1.2rem; border:1px solid var(--cc-border); border-radius:16px;
+            background:var(--cc-bg);
+        }
+        .cc-doctor-patient-strip > span {
+            width:46px; height:46px; display:flex; align-items:center; justify-content:center;
+            border-radius:15px; background:var(--cc-surface-aqua); color:var(--cc-accent-strong); font-weight:780;
+        }
+        .cc-doctor-patient-strip small {display:block; color:var(--cc-muted); font-size:.74rem;}
+        .cc-doctor-patient-strip strong {display:block; margin-top:.15rem; font-size:1.05rem;}
+        .cc-doctor-patient-strip p {margin:0 0 0 auto; color:var(--cc-muted); font-size:.82rem;}
+        .st-key-cc_doctor_workspace [data-testid="stHorizontalBlock"] {gap:1.4rem;}
+        .st-key-cc_doctor_workspace [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child {
+            padding:0; border:0;
+        }
+        .cc-doctor-brief-card {
+            padding:1.3rem 1.4rem; border:1px solid var(--cc-border); border-radius:18px;
+            background:var(--cc-bg); box-shadow:0 12px 32px rgba(21,55,57,.055);
+        }
+        .cc-doctor-brief-card > header {display:flex; align-items:center; gap:1rem; padding-bottom:1rem; border-bottom:1px solid var(--cc-border);}
+        .cc-doctor-brief-card > header > span {
+            width:56px; height:56px; display:flex; align-items:center; justify-content:center;
+            border-radius:18px; background:var(--cc-surface-aqua); color:var(--cc-accent);
+            font-size:1.25rem; font-weight:790;
+        }
+        .cc-doctor-brief-card > header p {margin:0; color:var(--cc-muted); font-size:.68rem; letter-spacing:.12em;}
+        .cc-doctor-brief-card > header h2 {margin:.1rem 0 0; font-size:1.75rem; letter-spacing:-.035em;}
+        .cc-doctor-facts {margin:0; border:0;}
+        .cc-doctor-fact {
+            display:grid; grid-template-columns:42px minmax(0, 1fr); gap:1rem;
+            padding:1.05rem 0; border-bottom:1px solid var(--cc-border);
+        }
+        .cc-doctor-fact:last-child {border-bottom:0;}
+        .cc-doctor-fact > span {
+            width:38px; height:38px; display:flex; align-items:center; justify-content:center;
+            border-radius:13px; background:var(--cc-surface-subtle); color:var(--cc-accent); font-weight:780;
+        }
+        .cc-doctor-fact dt {color:var(--cc-muted); font-size:.78rem; font-weight:650;}
+        .cc-doctor-fact dd {margin:.28rem 0 0; font-size:1.04rem; line-height:1.5; font-weight:650;}
+        .cc-doctor-fact:last-child > span {background:var(--cc-caution-bg); color:var(--cc-caution);}
+        .cc-doctor-fact:last-child dd {color:var(--cc-text);}
+        .cc-doctor-notice {margin:1rem 0; padding:.8rem 1rem; border:0; border-radius:12px;}
+        .cc-doctor-summary {
+            margin:1rem 0; padding:1rem 1.1rem; border:1px solid var(--cc-border);
+            border-radius:14px; background:var(--cc-bg);
+        }
+        .cc-doctor-evidence-head {margin:0 0 1rem;}
+        .cc-doctor-evidence-head p {margin:0; color:var(--cc-accent); font-size:.66rem; letter-spacing:.12em; font-weight:760;}
+        .cc-doctor-evidence-head h2 {margin:.2rem 0 0; font-size:1.45rem;}
+        .cc-doctor-evidence-chain {
+            position:relative; margin:0 0 1rem; padding:1.1rem 1rem; list-style:none;
+            border:1px solid var(--cc-border); border-radius:16px; background:var(--cc-bg);
+        }
+        .cc-doctor-evidence-chain::before {
+            content:""; position:absolute; top:37px; bottom:37px; left:29px; width:1px; background:#A9CFCC;
+        }
+        .cc-doctor-evidence-chain li {position:relative; display:flex; align-items:center; gap:.8rem; min-height:58px;}
+        .cc-doctor-evidence-chain li > span {
+            width:38px; height:38px; display:flex; align-items:center; justify-content:center;
+            border:4px solid #fff; border-radius:50%; background:var(--cc-surface-aqua);
+            color:var(--cc-accent); font-size:.68rem; font-weight:760; z-index:1;
+        }
+        .cc-doctor-evidence-chain strong {font-size:.9rem;}
+        .cc-doctor-source-title {margin:1rem 0 .25rem; padding:0; border:0; color:var(--cc-muted); font-size:.76rem !important;}
+        .stApp:has(.cc-doctor-shell) [class*="st-key-cc_doctor_source_"] button {
+            min-height:42px !important; padding:.35rem .1rem !important; font-size:.82rem !important;
+        }
+        .st-key-cc_doctor_primary button {min-height:52px !important; border:0 !important; border-radius:12px !important;}
+
+        @media (max-width: 900px) {
+            .cc-demo-hero {grid-template-columns:1fr; gap:2.5rem; min-height:0; padding:3rem 0;}
+            .cc-demo-hero h1 {font-size:clamp(2.5rem, 10vw, 4rem);}
+            .cc-guide-facts {grid-template-columns:1fr;}
+            .cc-guide-fact {padding:.45rem .8rem;}
+            .cc-role-section-head {margin-top:3.2rem;}
+            .cc-nurse-evidence-grid {grid-template-columns:1fr;}
+            .cc-nurse-evidence-grid article {min-height:0;}
+            .cc-nurse-evidence-grid article > p {margin:.65rem 0 0;}
+        }
+        @media (max-width: 768px) {
+            .block-container {padding:.6rem 1rem 2.5rem;}
+            .cc-role-topbar {min-height:54px; margin-bottom:1rem;}
+            .cc-role-topbar-badge {font-size:.7rem;}
+            .cc-demo-header {min-height:56px;}
+            .cc-demo-nav-label {display:none;}
+            .cc-demo-brand strong {font-size:1.08rem;}
+            .cc-demo-hero {padding:2.4rem 0 2.8rem;}
+            .cc-demo-hero h1 {font-size:2.65rem !important; line-height:1.08 !important;}
+            .cc-demo-lead {font-size:1rem; line-height:1.7;}
+            .cc-demo-chain {padding:1.2rem; border-radius:16px;}
+            .cc-demo-chain-roles {grid-template-columns:1fr; gap:.75rem;}
+            .cc-demo-chain-roles i {transform:rotate(90deg);}
+            .cc-demo-chain-roles > div {display:grid; grid-template-columns:44px 1fr; gap:.1rem .8rem; text-align:left;}
+            .cc-demo-chain-roles > div > span {grid-row:1 / span 2; width:44px; height:44px; margin:0;}
+            .cc-demo-chain-proof {grid-template-columns:repeat(2, 1fr);}
+            .cc-guide-stage-head {display:block; padding-top:2rem;}
+            .cc-guide-stage-head h2 {font-size:1.6rem !important;}
+            .cc-guide-stage-head p {margin-top:.35rem;}
+            .cc-guide {padding:1rem .35rem; overflow-x:auto;}
+            .cc-guide-steps {min-width:520px;}
+            .cc-guide-current {padding:1.1rem;}
+            .cc-guide-current-head {align-items:flex-start;}
+            .cc-guide-current h2 {font-size:1.3rem !important;}
+            .cc-guide-facts {display:block;}
+            .cc-guide-meta {grid-template-columns:1fr;}
+            .cc-role-section-head h2 {font-size:1.55rem !important;}
+            .cc-demo-footer {display:block;}
+            .cc-demo-footer span {display:block; margin-top:.35rem;}
+            .stApp:has(.cc-patient-shell) .block-container {
+                margin:0; padding:.7rem 1.1rem 2.5rem; border:0; border-radius:0; box-shadow:none;
+            }
+            .stApp:has(.cc-patient-shell) h1 {font-size:1.9rem !important;}
+            .cc-patient-prompt {grid-template-columns:42px 1fr; margin:1.35rem 0;}
+            .cc-patient-prompt > span {width:42px; height:42px;}
+            .cc-patient-prompt h2 {font-size:1.35rem !important;}
+            .cc-patient-quote blockquote {max-width:90%; font-size:1.05rem;}
+            .cc-patient-meaning {grid-template-columns:44px 1fr; padding:1rem;}
+            .cc-patient-meaning-mark {width:44px; height:44px;}
+            .cc-patient-meaning strong {font-size:1.1rem;}
+            .stApp:has(.cc-nurse-shell) .block-container,
+            .stApp:has(.cc-doctor-shell) .block-container {padding:.7rem 1rem 2.5rem;}
+            .stApp:has(.cc-nurse-shell) h1,
+            .stApp:has(.cc-doctor-shell) h1 {font-size:1.85rem !important;}
+            .cc-nurse-count {padding:.6rem; font-size:.8rem;}
+            .st-key-cc_nurse_workspace [data-testid="stHorizontalBlock"]:has(.cc-nurse-sort)
+            > [data-testid="stColumn"]:first-child {padding:.7rem; border-radius:14px;}
+            .cc-nurse-review-head {display:block; padding:1rem;}
+            .cc-nurse-review-badge {display:inline-block; margin-top:.75rem;}
+            .cc-doctor-patient-strip p {display:none;}
+            .cc-doctor-brief-card {padding:1rem;}
+            .cc-doctor-brief-card > header h2 {font-size:1.45rem !important;}
+            .cc-doctor-fact {grid-template-columns:38px 1fr; gap:.75rem;}
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -3630,7 +4084,9 @@ def render_competition_progress(st, progress, *, show_next: bool = True) -> None
         current_url = getattr(getattr(st, "context", None), "url", None)
         current_path = urlparse(current_url).path.rstrip("/") if current_url else ""
         is_home = bool(current_url) and current_path == ""
-        is_audit = bool(current_url) and current_path.endswith("/audit_log")
+        is_audit = bool(current_url) and current_path.endswith(
+            ("/audit_log", "/records")
+        )
         if not (is_home or is_audit):
             st.stop()
 

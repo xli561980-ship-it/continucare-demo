@@ -762,23 +762,37 @@ def _render_patient_status(projection: PatientFollowupProjection) -> None:
 def _render_patient_statement(projection: PatientFollowupProjection) -> None:
     if not projection.original_quote:
         return
-    st.markdown(
-        f"""
-        <section class="cc-patient-quote" aria-label="患者原话">
-          <span class="cc-patient-label">您刚才说</span>
-          <blockquote>“{html.escape(projection.original_quote)}”</blockquote>
-        </section>
-        """,
-        unsafe_allow_html=True,
-    )
     meaning_rows = "".join(
-        f"<p>{html.escape(item)}</p>" for item in projection.recorded_meanings
+        f"<strong>{html.escape(item)}</strong>" for item in projection.recorded_meanings
     )
+    meaning_prompt = projection.question
+    if not meaning_prompt:
+        if projection.state == "candidate_rejected":
+            meaning_prompt = "这段内容没有写入确认记录。"
+        elif projection.tone == "error":
+            meaning_prompt = "这条记录的状态暂时无法确认。"
+        else:
+            meaning_prompt = "已由你本人确认。"
     st.markdown(
         f"""
-        <section class="cc-patient-meaning" aria-label="系统记法">
-          <span class="cc-patient-label">我们记成了</span>
-          {meaning_rows or '<p>这段待确认内容</p>'}
+        <section class="cc-patient-prompt">
+          <span aria-hidden="true">“</span>
+          <div>
+            <h2>今天身体怎么样？</h2>
+            <p>可以像平时聊天一样告诉我。</p>
+          </div>
+        </section>
+        <section class="cc-patient-quote" aria-label="患者原话">
+          <span class="cc-patient-label">你说</span>
+          <blockquote>{html.escape(projection.original_quote)}</blockquote>
+        </section>
+        <section class="cc-patient-meaning" aria-label="待确认记录">
+          <span class="cc-patient-meaning-mark" aria-hidden="true">✓</span>
+          <div>
+            <span class="cc-patient-label">ContinuCare 帮你整理为</span>
+            {meaning_rows or '<strong>这段待确认内容</strong>'}
+            <p>{html.escape(meaning_prompt)}</p>
+          </div>
         </section>
         """,
         unsafe_allow_html=True,
@@ -810,15 +824,6 @@ def _render_patient_decisions(
     generation: str,
     run_id: str,
 ) -> None:
-    st.markdown(
-        f'<p class="cc-patient-question">{html.escape(projection.question or "")}</p>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        f'<div class="cc-patient-consequence">{html.escape(projection.consequence or "")}</div>',
-        unsafe_allow_html=True,
-    )
-
     pending = st.session_state.get(_PATIENT_PENDING_KEY)
     stale_pending = pending and (
         pending.get("generation") != generation or pending.get("run_id") != run_id
@@ -860,7 +865,7 @@ def _render_patient_links(projection: PatientFollowupProjection) -> None:
         with st.container(key="cc_patient_nurse_link"):
             st.page_link(
                 "pages/2_nurse_risk_center.py",
-                label="演示：切换到护士工作台",
+                label="下一步：进入护士随访待办",
                 width="stretch",
             )
     if projection.show_record_link:
@@ -872,7 +877,7 @@ def _render_patient_links(projection: PatientFollowupProjection) -> None:
             )
     if projection.show_home_link:
         with st.container(key="cc_patient_home_link"):
-            st.page_link("app.py", label="返回合成演示导览", width="stretch")
+            st.page_link("app.py", label="返回演示首页", width="stretch")
 
 
 def _render_patient_main(
@@ -883,7 +888,28 @@ def _render_patient_main(
     run_id: str | None = None,
 ) -> None:
     with st.container(key="cc_patient_page"):
+        st.markdown(
+            """
+            <header class="cc-role-topbar">
+              <span class="cc-role-topbar-brand"><i aria-hidden="true">C</i> ContinuCare</span>
+              <span class="cc-role-topbar-badge">合成数据演示</span>
+            </header>
+            """,
+            unsafe_allow_html=True,
+        )
         st.title("我的随访")
+        progress_label = {
+            "candidate_ready": "本轮随访 · 1 / 3",
+            "candidate_unsure": "本轮随访 · 1 / 3",
+            "confirmed": "本轮随访 · 已确认",
+            "read_only": "本轮随访 · 处理中",
+            "story_complete": "本轮随访 · 已完成",
+        }.get(projection.state, "本轮随访")
+        st.markdown(
+            f'<div class="cc-patient-progress"><span>{html.escape(progress_label)}</span>'
+            '<i aria-hidden="true"></i></div>',
+            unsafe_allow_html=True,
+        )
         error_message = st.session_state.pop(_PATIENT_ERROR_KEY, None)
         if error_message:
             st.markdown(
@@ -891,15 +917,18 @@ def _render_patient_main(
                 f'role="alert" aria-live="assertive"><h2>这次没有保存</h2><p>{html.escape(error_message)}</p></section>',
                 unsafe_allow_html=True,
             )
-        _render_patient_status(projection)
         if projection.decision_actions:
             _render_patient_statement(projection)
+            _render_patient_status(projection)
             _render_patient_decisions(
                 projection,
                 candidate_ids=candidate_ids,
                 generation=generation or "",
                 run_id=run_id or "",
             )
+        else:
+            _render_patient_status(projection)
+            _render_patient_statement(projection)
         _render_patient_outcomes(projection)
         if projection.state == "candidate_rejected":
             st.markdown(

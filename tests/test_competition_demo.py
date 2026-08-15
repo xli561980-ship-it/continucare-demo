@@ -22,6 +22,7 @@ from continucare.layer4 import (
     TaskWorkflowService,
 )
 from continucare.layer4.manual_reviews import SEND_ENABLED
+from continucare.navigation import APP_ROUTES, ROLE_ROUTES
 from continucare.pathways import load_builtin_pathways
 from continucare.services import competition_demo
 from continucare.services.competition_demo import (
@@ -929,6 +930,9 @@ def test_shared_progress_renderer_and_home_use_terminal_contract(monkeypatch):
     audit_renderer = _ProgressRenderer(url="http://localhost:8501/audit_log")
     render_competition_progress(audit_renderer, progress)
     assert not audit_renderer.stopped
+    records_renderer = _ProgressRenderer(url="http://localhost:8501/records")
+    render_competition_progress(records_renderer, progress)
+    assert not records_renderer.stopped
     prefixed_audit_renderer = _ProgressRenderer(
         url="https://example.test/continucare/audit_log"
     )
@@ -997,11 +1001,11 @@ def test_integrity_issue_projects_fail_closed_without_a_business_action():
 
 def test_home_guide_is_human_language_accessible_and_knowledge_independent():
     assert DEMO_GUIDE_STEPS == (
-        "患者表达",
-        "患者确认",
-        "护士核对",
-        "医生速览",
-        "记录追溯",
+        "一句原话",
+        "本人确认",
+        "人工核对",
+        "复诊速览",
+        "完整留痕",
     )
     assert all("Knowledge" not in label for label in DEMO_GUIDE_STEPS)
 
@@ -1085,4 +1089,28 @@ def test_home_source_keeps_reset_and_technical_details_secondary():
     assert "新一轮暂时无法开始，原来的演示记录没有被替换。请重试。" in app_source
     assert '"技术详情：外部适配器与当前配置"' in app_source
     assert '"再用 20 秒看负向路径"' in app_source
-    assert "按角色查看同一故事" not in app_source
+    assert "THREE ROLE EXPERIENCES" in app_source
+    assert "三种角色，只看此刻需要的内容" in app_source
+    assert "ROLE_ROUTES" in app_source
+
+
+def test_hidden_router_exposes_unique_role_specific_urls():
+    assert tuple(route.route_id for route in ROLE_ROUTES) == (
+        "patient",
+        "nurse",
+        "doctor",
+    )
+    assert tuple(route.url_path for route in ROLE_ROUTES) == (
+        "patient",
+        "nurse",
+        "doctor",
+    )
+    assert len({route.source for route in APP_ROUTES}) == len(APP_ROUTES)
+    assert len({route.url_path for route in APP_ROUTES if route.url_path}) == 5
+    assert sum(route.default for route in APP_ROUTES) == 1
+
+    router_source = (
+        __import__("pathlib").Path(__file__).parents[1] / "streamlit_app.py"
+    ).read_text("utf-8")
+    assert "st.navigation(pages, position=\"hidden\")" in router_source
+    assert 'visibility="hidden"' in router_source

@@ -27,7 +27,7 @@ KNOWLEDGE_BOUNDARIES = (
 )
 
 
-def _home_link(label: str = "返回合成演示导览") -> None:
+def _home_link(label: str = "返回演示首页") -> None:
     try:
         st.page_link("app.py", label=label, width="stretch")
     except (StreamlitPageNotFoundError, KeyError):

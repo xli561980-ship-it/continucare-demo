@@ -212,7 +212,7 @@ def _render_queue(
         selected = item.task_id == selected_task_id
         key_prefix = "cc_nurse_task_selected" if selected else "cc_nurse_task"
         if st.button(
-            "例行记录核对",
+            item.patient_label,
             key=f"{key_prefix}_{prefix}_{index}",
             width="stretch",
         ):
@@ -221,9 +221,8 @@ def _render_queue(
             st.rerun()
         st.markdown(
             '<div class="cc-nurse-task-meta">'
-            f"{html.escape(item.patient_label)} · "
-            f"{html.escape(_format_time(item.submitted_at))}<br>"
-            f"{html.escape(item.status_title)}"
+            f"新确认记录 · {html.escape(item.status_title)}<br>"
+            f"{html.escape(_format_time(item.submitted_at))}"
             "</div>",
             unsafe_allow_html=True,
         )
@@ -232,7 +231,7 @@ def _render_queue(
 def _render_disclosure(task: NurseTaskProjection, *, area: str) -> None:
     choice = st.query_params.get("cc_nurse_disclosure")
     options = (
-        (("patient", "查看患者原话"),)
+        (("patient", "查看原始来源详情"),)
         if area == "source"
         else (("history", "查看先前动作"), ("technical", "技术详情"))
     )
@@ -287,12 +286,8 @@ def _render_disclosure(task: NurseTaskProjection, *, area: str) -> None:
 def _render_communication(task: NurseTaskProjection) -> None:
     if not task.communication_text:
         return
-    marker = task.communication_marker or "模拟（未真实发送）"
-    title = (
-        "待人工核对的沟通文字"
-        if task.status_title == "沟通文字待核对"
-        else "已核对的沟通文字"
-    )
+    marker = "未发送"
+    title = "沟通文字草稿"
     st.markdown(
         '<section class="cc-nurse-communication">'
         f"<h3>{html.escape(title)}</h3>"
@@ -314,7 +309,7 @@ def _render_primary_action(task: NurseTaskProjection) -> None:
         with st.container(key="cc_nurse_primary_link"):
             st.page_link(
                 "pages/3_doctor_summary.py",
-                label=task.primary_label or "前往复诊速览",
+                label="进入复诊准备",
                 width="stretch",
             )
         return
@@ -337,8 +332,14 @@ def _render_primary_action(task: NurseTaskProjection) -> None:
         outcome = None
     note = action_notes[task.primary_action]
     with st.container(key="cc_nurse_primary"):
+        display_label = {
+            "acknowledge": "开始核对记录",
+            "start": "核对记录与来源",
+            "record_outcome": "保存核对结果",
+            "approve_draft": "确认文字已核对",
+        }.get(task.primary_action, task.primary_label or "继续")
         clicked = st.button(
-            task.primary_label or "继续",
+            display_label,
             key=f"cc_nurse_primary_button_{task.task_id}_{task.primary_action}",
             type="primary",
             width="stretch",
@@ -464,32 +465,41 @@ def _render_detail(task: NurseTaskProjection | None) -> None:
             unsafe_allow_html=True,
         )
         return
+    review_label = "待人工核对" if task.queue == "pending" else task.status_title
+    original_quote = task.original_quote or "患者原话暂时无法读取"
     st.markdown(
-        '<dl class="cc-nurse-detail-head">'
-        "<dt>任务类型</dt><dd>例行记录核对</dd>"
-        f"<dt>提交时间</dt><dd>{html.escape(_format_time(task.submitted_at))}</dd>"
-        "</dl>"
-        '<div class="cc-nurse-statement">'
-        "<span>患者确认的表述</span>"
-        f"<strong>{html.escape(task.confirmed_statement)}</strong>"
-        "</div>",
-        unsafe_allow_html=True,
-    )
-    _render_disclosure(task, area="source")
-    st.markdown(
-        f'<section class="cc-nurse-status cc-nurse-status--{html.escape(task.tone)}" '
-        'aria-live="polite">'
-        f"<h2>{html.escape(task.status_title)}</h2>"
-        f"<p>{html.escape(task.status_detail)}</p>"
-        "</section>",
+        f"""
+        <section class="cc-nurse-review-head" aria-live="polite">
+          <span class="cc-nurse-review-badge cc-nurse-review-badge--{html.escape(task.tone)}">{html.escape(review_label)}</span>
+          <div>
+            <h2>核对记录与来源</h2>
+            <p>{html.escape(task.status_detail)}</p>
+          </div>
+        </section>
+        <section class="cc-nurse-evidence-grid" aria-label="记录核对证据">
+          <article>
+            <span>患者原话</span>
+            <p>“{html.escape(original_quote)}”</p>
+          </article>
+          <article>
+            <span>已确认记录</span>
+            <p>{html.escape(task.confirmed_statement)}</p>
+          </article>
+          <article>
+            <span>来源</span>
+            <p>患者本人确认</p>
+          </article>
+        </section>
+        <section class="cc-nurse-why">
+          <span aria-hidden="true">?</span>
+          <div><strong>为什么交给我</strong><p>确认记录与患者原话一致，并保留来源。</p></div>
+        </section>
+        """,
         unsafe_allow_html=True,
     )
     _render_communication(task)
     _render_primary_action(task)
-    st.markdown(
-        f'<div class="cc-nurse-result-boundary">{html.escape(NURSE_RESULT_BOUNDARY)}</div>',
-        unsafe_allow_html=True,
-    )
+    _render_disclosure(task, area="source")
     if task.outcome_label:
         st.markdown(f"**核对结果：** {task.outcome_label}")
     if task.review_note:
@@ -506,17 +516,12 @@ def _render_detail(task: NurseTaskProjection | None) -> None:
 
 
 st.set_page_config(
-    page_title="护士工作台 · ContinuCare",
+    page_title="随访待办 · ContinuCare",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 inject_global_styles(st)
 st.markdown('<span class="cc-nurse-shell" aria-hidden="true"></span>', unsafe_allow_html=True)
-st.title("护士工作台")
-st.markdown(
-    f'<div class="cc-nurse-boundary">{html.escape(NURSE_ROLE_BOUNDARY)}</div>',
-    unsafe_allow_html=True,
-)
 
 settings = get_settings()
 progress = read_competition_demo(settings.db_path)
@@ -544,6 +549,26 @@ projection = project_nurse_workbench(
 )
 if projection.selected_task_id:
     st.session_state["cc_nurse_selected_task"] = projection.selected_task_id
+
+st.markdown(
+    """
+    <header class="cc-role-topbar">
+      <span class="cc-role-topbar-brand"><i aria-hidden="true">C</i> ContinuCare</span>
+      <span class="cc-role-topbar-badge">合成数据演示</span>
+    </header>
+    """,
+    unsafe_allow_html=True,
+)
+title_column, count_column = st.columns([4, 1], vertical_alignment="center")
+with title_column:
+    st.title("随访待办")
+    st.caption("核对记录与来源，再交给复诊准备。")
+with count_column:
+    pending_count = len(projection.pending_tasks)
+    st.markdown(
+        f'<div class="cc-nurse-count"><strong>{pending_count}</strong> 条待核对</div>',
+        unsafe_allow_html=True,
+    )
 
 notice = st.session_state.pop("cc_nurse_notice", None)
 if notice:
@@ -597,6 +622,8 @@ with st.container(key="cc_nurse_workspace"):
         _render_detail(selected_task)
 
 with st.expander("演示边界", expanded=False):
+    st.caption(NURSE_ROLE_BOUNDARY)
+    st.caption(NURSE_RESULT_BOUNDARY)
     if progress.alert_count == 0 and progress.approved_clinical_rule_count == 0:
         st.caption("临床警报未启用：0 条获批规则，0 条 Alert。")
     else:

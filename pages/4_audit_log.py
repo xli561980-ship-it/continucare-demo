@@ -25,7 +25,7 @@ from continucare.ui import (
 AUDIT_BOUNDARY = "合成数据 · 无临床评估 · 无风险分级 · 无真实发送 · 外部系统为 Mock/disabled。"
 
 
-def _guide_link(label: str = "返回合成演示导览") -> None:
+def _guide_link(label: str = "返回演示首页") -> None:
     try:
         st.page_link("app.py", label=label, width="stretch")
     except (StreamlitPageNotFoundError, KeyError):

@@ -7,6 +7,7 @@ import streamlit as st
 from continucare.config import get_settings
 from continucare.demo_data import SCENARIOS
 from continucare.knowledge import load_builtin_bundle
+from continucare.navigation import ROLE_ROUTES
 from continucare.services.competition_demo import (
     CompetitionDemoStartError,
     load_technical_demo_atomically,
@@ -47,7 +48,7 @@ def _render_start_action(db_path) -> None:
 
 
 st.set_page_config(
-    page_title="ContinuCare｜合成演示导览",
+    page_title="ContinuCare｜院外随访接力",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -64,11 +65,33 @@ except Exception:
 st.markdown(
     """
     <header class="cc-demo-header">
-      <h1>ContinuCare <span>｜合成演示导览</span></h1>
-      <p>角色切换仅用于演示，不代表已实现身份认证或权限控制。</p>
-      <p class="cc-demo-boundary">不提供临床评估、诊断或风险分级；不会真实发送；外部系统为 Mock。</p>
+      <div class="cc-demo-brand">
+        <span class="cc-demo-brand-mark" aria-hidden="true">C</span>
+        <strong>ContinuCare</strong>
+        <span class="cc-demo-badge">合成数据演示</span>
+      </div>
+      <span class="cc-demo-nav-label">院外随访接力</span>
     </header>
-    <p class="cc-demo-claim">患者说的话，一路跟到复诊速览。</p>
+    <section class="cc-demo-hero">
+      <div class="cc-demo-hero-copy">
+        <p class="cc-demo-eyebrow">PATIENT-REPORTED FOLLOW-UP</p>
+        <h1>让院外一句话，<br>变成复诊前可追溯的记录</h1>
+        <p class="cc-demo-lead">ContinuCare 把患者自由表达整理为待确认事实，
+        并在患者、护士、医生之间完成有来源的接力。</p>
+      </div>
+      <div class="cc-demo-chain" aria-label="ContinuCare 三端接力">
+        <div class="cc-demo-chain-roles">
+          <div><span>01</span><strong>患者端</strong><small>说出今天的情况</small></div>
+          <i aria-hidden="true">→</i>
+          <div><span>02</span><strong>护士端</strong><small>核对记录与来源</small></div>
+          <i aria-hidden="true">→</i>
+          <div><span>03</span><strong>医生端</strong><small>查看复诊前速览</small></div>
+        </div>
+        <div class="cc-demo-chain-proof">
+          <span>一句原话</span><span>本人确认</span><span>人工核对</span><span>复诊速览</span>
+        </div>
+      </div>
+    </section>
     """,
     unsafe_allow_html=True,
 )
@@ -86,6 +109,43 @@ render_demo_guide(
         else None
     ),
 )
+
+st.markdown(
+    """
+    <section class="cc-role-section-head">
+      <p>THREE ROLE EXPERIENCES</p>
+      <h2>三种角色，只看此刻需要的内容</h2>
+      <span>三个固定地址共享同一条合成记录，适合分设备演示。</span>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
+role_copy = {
+    "patient": ("01", "像聊天一样表达", "确认系统是否准确理解自己的原话。", "进入患者随访"),
+    "nurse": ("02", "核对记录与来源", "并排查看患者原话、确认记录和确认来源。", "进入随访待办"),
+    "doctor": ("03", "30 秒复诊准备", "查看已确认事实、护理接力与仍需补充的信息。", "进入复诊准备"),
+}
+role_columns = st.columns(len(ROLE_ROUTES), gap="medium")
+for column, route in zip(role_columns, ROLE_ROUTES):
+    number, title, description, action = role_copy[route.url_path]
+    with column, st.container(key=f"cc_role_card_{route.url_path}"):
+        st.markdown(
+            f"""
+            <article class="cc-role-card-copy">
+              <span class="cc-role-number">{number}</span>
+              <p>{route.title}</p>
+              <h3>{title}</h3>
+              <span>{description}</span>
+            </article>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.page_link(
+            route.source,
+            label=action,
+            icon=route.icon,
+            width="stretch",
+        )
 
 with st.expander(
     "再用 20 秒看负向路径",
@@ -187,4 +247,13 @@ with st.expander(
             )
             st.rerun()
 
-st.caption("当前为合成产品原型，正在寻找设计合作方；不是临床试点。")
+st.caption("当前展示合成数据下的端到端产品流程，不代表临床试点或真实系统接入。")
+st.markdown(
+    """
+    <footer class="cc-demo-footer">
+      <strong>ContinuCare</strong>
+      <span>合成数据演示 · 不提供诊断或治疗建议 · 不真实发送</span>
+    </footer>
+    """,
+    unsafe_allow_html=True,
+)

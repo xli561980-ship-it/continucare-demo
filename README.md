@@ -4,7 +4,7 @@
 
 > **安全边界：仅使用合成数据。系统不是医疗急救通道，不诊断、不治疗、不分诊，也不生成用药建议。**
 
-当前仍是 Streamlit 本地合成 Web 原型，不是原生 App、临床试点或生产系统。首页名称为“合成演示导览”，主故事按五步展开：患者表达 → 患者确认 → 护士核对 → 医生速览 → 记录追溯。开始新一轮会在用户明确同意后原子替换本地合成运行数据，并生成固定原话“我今天拉肚子。”的未确认候选；患者确认、护士核对记录和未发送沟通文字、医生生成/刷新复诊速览仍分别需要明确人工点击。进度从 SQLite 事实恢复，不依赖浏览器 session state。Knowledge 是独立资料库，不属于五步完成度。完整设计见 [M5-D 稳定的一键比赛 Demo](docs/28_m5_d_competition_demo.md)。
+当前仍是 Streamlit 本地合成 Web 原型，不是原生 App、临床试点或生产系统。比赛首页以“让院外一句话，变成复诊前可追溯的记录”为主张，主故事按五步展开：一句原话 → 本人确认 → 人工核对 → 复诊速览 → 完整留痕。开始新一轮会在用户明确同意后原子替换本地合成运行数据，并生成固定原话“我今天拉肚子。”的未确认候选；患者确认、护士核对记录和未发送沟通文字、医生生成/刷新复诊速览仍分别需要明确人工点击。进度从 SQLite 事实恢复，不依赖浏览器 session state。Knowledge 是独立资料库，不属于五步完成度。完整业务设计见 [M5-D 稳定的一键比赛 Demo](docs/28_m5_d_competition_demo.md)。
 
 当前版本已接入小米 MiMo OpenAI-compatible 适配器；配置本地密钥时使用 `mimo-v2.5` JSON mode，分别承担受控抽取、Safety Critic 和患者语言改写。主抽取不可用时回退本地语义 Mock，辅助模型不可用时回退确定性硬规则或固定语言模板。无论哪种模式，Safety Agent 和患者确认门都不能绕过。
 
@@ -20,10 +20,17 @@ Knowledge v2 alias readiness 已合入代码主线，但 alias UI consumer integ
 python3.11 -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]'
 .venv/bin/python -m pytest -q
-.venv/bin/streamlit run app.py
+.venv/bin/streamlit run streamlit_app.py
 ```
 
-打开 Streamlit 输出的本地地址即可进入首页。运行数据默认保存在 `data/continucare.db`，该目录已被 Git 忽略。
+打开 Streamlit 输出的本地地址即可进入演示控制台。三个角色端使用同一服务和同一条本地合成记录，但拥有彼此独立的固定入口：
+
+- 演示控制台：`http://localhost:8501/`
+- 患者端“我的随访”：`http://localhost:8501/patient`
+- 护士端“随访待办”：`http://localhost:8501/nurse`
+- 医生端“复诊准备”：`http://localhost:8501/doctor`
+
+可以把三个角色端分别放在不同浏览器标签页或演示设备上。当前拆分属于比赛演示级角色界面隔离，不代表已经实现登录、身份认证或权限控制。运行数据默认保存在 `data/continucare.db`，该目录已被 Git 忽略。
 
 普通离线测试不下载外部文件；未设置 `FHIR_R4_SCHEMA_ZIP` 时，依赖 HL7 官方 JSON Schema 的 3 项测试会明确标记为 skipped。比赛提交或发布验收不能把这些 skip 当作通过，必须按下方“验收命令”下载并核对固定哈希后重新运行全量测试。
 
@@ -99,10 +106,10 @@ CONTINUCARE_EXTERNAL_EGRESS_ENABLED=false
 
 ## 页面
 
-- 合成演示导览：展示五步故事的当前角色、当前步骤和下一步；
-- 我的随访：展示患者原话、系统记法和明确的确认选择；
-- 护士工作台：处理例行记录核对，并核对尚未发送的沟通文字；
-- 复诊速览：分开呈现患者确认的事实、护理动作和尚未提供临床评估的边界；
+- 比赛演示首页：先说明三端接力价值，再展示当前角色、当前步骤和下一步；
+- 我的随访：以对话式首屏展示患者原话、待确认记录和三个明确选择；
+- 随访待办：并排核对患者原话、已确认记录和“患者本人确认”来源，并处理未发送文字；
+- 复诊准备：用“30 秒速览”分开呈现患者确认、护理接力和复诊时仍需补充的信息；
 - 记录追溯：用人类可读的中文说明记录如何形成或停止，技术详情按需展开；
 - Knowledge 资料库 / 症状采集参考：独立只读，不读取患者故事，也不参与五步完成判定。
 
@@ -169,7 +176,7 @@ FHIR_R4_SCHEMA_ZIP="$FHIR_R4_SCHEMA_PATH" \
 .venv/bin/python scripts/validate_fhir_r4.py \
   --schema "$FHIR_R4_SCHEMA_PATH"
 .venv/bin/python scripts/evaluate_semantic_layer.py
-.venv/bin/streamlit run app.py
+.venv/bin/streamlit run streamlit_app.py
 ```
 
 哈希检查必须输出 `/tmp/fhir-r4-schema.zip: OK`。全量 pytest 必须以退出码 0 完成，且官方 Schema 可用时不应再出现上述 3 个 skip；独立校验器应逐项输出 `valid`。任一步失败都应停止验收，不得仅根据一次新下载结果修改仓库中的固定哈希。

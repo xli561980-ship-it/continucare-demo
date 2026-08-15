@@ -485,7 +485,9 @@ def test_page_uses_pure_projection_guards_and_scoped_doctor_styles():
     page_source = DOCTOR_PAGE.read_text("utf-8")
     ui_source = UI_SOURCE.read_text("utf-8")
 
-    assert 'st.title("复诊速览")' in page_source
+    assert 'st.title("复诊准备")' in page_source
+    assert "30 秒速览" in page_source
+    assert "证据链" in page_source
     assert "project_doctor_visit_brief" in page_source
     assert "DoctorWorkbenchService" in page_source
     assert "ManualReviewBriefService" in page_source
