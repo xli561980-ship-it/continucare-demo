@@ -1,8 +1,8 @@
 # HANDOFF
 
-> 给完全没有上下文的新会话使用。先完整阅读根目录 `AGENTS.md`，再阅读本文件。**最新权威状态：2026-08-15，`ROLE-1` 独立入口与 `DEMO-UI-2` 比赛展示重构已由 commit `b9ff951` 推送；其后用户发现旧 Knowledge 页面仍把 GLP-1 四症状 fixture 当作一级主题，要求展示已经建好的 Knowledge 主线。当前工作区已完成并验证 `KUI-1` Knowledge Ops 治理只读页面，尚未 commit / push。** 最新已提交基线为 `b9ff951`；最新未提交切片见 `KUI-1`。此前最终全仓审核、B-01/B-02、A++ UI-1 至 UI-6 和 Knowledge v2 alias readiness 的历史收口仍然有效。后续不得恢复旧四症状主题页，也不得把单一症状表达成 GLP-1 用药归因。
+> 给完全没有上下文的新会话使用。先完整阅读根目录 `AGENTS.md`，再阅读本文件。**最新权威状态：2026-08-15，`ROLE-1` 独立入口与 `DEMO-UI-2` 比赛展示重构已由 commit `b9ff951` 推送；其后完成的 `KUI-1` Knowledge Ops 治理只读页面已由 commit `12b91f8` 推送。** 此前最终全仓审核、B-01/B-02、A++ UI-1 至 UI-6 和 Knowledge v2 alias readiness 的历史收口仍然有效。后续不得恢复旧四症状主题页，也不得把单一症状表达成 GLP-1 用药归因。
 
-## KUI-1. Knowledge Ops 治理只读页面（2026-08-15，已完成验证，未提交）
+## KUI-1. Knowledge Ops 治理只读页面（2026-08-15，已提交并推送：`12b91f8`）
 
 - 用户指出“腹泻为什么和 GLP 挂钩”“内置主题不应这样分类”，并提醒仓库已经建立完整 Knowledge。根因是旧页面只消费 v1 `load_builtin_bundle().symptom_views()`，把腹泻、恶心、呕吐、腹痛四个早期 fixture 当作全部 Knowledge；它没有展示后来合入的 Knowledge Ops 主线。
 - 新页面改为只读取 `continucare.knowledge.ops.read_model`，按真实数据层展示“来源库 / 术语治理 / 审核流程 / 发布状态”：13 条版本化来源策略、8 道人工审核门、12 项 open Gap 和 0 个正式 Knowledge Release。
