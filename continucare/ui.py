@@ -4068,12 +4068,14 @@ def inject_global_styles(st) -> None:
         .cc-kc-term-summary article.is-caution {background:var(--cc-caution-bg);}
         .cc-kc-term-summary article.is-caution strong {color:var(--cc-caution);}
         .cc-kc-term-detail {
-            display:grid; grid-template-columns:minmax(0, 1fr) max-content; gap:1.1rem 2rem;
+            display:grid; grid-template-columns:minmax(280px, .68fr) minmax(0, 1.32fr);
+            gap:1.1rem 2rem;
             margin:.7rem 0; padding:1.3rem; border:1px solid var(--cc-border);
             border-radius:18px; background:var(--cc-bg);
         }
         .cc-kc-term-state {
-            align-self:start; padding:.5rem .7rem; border-radius:999px;
+            align-self:start; justify-self:end; width:auto; padding:.5rem .7rem;
+            border-radius:999px;
             background:var(--cc-caution-bg); color:var(--cc-caution); font-size:.76rem;
         }
         .cc-kc-term-detail > section {padding-top:1rem; border-top:1px solid var(--cc-border);}

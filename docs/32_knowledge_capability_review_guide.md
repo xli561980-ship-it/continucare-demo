@@ -96,6 +96,11 @@ release intent 明确为 `readiness_only_blocked`。
 当前 Knowledge Ops 治理 UI 只读取 `continucare.knowledge.ops.read_model`，展示
 来源、审核、Gap 和发布准备状态；它不枚举或消费未审核 alias。
 
+产品当前所说的“患者口语标准化”是患者端既有的候选建议模式：受控语义层可以
+生成待确认候选，但必须经患者本人确认后才能写入。这条路径不读取
+`catalog_read_model`，也不把未审核 alias 当作匹配规则；因此不能写成 Knowledge
+已经启用患者表达自动匹配。
+
 未来 Core Symptom alias consumer UI 必须：
 
 - 只读取 `continucare.knowledge.ops.catalog_read_model` 的 frozen DTO/API；

@@ -10,7 +10,7 @@
 
 M5-E 增加了可选飞书 Bot、Aily 和 Bitable 协议适配器、统一配置工厂与 FakeTransport 合同测试。默认配置为飞书/Aily `mock`、Bitable `disabled`，不读取 Token、不创建真实 transport、不认证、不探活、不发送或写入；运行时 `SEND_ENABLED=False`，没有真实外部发送。代码已实现且 FakeTransport 合同已验证；真实租户验证和生产可用性均为否。详见 [飞书 / Aily 集成状态](docs/feishu_integration.md) 与 [M5-E 设计验收](docs/29_m5_e_optional_feishu_aily_adapters.md)。
 
-Knowledge 页面现在读取正式的 Knowledge Ops 治理只读模型，按“来源库 / 术语治理 / 审核流程 / 发布状态”展示已经建立的版本、来源策略、人工门禁和待补治理证据。Core Symptom v2 alias consumer integration 仍未实施，页面不导入 alias consumer API、不匹配患者文本；Knowledge 保持 `knowledge_effect=informational_only`、`runtime_authority=none`，不授权运行时动作。
+Knowledge 页面现在读取正式的 Knowledge Ops 治理只读模型，按“来源库 / 术语治理 / 审核流程 / 发布状态”展示已经建立的版本、来源策略、人工门禁和待补治理证据。患者端采用“受控语义层生成候选 → 本人确认后写入”的口语标准化模式；这不等于 Knowledge alias 自动匹配。Core Symptom v2 alias consumer integration 仍未实施，页面不导入 alias consumer API、不直接匹配患者文本；Knowledge 保持 `knowledge_effect=informational_only`、`runtime_authority=none`，不授权运行时动作。
 
 ## 本地运行
 
