@@ -1,6 +1,15 @@
 # HANDOFF
 
-> 给完全没有上下文的新会话使用。先完整阅读根目录 `AGENTS.md`，再阅读本文件。**最新权威状态：2026-08-15，`ROLE-1` 独立入口与 `DEMO-UI-2` 比赛展示重构已由 commit `b9ff951` 推送；其后完成的 `KUI-1` Knowledge Ops 治理只读页面已由 commit `12b91f8` 推送。** 此前最终全仓审核、B-01/B-02、A++ UI-1 至 UI-6 和 Knowledge v2 alias readiness 的历史收口仍然有效。后续不得恢复旧四症状主题页，也不得把单一症状表达成 GLP-1 用药归因。
+> 给完全没有上下文的新会话使用。先完整阅读根目录 `AGENTS.md`，再阅读本文件。**最新权威状态：2026-08-15，`ROLE-1` 独立入口与 `DEMO-UI-2` 比赛展示重构已由 commit `b9ff951` 推送；`KUI-1` Knowledge Ops 治理只读页面已由 commit `12b91f8` 推送；`KUI-1.1` 口语标准化说明与 Opus 非阻断项收口已由 commit `bd6a62c` 推送。** 此前最终全仓审核、B-01/B-02、A++ UI-1 至 UI-6 和 Knowledge v2 alias readiness 的历史收口仍然有效。后续不得恢复旧四症状主题页，也不得把单一症状表达成 GLP-1 用药归因。
+
+## KUI-1.1. 候选建议模式与 Opus 非阻断项收口（2026-08-15，已提交并推送：`bd6a62c`）
+
+- 用户同意将容易误解的“患者表达自动匹配：未启用”改为“患者口语标准化：候选建议模式”，并明确患者端由受控语义层生成候选、本人确认后才写入；Knowledge 仍不直接匹配患者文本。
+- 用户授权处理 `KUI-1` 的 Claude Opus 只读复核意见。当前改动覆盖：术语 Gap 缺失时不再 `StopIteration`、审核角色数从真实门禁派生、枚举与来源类型中文标签覆盖测试、HTML 插值转义、manifest 失败页保留非临床边界、未知来源类型进入显式兜底分类。
+- 本切片不得启用 `catalog_read_model` consumer、不得解除 alias Gap、不得绕过患者确认，也不得把候选建议宣传成正式 Knowledge 自动匹配。
+- 验证结果：Knowledge UI/registry 定向 `96 passed`；Knowledge Ops、比赛主线、患者确认和医生速览相关 `383 passed`；官方 FHIR R4 schema 下全量 `938 passed, 0 skipped`；`compileall` 与 `git diff --check` 通过。
+- Browser 逐项验证来源库、术语治理和发布状态；桌面 `1280×720` 与移动端 `390×844` 均无横向溢出，术语卡片布局已修复，最终 console 为 `0 error / 0 warning`。
+- Claude Sonnet 对最终 diff 进行一次只读核对，结论为 `PASS`，无 BLOCKER、无 NON-BLOCKING、无 NEED_CONTEXT；Codex 独立验收同意该结论。
 
 ## KUI-1. Knowledge Ops 治理只读页面（2026-08-15，已提交并推送：`12b91f8`）
 
