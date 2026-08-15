@@ -1,8 +1,19 @@
 # HANDOFF
 
-> 给完全没有上下文的新会话使用。先完整阅读根目录 `AGENTS.md`，再阅读本文件。**最新权威状态：2026-08-15，最终独立全仓审核、完整运行验证、Claude Opus 高风险复核及其修复切片均已收口；其后用户明确要求把患者端、护士端和医生端拆成独立入口，并指出旧版文字与展示仍不像合格比赛 Demo。当前工作区已完成 `ROLE-1` 独立入口和 `DEMO-UI-2` 比赛展示重构，但尚未 commit / push。当前比赛级合成原型结论为 PASS，无未解决代码级 blocker。** 最新已提交审核基线见下方 `AUD-R4`；最新未提交切片见 `DEMO-UI-2` 与 `ROLE-1`。此前 B-01/B-02、A++ UI-1 至 UI-6 和 Knowledge v2 alias readiness 的历史收口仍然有效；分别见 `AUD-R2`、`UI-6` 与 `K2`。后续不得按旧历史中“A++ 尚未实施”“Knowledge v2 尚未合入”“最终审核修复尚未完成”“三端仍无独立入口”或“首页仍应以工程验收台为主”的状态执行。
+> 给完全没有上下文的新会话使用。先完整阅读根目录 `AGENTS.md`，再阅读本文件。**最新权威状态：2026-08-15，`ROLE-1` 独立入口与 `DEMO-UI-2` 比赛展示重构已由 commit `b9ff951` 推送；其后用户发现旧 Knowledge 页面仍把 GLP-1 四症状 fixture 当作一级主题，要求展示已经建好的 Knowledge 主线。当前工作区已完成并验证 `KUI-1` Knowledge Ops 治理只读页面，尚未 commit / push。** 最新已提交基线为 `b9ff951`；最新未提交切片见 `KUI-1`。此前最终全仓审核、B-01/B-02、A++ UI-1 至 UI-6 和 Knowledge v2 alias readiness 的历史收口仍然有效。后续不得恢复旧四症状主题页，也不得把单一症状表达成 GLP-1 用药归因。
 
-## DEMO-UI-2. 比赛展示型三端重构（2026-08-15，已实现，未提交）
+## KUI-1. Knowledge Ops 治理只读页面（2026-08-15，已完成验证，未提交）
+
+- 用户指出“腹泻为什么和 GLP 挂钩”“内置主题不应这样分类”，并提醒仓库已经建立完整 Knowledge。根因是旧页面只消费 v1 `load_builtin_bundle().symptom_views()`，把腹泻、恶心、呕吐、腹痛四个早期 fixture 当作全部 Knowledge；它没有展示后来合入的 Knowledge Ops 主线。
+- 新页面改为只读取 `continucare.knowledge.ops.read_model`，按真实数据层展示“来源库 / 术语治理 / 审核流程 / 发布状态”：13 条版本化来源策略、8 道人工审核门、12 项 open Gap 和 0 个正式 Knowledge Release。
+- 症状不再作为一级分类，也不再默认展示腹泻或 `GLP1-14D`。术语治理页只从 governance Gap 展示目录版本、待复核 concept refs 和正式审核门，不枚举或使用未审核 aliases。
+- 仓库原有保护测试曾正确阻止页面导入 `catalog_read_model`；本切片保留该门禁。页面不导入 alias consumer API，不匹配患者文本，不读取 SQLite/患者故事，不访问网络，不写 Knowledge 状态，也不授权 runtime。
+- 页面首屏新增 Knowledge 治理流程、真实资产计数与有内容的模块卡片，取代旧页面大段工程声明、错误 GLP-1 归因和四症状单选器。
+- 主要修改：`pages/5_knowledge_evidence.py`、`continucare/ui.py`、导航与 Knowledge 入口文案、Knowledge UI/registry 测试、`README.md`、`docs/32_knowledge_capability_review_guide.md` 与本文件。
+- 验证结果：Knowledge/Knowledge Ops/比赛与医生相关定向 `350 passed`；官方 FHIR R4 schema 下全量 `933 passed, 0 skipped`；`compileall` 与 `git diff --check` 通过。
+- Browser 实测 `/knowledge` 首屏、来源库、术语治理、审核流程和发布状态；修复了多卡片 HTML 缩进导致第二、第三张来源卡被显示为代码文本的问题。桌面与 `390×844` 无横向溢出，最终新标签页 console 为 `0 error / 0 warning`；页面 DOM 不含旧“四个内置主题”或 `GLP1-14D`。
+
+## DEMO-UI-2. 比赛展示型三端重构（2026-08-15，已提交并推送：`b9ff951`）
 
 - 用户明确指出旧页面虽然能证明工程边界，但具体文字和首屏内容不像合格比赛 Demo。本切片不改业务状态机、持久化事实、患者确认门或临床安全边界，只重做首页与三端的信息故事、动作命名和视觉层级。
 - 首页主张改为“让院外一句话，变成复诊前可追溯的记录”，首屏先展示患者端 → 护士端 → 医生端价值接力；动态进度改为“一句原话 → 本人确认 → 人工核对 → 复诊速览 → 完整留痕”。技术配置、负向路径和数据管理继续保留在次级折叠区。
@@ -14,7 +25,7 @@
 - 验证结果：患者/护士/医生/比赛 Demo 定向 `118 passed`；固定哈希的官方 FHIR R4 schema 下全量 `933 passed, 0 skipped`；`compileall` 通过；离线语义评测 8/8 通过；连续离线彩排 3/3 通过。Browser 用隔离 `/tmp` 数据库真实走通“开始演示 → 患者确认 → 护士接手/核对/保存结果 → 医生生成速览”，桌面和 `390×844` 均无横向溢出，最终页面 console 为 `0 error / 0 warning`。
 - 本节取代历史 `UI-0.3` 中“患者说的话，一路跟到复诊速览”的首页主文案以及旧的“护士工作台 / 复诊速览”可见标题；历史章节仍保留用于解释安全边界与状态机决策，不应恢复旧首屏。
 
-## ROLE-1. 患者端 / 护士端 / 医生端独立入口（2026-08-15，已实现，未提交）
+## ROLE-1. 患者端 / 护士端 / 医生端独立入口（2026-08-15，已提交并推送：`b9ff951`）
 
 - 用户明确要求将医生端、患者端、护士端分开。本切片采用一个 Streamlit 服务、一个共享 SQLite 合成记录、三个固定角色 URL 和一个演示控制台；没有复制业务逻辑或创建三套数据。
 - 新入口文件为 `streamlit_app.py`，使用隐藏的 `st.navigation` 注册全部页面；默认控制台为 `/`，患者端为 `/patient`，护士端为 `/nurse`，医生端为 `/doctor`，记录追溯和 Knowledge 分别为 `/records`、`/knowledge`。

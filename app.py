@@ -174,7 +174,7 @@ st.markdown(
 )
 st.page_link(
     "pages/5_knowledge_evidence.py",
-    label="打开独立 Knowledge 资料库",
+    label="打开 Knowledge 中心",
     width="content",
 )
 if not knowledge_available:

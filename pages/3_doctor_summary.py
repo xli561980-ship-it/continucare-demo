@@ -746,7 +746,7 @@ if projection.show_knowledge_link:
     with st.container(key="cc_doctor_knowledge_link"):
         st.page_link(
             "pages/5_knowledge_evidence.py",
-            label="打开独立 Knowledge 资料库",
+            label="打开 Knowledge 中心",
             width="stretch",
         )
 

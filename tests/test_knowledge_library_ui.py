@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import ast
 from dataclasses import replace
-from html.parser import HTMLParser
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -16,26 +15,6 @@ from continucare.ui import project_knowledge_library
 ROOT = Path(__file__).parents[1]
 KNOWLEDGE_PAGE = ROOT / "pages" / "5_knowledge_evidence.py"
 UI_SOURCE = ROOT / "continucare" / "ui.py"
-
-
-class _KnowledgeDOM(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.ids: list[tuple[str, dict[str, str | None]]] = []
-        self.controls: list[dict[str, str | None]] = []
-
-    def handle_starttag(self, tag, attrs):
-        attributes = dict(attrs)
-        if "id" in attributes:
-            self.ids.append((tag, attributes))
-        if tag == "a" and "aria-controls" in attributes:
-            self.controls.append(attributes)
-
-
-def _rendered_dom(app) -> _KnowledgeDOM:
-    parser = _KnowledgeDOM()
-    parser.feed("\n".join(str(item.value) for item in app.markdown))
-    return parser
 
 
 def _registry_with_view(registry, view):
@@ -223,78 +202,62 @@ def test_page_imports_only_offline_knowledge_and_has_no_patient_or_story_runtime
     assert "patient_id" not in source
     assert "DEMO_PATIENT" not in source
     assert "自动预选" not in source
+    assert "continucare.knowledge.ops.read_model" in imports
+    assert "catalog_read_model" not in source
+    assert "load_builtin_bundle" not in source
 
 
-def test_page_loads_without_a_database_and_topic_switching_is_local(monkeypatch, tmp_path):
+def test_page_loads_ops_read_model_without_database_and_sections_are_local(monkeypatch, tmp_path):
     missing_db = tmp_path / "knowledge-must-not-create.db"
     monkeypatch.setenv("CONTINUCARE_DB_PATH", str(missing_db))
 
     app = AppTest.from_file(str(KNOWLEDGE_PAGE), default_timeout=10).run()
 
     assert not app.exception
-    assert app.title[0].value == "Knowledge 资料库"
-    assert app.radio[0].value == "diarrhea"
-    assert app.radio[0].options == ["腹泻", "恶心", "呕吐", "腹痛"]
-    app.radio[0].set_value("nausea").run()
+    assert app.radio[0].value == "sources"
+    assert app.radio[0].options == ["来源库", "术语治理", "审核流程", "发布状态"]
+    visible = "\n".join(item.value for item in app.markdown)
+    assert "让每条知识都能回答" in visible
+    assert "监管与药品资料" in visible
+    assert "医学标准与量表" in visible
+    assert "患者教育与研究" in visible
+
+    app.radio[0].set_value("terminology").run()
     assert not app.exception
-    assert app.radio[0].value == "nausea"
+    assert app.radio[0].value == "terminology"
     assert not missing_db.exists()
     visible = "\n".join(item.value for item in app.markdown)
-    assert "症状采集参考" in visible
-    assert "这里只说明采集依据，没有对这位患者做过评估" in visible
-    assert "支持什么" in visible
-    assert "不支持什么" in visible
+    assert "具体症状不是一级分类" in visible
+    assert "Core Symptom Catalog" in visible
+    assert "治理缺口仍待处理" in visible
+    assert "GLP1-14D" not in visible
+    assert "四个内置主题" not in visible
 
 
-def test_source_layer_is_separate_from_patient_source_styling_and_exposes_history_on_demand():
+def test_all_governed_knowledge_sections_render_without_alias_consumer_import():
     ui_source = UI_SOURCE.read_text("utf-8")
     app = AppTest.from_file(str(KNOWLEDGE_PAGE), default_timeout=10).run()
+    page_source = KNOWLEDGE_PAGE.read_text("utf-8")
 
-    collapsed = _rendered_dom(app)
-    assert len(collapsed.controls) == 1
-    assert collapsed.controls[0]["aria-expanded"] == "false"
-    targets = [
-        item for item in collapsed.ids if item[1]["id"] == "cc-knowledge-sources-panel"
-    ]
-    assert len(targets) == 1
-    assert targets[0][0] == "span"
-    assert targets[0][1]["hidden"] is None
-    assert targets[0][1]["aria-hidden"] == "true"
-    assert "tabindex" not in targets[0][1]
+    source_visible = "\n".join(item.value for item in app.markdown)
+    assert "SOURCE LIBRARY" in source_visible
+    assert "真实网络：未启用" in source_visible
 
-    app.query_params["cc_knowledge_details"] = "sources"
-    app.run()
-    assert not app.exception
-    visible = "\n".join(item.value for item in app.markdown)
-    assert "CURRENT / HISTORICAL" in visible
-    assert "未绑定的 link-only 来源" in visible
-    assert "页面加载不会访问官方来源 URL" in visible
-    assert ".cc-knowledge-source" in ui_source
-    assert ".cc-knowledge-shell" in ui_source
+    app.radio[0].set_value("review").run()
+    review_visible = "\n".join(item.value for item in app.markdown)
+    assert "HUMAN REVIEW GATES" in review_visible
+    assert "模型输出和测试事件都不能代替正式审核人" in review_visible
+    assert "版本发布" in review_visible
+
+    app.radio[0].set_value("release").run()
+    release_visible = "\n".join(item.value for item in app.markdown)
+    assert "治理准备中 · 尚未正式发布" in release_visible
+    assert "不能把未审核患者表达用于自动匹配" in release_visible
+    assert "患者表达匹配：未启用" in release_visible
+
+    assert ".cc-kc-hero" in ui_source
+    assert ".cc-kc-group-grid" in ui_source
+    assert ".cc-kc-gate-grid" in ui_source
     assert ".cc-patient-quote" in ui_source
-    assert "cc-knowledge-source cc-patient" not in ui_source
-    assert "render_disclosure_controls" in KNOWLEDGE_PAGE.read_text("utf-8")
-    assert "grid-template-columns:repeat(2, minmax(0, 1fr))" in ui_source
-    assert "min-height:48px" in ui_source
-    assert 'aria-expanded="{str(active).lower()}"' in ui_source
-    expanded = _rendered_dom(app)
-    assert expanded.controls[0]["aria-expanded"] == "true"
-    targets = [
-        item for item in expanded.ids if item[1]["id"] == "cc-knowledge-sources-panel"
-    ]
-    assert len(targets) == 1
-    assert targets[0][0] == "section"
-    assert "cc-knowledge-details-head" in (
-        targets[0][1].get("class") or ""
-    ).split()
-    assert "hidden" not in targets[0][1]
-    assert targets[0][1].get("aria-hidden") != "true"
-    assert "来源与版本" in visible
-
-    app.query_params["cc_knowledge_details"] = "future-value"
-    app.run()
-    unknown = _rendered_dom(app)
-    assert unknown.controls[0]["aria-expanded"] == "false"
-    assert sum(
-        item[1]["id"] == "cc-knowledge-sources-panel" for item in unknown.ids
-    ) == 1
+    assert "catalog_read_model" not in page_source
+    assert "get_core_symptom_record" not in page_source

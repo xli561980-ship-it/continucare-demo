@@ -577,31 +577,27 @@ def test_knowledge_page_has_no_patient_store_or_runtime_side_effect_imports():
     assert "patient_id" not in page.read_text("utf-8")
 
 
-def test_knowledge_page_renders_all_four_fixture_details_offline():
+def test_knowledge_page_renders_governed_ops_sections_offline():
     app = AppTest.from_file(
         str(REPOSITORY_ROOT / "pages" / "5_knowledge_evidence.py"),
         default_timeout=10,
     ).run()
 
     assert not app.exception
-    assert app.title[0].value == "Knowledge 资料库"
-    expected_topics = {
-        "diarrhea": "腹泻",
-        "nausea": "恶心",
-        "vomiting": "呕吐",
-        "abdominal-pain": "腹痛",
+    assert app.radio[0].options == ["来源库", "术语治理", "审核流程", "发布状态"]
+    expected_sections = {
+        "sources": "监管与药品资料",
+        "terminology": "Core Symptom Catalog",
+        "review": "HUMAN REVIEW GATES",
+        "release": "治理准备中 · 尚未正式发布",
     }
-    for symptom_id, topic_name in expected_topics.items():
-        app.radio[0].set_value(symptom_id).run()
+    for section_id, expected_text in expected_sections.items():
+        app.radio[0].set_value(section_id).run()
         assert not app.exception
         rendered = "\n".join(item.value for item in app.markdown)
-        assert topic_name in rendered
-        assert "支持什么" in rendered
-        assert "不支持什么" in rendered
-    app.query_params["cc_knowledge_details"] = "sources"
-    app.run()
-    assert not app.exception
-    assert any("CURRENT / HISTORICAL" in item.value for item in app.markdown)
+        assert expected_text in rendered
+        assert "GLP1-14D" not in rendered
+        assert "四个内置主题" not in rendered
 
 
 def test_payload_hash_is_checked_before_json_parsing(tmp_path):

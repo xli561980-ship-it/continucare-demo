@@ -54,7 +54,7 @@ APP_ROUTES = (
     AppRoute(
         route_id="knowledge",
         source="pages/5_knowledge_evidence.py",
-        title="Knowledge 资料库",
+        title="Knowledge 中心",
         icon=":material/menu_book:",
         url_path="knowledge",
     ),
