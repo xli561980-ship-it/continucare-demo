@@ -1,0 +1,125 @@
+{
+  "schema_version": "1.0",
+  "payload": {
+    "snapshots": [
+      {
+        "snapshot_id": "snapshot-synthetic-nausea-v1",
+        "topic_ref": {
+          "reference_id": "synthetic-topic-nausea",
+          "version": 1
+        },
+        "claim_refs": [
+          {
+            "reference_id": "synthetic-claim-nausea-collection",
+            "version": 1
+          }
+        ],
+        "source_refs": [
+          {
+            "reference_id": "synthetic-source-reference-manual",
+            "version": 1
+          }
+        ],
+        "binding_refs": [],
+        "statement_snapshot": "纯合成测试资料：可以考虑询问患者是否感觉恶心；该条目尚未完成临床评估。",
+        "supports": [
+          "在纯合成演示中采集患者对恶心的诚实自述。"
+        ],
+        "does_not_support": [
+          "不支持诊断、风险分级、治疗建议、医学频率或持续天数。"
+        ],
+        "permitted_use": [
+          "followup_question",
+          "patient_reported_record"
+        ],
+        "applicable_scope": {
+          "mode": "synthetic_demo_only",
+          "population": "no real patient or hospital"
+        },
+        "review_status": "not_assessed",
+        "version": 1,
+        "knowledge_effect": "informational_only",
+        "runtime_authority": "none",
+        "data_classification": "synthetic_demo"
+      },
+      {
+        "snapshot_id": "snapshot-synthetic-weight-v1",
+        "topic_ref": {
+          "reference_id": "synthetic-topic-weight-self-report",
+          "version": 1
+        },
+        "claim_refs": [
+          {
+            "reference_id": "synthetic-claim-weight-recording",
+            "version": 1
+          }
+        ],
+        "source_refs": [
+          {
+            "reference_id": "synthetic-source-reference-manual",
+            "version": 1
+          }
+        ],
+        "binding_refs": [],
+        "statement_snapshot": "纯合成测试资料：允许患者诚实记录自行测量的数值。",
+        "supports": [
+          "记录患者明确输入的自测数值。"
+        ],
+        "does_not_support": [
+          "不支持临床阈值、自动报警、诊断或治疗建议。"
+        ],
+        "permitted_use": [
+          "patient_self_measurement"
+        ],
+        "applicable_scope": {
+          "mode": "synthetic_demo_only",
+          "population": "no real patient or hospital"
+        },
+        "review_status": "internally_checked",
+        "version": 1,
+        "knowledge_effect": "informational_only",
+        "runtime_authority": "none",
+        "data_classification": "synthetic_demo"
+      },
+      {
+        "snapshot_id": "snapshot-synthetic-unsupported-v1",
+        "topic_ref": {
+          "reference_id": "synthetic-topic-lab-order-only",
+          "version": 1
+        },
+        "claim_refs": [
+          {
+            "reference_id": "synthetic-claim-unsupported-use",
+            "version": 1
+          }
+        ],
+        "source_refs": [
+          {
+            "reference_id": "synthetic-source-reference-manual",
+            "version": 1
+          }
+        ],
+        "binding_refs": [],
+        "statement_snapshot": "纯合成负向测试资料：该用途不属于第一阶段允许的患者记录范围。",
+        "supports": [
+          "仅用于验证不允许的用途会被服务层拒绝。"
+        ],
+        "does_not_support": [
+          "不授权创建检验、影像、ServiceRequest 或其他临床医嘱。"
+        ],
+        "permitted_use": [
+          "lab_order"
+        ],
+        "applicable_scope": {
+          "mode": "synthetic_demo_negative_test",
+          "population": "no real patient or hospital"
+        },
+        "review_status": "not_assessed",
+        "version": 1,
+        "knowledge_effect": "informational_only",
+        "runtime_authority": "none",
+        "data_classification": "synthetic_demo"
+      }
+    ]
+  }
+}

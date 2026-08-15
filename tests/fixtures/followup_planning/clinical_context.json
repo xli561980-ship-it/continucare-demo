@@ -1,0 +1,23 @@
+{
+  "case_id": "case-synthetic-followup-001",
+  "patient_id": "Patient/synthetic-followup-001",
+  "synthetic": true,
+  "entries": [
+    {
+      "entry_id": "entry-doctor-recorded-001",
+      "source_reference": "SyntheticCase/case-synthetic-followup-001/assessment/1",
+      "source_excerpt_snapshot": "合成医生记录：复诊时记录恶心。",
+      "source_kind": "doctor_recorded_condition",
+      "extracted_text": "复诊时记录恶心",
+      "coding": null
+    },
+    {
+      "entry_id": "entry-patient-report-001",
+      "source_reference": "SyntheticCase/case-synthetic-followup-001/patient-report/1",
+      "source_excerpt_snapshot": "合成患者自述：昨晚感觉恶心。",
+      "source_kind": "patient_report",
+      "extracted_text": "昨晚感觉恶心",
+      "coding": null
+    }
+  ]
+}

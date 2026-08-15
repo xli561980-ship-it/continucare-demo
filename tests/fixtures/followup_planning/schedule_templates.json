@@ -1,0 +1,45 @@
+{
+  "templates": [
+    {
+      "schedule_id": "schedule-synthetic-demo-approved",
+      "version": 1,
+      "values": {
+        "interval_days": 2,
+        "times_of_day": [
+          "09:00:00",
+          "18:00:00"
+        ],
+        "duration_days": 5,
+        "timezone": "Europe/Berlin"
+      },
+      "basis": "institution_template",
+      "approval_status": "approved",
+      "authored_by": "Practitioner/synthetic-demo-author",
+      "approved_by": "Practitioner/synthetic-demo-approver",
+      "approved_at": "2026-08-15T08:00:00+00:00",
+      "created_at": "2026-08-15T07:00:00+00:00",
+      "data_classification": "synthetic_demo",
+      "approval_scope": "demo_only"
+    },
+    {
+      "schedule_id": "schedule-synthetic-demo-draft",
+      "version": 1,
+      "values": {
+        "interval_days": 1,
+        "times_of_day": [
+          "10:00:00"
+        ],
+        "duration_days": 3,
+        "timezone": "Europe/Berlin"
+      },
+      "basis": "institution_template",
+      "approval_status": "draft",
+      "authored_by": "Practitioner/synthetic-demo-author",
+      "approved_by": null,
+      "approved_at": null,
+      "created_at": "2026-08-15T07:00:00+00:00",
+      "data_classification": "synthetic_demo",
+      "approval_scope": "demo_only"
+    }
+  ]
+}
